@@ -1,106 +1,121 @@
-AntsShop — README
+E‑Commerce App — Hybrid Search, DDD, PayPal Sandbox
+A modern e‑commerce application built with Domain‑Driven Design (DDD), a hybrid search engine (Postgres keyword search + ChromaDB vector embeddings), and PayPal sandbox payments.
+Includes a full admin panel, product management, category management, cart, orders, and email notifications.
 
-Overview
-AntsShop lets users:
+📁 Project Structure
+Code
+/src        → Backend (FastAPI, DDD architecture)
+/frontend   → Frontend (React + Neon‑Glass UI)
+/docker     → Docker configs
+Backend (src/)
+Organized using Domain‑Driven Design:
 
-Register & log in — authentication stored as an HTTP cookie so the browser can make authenticated requests.
+domain/ — entities, value objects, repository interfaces
 
-Browse products & categories — responsive index and category pages; click a product to view details.
+application/ — use cases
 
-Search with hybrid search — semantic vectors (Chroma) + Postgres keyword matching; results are merged and ranked for relevance.
+infrastructure/ — database, email worker, repositories
 
-Add to cart & checkout — view subtotal, tax, and total; pay via PayPal (sandbox).
+presentation/ — FastAPI routes
 
-View orders — orders page lists past orders and lets users expand each order to see itemized details and timestamps.
+Frontend (frontend/)
+React application with:
 
-Admin panel — protected admin routes for product/category CRUD; admins are granted via the database.
+Product pages
 
-Highlights & UX
-Cookie‑based auth: login/register set an HTTP cookie; frontend includes credentials: "include" for protected API calls.
+Category pages
 
-Hybrid search pipeline: semantic embedding → Chroma vector search → Postgres keyword search → merge & dedupe. Semantic matches are preserved in order; exact keyword matches follow.
+Cart
 
-Cart totals: clear display of totals with and without taxes so users can review charges before paying.
+Orders
 
-PayPal sandbox: integrated for safe testing of the full checkout flow and redirect/capture flow.
+Admin dashboard
 
-Orders UX: inline expandable order details appear directly under each order for quick inspection.
+Neon‑glass cyber UI aesthetic
 
-Admin tools: add, update, remove products and categories from a protected admin area.
+🔍 Hybrid Search (Keywords + Embeddings)
+Search combines:
 
-Architecture & design
-Domain‑Driven Design (DDD)  
-The backend is organized around domain models, repositories, and use cases. Business logic lives in use case classes, keeping controllers thin and behavior explicit and testable.
+Postgres keyword search
 
-Event‑Driven Architecture (in progress)  
-The project is being migrated toward an event‑driven approach. Domain events (for example, payment completed, order created, cart cleared) are published so other parts of the system can react asynchronously. This enables future features like inventory updates, email notifications, analytics, and microservices integration without coupling them to the synchronous request flow.
+ChromaDB vector embeddings for semantic search
 
-Separation of concerns  
-Frontend and backend are separate apps. The frontend consumes the backend API and uses cookie authentication for protected endpoints. This separation makes it easy to deploy the frontend as a static site and scale the backend independently.
+This allows users to find products even with fuzzy or descriptive queries.
 
-Running locally (quick start)
-Prerequisites
+💳 PayPal Sandbox Payments
+Checkout uses PayPal sandbox mode, allowing safe test payments without real money.
 
-Python 3.10+ (backend)
-
-Node 16+/18+ (frontend)
-
-PostgreSQL database
-
-Chroma vector store (persistent folder)
-
-PayPal sandbox account (client id & secret)
-
-Environment variables (example)  
-Set your DB, Chroma path, and PayPal sandbox credentials in your environment or .env:
+🛠 Starting the App (Docker Compose)
+Make sure Docker is installed, then run:
 
 Code
-DATABASE_URL=postgresql://user:pass@localhost:5432/antsshop
-CHROMA_PERSIST_DIR=./chroma_db
-PAYPAL_CLIENT_ID=your_sandbox_client_id
-PAYPAL_CLIENT_SECRET=your_sandbox_secret
-FRONTEND_URL=http://localhost:3000
-Start the backend
+docker compose up --build
+This starts:
 
-Create and activate a virtual environment, install dependencies.
+Backend
 
-Run migrations (if present).
+Frontend
 
-Start the API server.
+Postgres
 
-Example commands:
+Redis
 
-bash
-python -m venv venv
-source venv/bin/activate        # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
-alembic upgrade head            # if using Alembic migrations
-uvicorn src.main:app --reload
-Start the frontend
+Worker
 
-bash
-cd frontend
-npm install
-npm run dev
-Notes
+ChromaDB
 
-The frontend talks to the backend API and includes cookies on authenticated requests.
+The app becomes available at:
 
-If you change embedding models (different vector dimension), delete the Chroma persistence folder and reindex products so the collection is recreated with the correct dimension.
+Code
+http://localhost:3000   → Frontend
+http://localhost:8000   → Backend API
+🔐 Accessing the Admin Panel
+By default, no user is an admin.
+To promote yourself:
 
-Admin, maintenance & quick admin SQL
-Grant admin access
+1️⃣ Enter Postgres inside Docker
+Code
+docker compose exec postgres psql -U postgres -d your_db
+2️⃣ Set your user as admin
+Code
+UPDATE users SET is_admin = TRUE WHERE id = 1;
+3️⃣ Open the admin panel
+Code
+http://localhost:3000/admin
+You now have access to:
 
-To make a user an admin quickly, run this SQL in your Postgres instance:
+Product management
 
-sql
-UPDATE users SET is_admin = true WHERE id = 1;
-Reindexing & Chroma
+Category management
 
-If you switch embedding models (different vector dimension), recreate the Chroma collection by deleting the Chroma persistence folder and re‑running your reindex script or re‑creating product embeddings.
+Order management
 
-A reindex script should iterate all products and write embeddings to the vector store so search remains accurate.
+Admin-only tools
 
-Event pipeline
+📦 Features
+Full e‑commerce flow
 
-The backend publishes domain events (payment completed, order created) so background workers can process inventory updates, emails, analytics, and other async tasks. The event‑driven pipeline is in progress and designed to be durable and extensible.
+Hybrid search engine
+
+PayPal sandbox payments
+
+Cart + order system
+
+Email worker (SMTP)
+
+Admin dashboard
+
+DDD backend architecture
+
+Neon‑glass UI
+
+🚀 Ready for Deployment
+The project is fully containerized and can be deployed to:
+
+Docker servers
+
+VPS
+
+Kubernetes
+
+Render / Railway / Fly.io
