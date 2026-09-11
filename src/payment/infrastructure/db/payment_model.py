@@ -1,9 +1,7 @@
 from datetime import datetime
-from enum import Enum
-
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
 from sqlalchemy import Enum as SqlEnum, Float, Integer, String, DateTime
-from core.config.database import Base
+from core.infrastructure.database import Base
 from payment.domain.entities.payment import PaymentStatus
 
 

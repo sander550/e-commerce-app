@@ -2,7 +2,7 @@
 from sqlalchemy import String, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
-from core.config.database import Base
+from core.infrastructure.database import Base
 
 
 class RefreshTokenModel(Base):

@@ -7,6 +7,8 @@ from order.domain.entities.order_item import OrderItem
 class Order:
     id: int | None
     user_id: int
+    shipping_address: str
+    delivery_method: str
     items: List[OrderItem] = field(default_factory=list)
     subtotal: float = 0.0
     tax: float = 0.0

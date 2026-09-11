@@ -3,7 +3,7 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, Float, Boolean, ForeignKey
 from catalog.infrastructure.db.category_model import CategoryModel
-from core.config.database import Base
+from core.infrastructure.database import Base
 
 class ProductModel(Base):
     __tablename__ = "products"

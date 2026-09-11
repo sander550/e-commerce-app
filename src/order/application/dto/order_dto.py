@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 from typing import List
 
+class PlaceOrderDTO(BaseModel):
+    shipping_address: str
+    delivery_method: str
+
 
 class OrderItemResponseDTO(BaseModel):
     product_id: int
@@ -24,6 +28,8 @@ class OrderItemResponseDTO(BaseModel):
 class OrderResponseDTO(BaseModel):
     id: int
     user_id: int
+    shipping_address: str
+    delivery_method: str
     subtotal: float
     tax: float
     total: float
@@ -36,6 +42,8 @@ class OrderResponseDTO(BaseModel):
         return OrderResponseDTO(
             id=order.id,
             user_id=order.user_id,
+            shipping_address=order.shipping_address,
+            delivery_method=order.delivery_method,
             subtotal=order.subtotal,
             tax=order.tax,
             total=order.total,

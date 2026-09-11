@@ -2,7 +2,7 @@
 from sqlalchemy import String, Boolean, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
-from core.config.database import Base
+from core.infrastructure.database import Base
 
 
 class UserModel(Base):
@@ -12,7 +12,6 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String)
 
-    # ⭐ Admin flag (default false)
     is_admin: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
@@ -23,4 +22,7 @@ class UserModel(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # ⭐ User’s saved default shipping address
+    shipping_address: Mapped[str | None] = mapped_column(String(500), nullable=True)
 

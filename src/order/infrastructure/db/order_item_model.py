@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
-
-from core.config.database import Base
+from core.infrastructure.database import Base
 
 
 class OrderItemModel(Base):

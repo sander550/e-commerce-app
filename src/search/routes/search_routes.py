@@ -9,10 +9,10 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 
 @router.get("/")
-async def search_products(q: str, limit: int = 30, use_case:
+async def search_products(q: str, use_case:
     HybridSearchUseCase = Depends(get_search_use_case)):
     try:
-        products = await use_case.execute(query=q, limit=limit)
+        products = await use_case.execute(query=q)
     except Exception as e:
         return MessageDTO.from_message(str(e))
     return products

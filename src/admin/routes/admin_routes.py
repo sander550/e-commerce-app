@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from admin.application.dto.admin_dto import (CreateProductDTO, UpdateProductDTO,
-                                             CreateCategoryDTO, UpdateCategoryDTO)
+                                             CreateCategoryDTO, UpdateCategoryDTO,
+                                             UpdateOrderDTO
+                                             )
 
 from admin.application.use_cases.create_product import CreateProductUseCase
 from admin.application.use_cases.update_product import UpdateProductUseCase
@@ -8,6 +10,9 @@ from admin.application.use_cases.delete_product import DeleteProductUseCase
 from admin.application.use_cases.update_category import UpdateCategoryUseCase
 from admin.application.use_cases.create_category import CreateCategoryUseCase
 from admin.application.use_cases.delete_category import DeleteCategoryUseCase
+from admin.application.use_cases.update_order import UpdateOrderUseCase
+from admin.application.use_cases.delete_order import DeleteOrderUseCase
+
 
 from core.application.use_case_factories.admin_factories import (
     get_create_product_use_case,
@@ -15,7 +20,10 @@ from core.application.use_case_factories.admin_factories import (
     get_delete_product_use_case,
     get_update_category_use_case,
     get_delete_category_use_case,
-    get_create_category_use_case
+    get_create_category_use_case,
+    get_update_order_use_case,
+    get_delete_order_use_case
+
 )
 from core.security.dependencies import admin_required
 
@@ -117,6 +125,39 @@ async def delete_category(
 ):
     try:
         await use_case.execute(category_id)
+        return {"status": "deleted"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+# -------------------------
+# ORDER ROUTES
+# -------------------------
+
+
+@router.put("/order/{order_id}", dependencies=[Depends(admin_required)])
+async def update_order(
+    order_id: int,
+    dto: UpdateOrderDTO,
+    use_case: UpdateOrderUseCase = Depends(get_update_order_use_case)
+):
+    try:
+        return await use_case.execute(
+            order_id=order_id,
+            status=dto.status,
+            shipping_address=dto.shipping_address,
+            delivery_method=dto.delivery_method,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/order/{order_id}", dependencies=[Depends(admin_required)])
+async def delete_order(
+    order_id: int,
+    use_case: DeleteOrderUseCase = Depends(get_delete_order_use_case)
+):
+    try:
+        await use_case.execute(order_id)
         return {"status": "deleted"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

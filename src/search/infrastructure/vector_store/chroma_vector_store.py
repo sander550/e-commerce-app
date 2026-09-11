@@ -1,9 +1,10 @@
 # search/infrastructure/vector_store/chroma_vector_store.py
 
+
 class ChromaVectorStore:
     def __init__(self, client):
         self.client = client
-        self.collection = client.get_or_create_collection("products")
+        self.collection = client.get_collection("products")
 
     async def add(self, id: int, embedding: list[float]):
         # Chroma expects strings for IDs

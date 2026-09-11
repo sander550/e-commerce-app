@@ -5,7 +5,7 @@ from order.application.use_cases.get_order_details import GetOrderDetailsUseCase
 from order.application.use_cases.list_user_orders import ListUserOrdersUseCase
 
 
-from order.application.dto.order_dto import OrderResponseDTO
+from order.application.dto.order_dto import OrderResponseDTO, PlaceOrderDTO
 
 from core.application.use_case_factories.order_factories import (
     get_place_order_use_case,
@@ -22,11 +22,12 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 # ---------------------------------------------------------
 @router.post("/", response_model=OrderResponseDTO)
 async def place_order(
+    dto: PlaceOrderDTO,
     user=Depends(auth_required),
     use_case: PlaceOrderUseCase = Depends(get_place_order_use_case)
 ):
     try:
-        order = await use_case.execute(user.id)
+        order = await use_case.execute(user.id, dto.shipping_address, dto.delivery_method)
         return OrderResponseDTO.from_domain(order)
     except Exception as e:
         raise HTTPException(400, str(e))
@@ -42,6 +43,7 @@ async def list_user_orders(
 ):
     try:
         orders = await use_case.execute(user.id)
+
         return [OrderResponseDTO.from_domain(o) for o in orders]
     except Exception as e:
         raise HTTPException(400, str(e))

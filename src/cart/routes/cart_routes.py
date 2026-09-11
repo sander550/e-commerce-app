@@ -58,6 +58,7 @@ async def add_item(
             product_id=dto.product_id,
             quantity=dto.quantity
         )
+
         return CartResponseDTO.from_domain(cart)
     except Exception as e:
         raise HTTPException(400, str(e))

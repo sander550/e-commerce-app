@@ -4,14 +4,14 @@ class HybridSearchUseCase:
         self.vector_store = vector_store
         self.product_repo = product_repo
 
-    async def execute(self, query: str, limit: int = 10):
+    async def execute(self, query: str):
         # 1. Embed query
         embedding = await self.embedding_service.embed(query)
         if not embedding:
             return []
 
         # 2. Semantic search
-        semantic_ids = await self.vector_store.search(embedding, limit=limit)
+        semantic_ids = await self.vector_store.search(embedding, limit=10)
 
         # 3. Keyword search
         keyword_ids = await self.product_repo.search_keyword(query)

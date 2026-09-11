@@ -1,6 +1,6 @@
 from core.application.providers.repo_provider import RepoProvider
-from core.config.database import async_session_factory
 from catalog.application.use_cases.update_stock import UpdateStockUseCase
+from core.infrastructure.database import async_session_factory
 
 async def update_stock_handler(event):
     # Build use case manually because you cant use Depends in non routes

@@ -10,7 +10,6 @@ export default function ProfilePage() {
 
   const loggedIn = localStorage.getItem("logged_in") === "true";
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!loggedIn) navigate("/login");
   }, [loggedIn, navigate]);
@@ -67,32 +66,87 @@ export default function ProfilePage() {
       <style>{`
         .profile-wrapper {
           min-height: 100vh;
-          background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-          color: white;
+          background: linear-gradient(135deg, #050505, #0a0f1a);
+          color: #e8e8ff;
           font-family: Inter, sans-serif;
           padding: 40px;
           display: flex;
           flex-direction: column;
           align-items: center;
+          animation: fadeIn 0.6s ease;
         }
 
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* NEW CYBER ANIMATION */
+        @keyframes waveMove {
+          0% { transform: translateX(-40px); opacity: 0.4; }
+          50% { transform: translateX(40px); opacity: 0.8; }
+          100% { transform: translateX(-40px); opacity: 0.4; }
+        }
+
+        @keyframes floatAvatar {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+          100% { transform: translateY(0px); }
+        }
+
+        /* Avatar Container */
+        .avatar-container {
+          position: relative;
+          width: 180px;
+          height: 180px;
+          margin-bottom: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .avatar-wave {
+          position: absolute;
+          width: 180px;
+          height: 180px;
+          border-radius: 50%;
+          background: radial-gradient(
+            circle,
+            rgba(0,200,255,0.25) 0%,
+            rgba(0,200,255,0.05) 70%,
+            transparent 100%
+          );
+          animation: waveMove 3.5s infinite ease-in-out;
+          filter: blur(12px);
+        }
+
+        .avatar-icon {
+          font-size: 80px;
+          color: #7feaff;
+          text-shadow: 0 0 15px rgba(0,200,255,0.6);
+          animation: floatAvatar 3s infinite ease-in-out;
+          z-index: 2;
+        }
+
+        /* Profile Card */
         .glass-card {
           width: 100%;
-          max-width: 500px;
+          max-width: 520px;
           padding: 32px;
           border-radius: 20px;
-          background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(18px);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-          margin-bottom: 40px;
+          background: rgba(15, 15, 30, 0.75);
+          backdrop-filter: blur(25px);
+          border: 1px solid rgba(0,200,255,0.25);
+          box-shadow: 0 0 40px rgba(0,200,255,0.15);
           text-align: center;
         }
 
         .title {
-          font-size: 28px;
+          font-size: 30px;
           font-weight: 700;
           margin-bottom: 20px;
+          color: #00c8ff;
+          text-shadow: 0 0 10px rgba(0,200,255,0.4);
         }
 
         .info {
@@ -100,86 +154,48 @@ export default function ProfilePage() {
           margin-bottom: 10px;
         }
 
-        .logout-btn {
+        /* Buttons */
+        .logout-btn,
+        .back-btn {
           margin-top: 20px;
           padding: 12px 20px;
           border-radius: 12px;
-          background: linear-gradient(135deg, #ff4d4d, #ff3333);
           border: none;
           color: white;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
+          transition: 0.25s;
+        }
+
+        .logout-btn {
+          background: rgba(255, 80, 80, 0.25);
+          border: 1px solid rgba(255, 80, 80, 0.4);
+        }
+
+        .logout-btn:hover {
+          background: rgba(255, 80, 80, 0.35);
+          transform: scale(1.05);
         }
 
         .back-btn {
-          margin-top: 12px;
-          padding: 12px 20px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, #4d79ff, #3366ff);
-          border: none;
-          color: white;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
+          background: rgba(0,200,255,0.25);
+          border: 1px solid rgba(0,200,255,0.4);
         }
 
-        /* COOL ROTATING CUBE */
-        .cube-container {
-          width: 150px;
-          height: 150px;
-          perspective: 600px;
-          margin-bottom: 40px;
-        }
-
-        .cube {
-          width: 100%;
-          height: 100%;
-          position: relative;
-          transform-style: preserve-3d;
-          animation: rotateCube 6s linear infinite;
-        }
-
-        .cube-face {
-          position: absolute;
-          width: 150px;
-          height: 150px;
-          background: rgba(255,255,255,0.12);
-          border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 22px;
-          font-weight: bold;
-        }
-
-        .front  { transform: translateZ(75px); }
-        .back   { transform: rotateY(180deg) translateZ(75px); }
-        .right  { transform: rotateY(90deg) translateZ(75px); }
-        .left   { transform: rotateY(-90deg) translateZ(75px); }
-        .top    { transform: rotateX(90deg) translateZ(75px); }
-        .bottom { transform: rotateX(-90deg) translateZ(75px); }
-
-        @keyframes rotateCube {
-          from { transform: rotateX(0deg) rotateY(0deg); }
-          to   { transform: rotateX(360deg) rotateY(360deg); }
+        .back-btn:hover {
+          background: rgba(0,200,255,0.35);
+          transform: scale(1.05);
         }
       `}</style>
 
-      {/* COOL ROTATING CUBE */}
-      <div className="cube-container">
-        <div className="cube">
-          <div className="cube-face front">👤</div>
-          <div className="cube-face back">⚡</div>
-          <div className="cube-face right">🔥</div>
-          <div className="cube-face left">💎</div>
-          <div className="cube-face top">⭐</div>
-          <div className="cube-face bottom">🚀</div>
-        </div>
+      {/* Neon Avatar */}
+      <div className="avatar-container">
+        <div className="avatar-wave"></div>
+        <div className="avatar-icon">👤</div>
       </div>
 
-      {/* PROFILE CARD */}
+      {/* Profile Card */}
       <div className="glass-card">
         <div className="title">Your Profile</div>
 
@@ -189,8 +205,8 @@ export default function ProfilePage() {
           <>
             <div className="info"><strong>ID:</strong> {user.id}</div>
             <div className="info"><strong>Email:</strong> {user.email}</div>
-            <div className="info"><strong>Is_active:</strong> {user.is_active.toString()}</div>
-            <div className="info"><strong>Created_at:</strong> {user.created_at}</div>
+            <div className="info"><strong>Active:</strong> {user.is_active.toString()}</div>
+            <div className="info"><strong>Created:</strong> {user.created_at}</div>
           </>
         )}
 
@@ -198,7 +214,7 @@ export default function ProfilePage() {
           Logout
         </button>
 
-        <button className="back-btn" onClick={() => navigate("/index")}>
+        <button className="back-btn" onClick={() => navigate("/")}>
           ← Back to Store
         </button>
       </div>

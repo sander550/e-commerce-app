@@ -1,7 +1,8 @@
 from passlib.context import CryptContext
+from core.config.settings import settings
 
 pwd_context = CryptContext(
-    schemes=["argon2"],
+    schemes=[settings.PASSWORD_HASH_SCHEME],
     deprecated="auto"
 )
 

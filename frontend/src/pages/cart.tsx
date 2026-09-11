@@ -6,11 +6,23 @@ export default function CartPage() {
   const [totals, setTotals] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Address fields
+  const [street, setStreet] = useState("");
+  const [houseNumber, setHouseNumber] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
+
+  const [deliveryMethod, setDeliveryMethod] = useState("standard");
+
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Track which fields should be highlighted red
+  const [highlightErrors, setHighlightErrors] = useState(false);
+
   // -----------------------------
-  // LOAD CART + TOTALS
+  // LOAD CART + TOTALS + PROFILE
   // -----------------------------
   const fetchCart = async () => {
     try {
@@ -38,10 +50,30 @@ export default function CartPage() {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/auth/profile", {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!res.ok) return;
+
+      if (json.shipping_address) {
+        const parts = json.shipping_address.split(",").map((p: string) => p.trim());
+        setStreet(parts[0] || "");
+        setHouseNumber(parts[1] || "");
+        setCity(parts[2] || "");
+        setPostalCode(parts[3] || "");
+        setCountry(parts[4] || "");
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     (async () => {
       await fetchCart();
       await fetchTotals();
+      await fetchProfile();
       setLoading(false);
     })();
   }, []);
@@ -121,17 +153,34 @@ export default function CartPage() {
   };
 
   // -----------------------------
-  // ⭐ PAY WITH PAYPAL (auto-create order)
+  // PAY WITH PAYPAL
   // -----------------------------
   const payWithPayPal = async () => {
     setError(null);
     setSuccess(null);
 
+    // Enable red highlighting
+    setHighlightErrors(true);
+
+    const missing =
+      !street || !houseNumber || !city || !postalCode || !country;
+
+    if (missing) {
+      setError("Please fill in all shipping fields.");
+      return;
+    }
+
+    const fullAddress = `${street}, ${houseNumber}, ${city}, ${postalCode}, ${country}`;
+
     try {
-      // 1. Create order
       const orderRes = await fetch("http://localhost:8000/orders/", {
         method: "POST",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shipping_address: fullAddress,
+          delivery_method: deliveryMethod,
+        }),
       });
 
       const orderJson = await orderRes.json();
@@ -140,7 +189,6 @@ export default function CartPage() {
 
       const orderId = orderJson.id;
 
-      // 2. Create PayPal payment
       const payRes = await fetch("http://localhost:8000/payment/create", {
         method: "POST",
         credentials: "include",
@@ -152,19 +200,15 @@ export default function CartPage() {
       if (!payRes.ok)
         return setError(payJson.detail || "Failed to start PayPal payment.");
 
-      // 3. Redirect to PayPal
       window.location.href = payJson.approval_url;
     } catch {
       setError("Failed to start PayPal payment.");
     }
   };
 
-  // -----------------------------
-  // LOADING
-  // -----------------------------
   if (loading)
     return (
-      <div className="index-wrapper fade-in">
+      <div className="page-wrapper fade-in">
         <div className="glass pulse">Loading cart...</div>
       </div>
     );
@@ -173,54 +217,124 @@ export default function CartPage() {
   // UI
   // -----------------------------
   return (
-    <div className="index-wrapper fade-in">
+    <div className="page-wrapper fade-in">
       <style>{`
-        .index-wrapper {
+        .page-wrapper {
           min-height: 100vh;
-          background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-          color: white;
+          background: linear-gradient(135deg, #050505, #0a0f1a);
+          color: #e8e8ff;
           font-family: Inter, sans-serif;
           padding: 24px;
-          animation: fadeIn 0.6s ease-out;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-          animation: fadeIn 0.6s ease-out;
-        }
-
-        .pulse {
-          animation: pulseAnim 1.4s infinite ease-in-out;
-        }
-
-        @keyframes pulseAnim {
-          0% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.03); opacity: 1; }
-          100% { transform: scale(1); opacity: 0.8; }
+        .layout {
+          display: grid;
+          grid-template-columns: 1fr 0.9fr;
+          gap: 24px;
         }
 
         .glass {
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.15);
-          backdrop-filter: blur(14px);
-          border-radius: 16px;
-          padding: 20px;
-          margin-bottom: 24px;
-          box-shadow: 0 0 20px rgba(255,255,255,0.08);
-          animation: fadeIn 0.6s ease-out;
+          background: rgba(15, 15, 30, 0.75);
+          border: 1px solid rgba(0, 200, 255, 0.25);
+          backdrop-filter: blur(25px);
+          border-radius: 18px;
+          padding: 22px;
+          box-shadow: 0 0 40px rgba(0, 200, 255, 0.15);
         }
 
-        .error-box, .success-box {
-          animation: fadeIn 0.4s ease-out;
+        .section-title {
+          font-size: 22px;
+          font-weight: 700;
+          margin-bottom: 14px;
+          color: #00c8ff;
+          text-shadow: 0 0 8px rgba(0,200,255,0.4);
+        }
+
+        .item {
+          padding: 12px 0;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        input {
+          width: 100%;
+          padding: 12px;
+          border-radius: 10px;
+          border: none;
+          margin-bottom: 12px;
+          background: rgba(255,255,255,0.08);
+          color: white;
+          font-size: 15px;
+          outline: none;
+        }
+
+        input.error {
+          border: 1px solid #ff4444;
+          background: rgba(255, 50, 50, 0.15);
+        }
+
+        select {
+          width: 100%;
+          padding: 12px;
+          border-radius: 10px;
+          border: none;
+          margin-bottom: 12px;
+          background: rgba(0,200,255,0.25);
+          color: #000;
+          font-weight: 600;
+        }
+
+        .paypal-btn {
+          padding: 14px 18px;
+          background: rgba(0,200,255,0.25);
+          border: 1px solid rgba(0,200,255,0.4);
+          border-radius: 14px;
+          cursor: pointer;
+          margin-top: 12px;
+          color: white;
+          font-weight: 600;
+          width: 100%;
+          transition: 0.2s;
+        }
+
+        .paypal-btn:hover {
+          background: rgba(0,200,255,0.35);
+          transform: scale(1.03);
+        }
+
+        .qty-btn, .remove-btn, .clear-btn {
+          padding: 8px 12px;
+          margin-left: 6px;
+          border-radius: 8px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.15);
+          color: white;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+
+        .qty-btn:hover {
+          background: rgba(255,255,255,0.18);
+        }
+
+        .remove-btn:hover {
+          background: rgba(255,80,80,0.25);
+        }
+
+        .clear-btn {
+          margin-top: 12px;
+          width: 100%;
+        }
+
+        .clear-btn:hover {
+          background: rgba(255,80,80,0.25);
         }
 
         .error-box {
-          background: #ffdddd;
-          color: #a30000;
+          background: #330000;
+          color: #ffaaaa;
           padding: 12px;
           border-radius: 10px;
           margin-bottom: 20px;
@@ -228,170 +342,172 @@ export default function CartPage() {
         }
 
         .success-box {
-          background: #ddffdd;
-          color: #006600;
+          background: #003300;
+          color: #aaffaa;
           padding: 12px;
           border-radius: 10px;
           margin-bottom: 20px;
           font-weight: 600;
         }
 
-        .section-title {
-          font-size: 20px;
-          font-weight: 600;
-          margin-bottom: 12px;
-        }
-
-        .item {
-          padding: 12px 0;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          animation: fadeIn 0.4s ease-out;
-        }
-
-        .qty-btn, .remove-btn, .clear-btn, .paypal-btn {
-          transition: all 0.2s ease;
-        }
-
-        .qty-btn:hover {
-          background: rgba(255,255,255,0.2);
-          transform: scale(1.05);
-        }
-
-        .remove-btn:hover {
-          background: rgba(255,80,80,0.35);
-          transform: scale(1.05);
-        }
-
-        .clear-btn:hover {
-          background: rgba(255,80,80,0.35);
-          transform: scale(1.05);
-        }
-
-        .paypal-btn:hover {
-          background: rgba(0,120,255,0.35);
-          transform: scale(1.05);
-        }
-
-        .paypal-btn {
-          padding: 12px 16px;
-          background: rgba(0,120,255,0.25);
-          border: 1px solid rgba(0,120,255,0.4);
-          border-radius: 12px;
-          cursor: pointer;
-          margin-top: 12px;
-          color: white;
-          font-weight: 600;
-        }
-
         .nav-btn {
-          margin-right: 12px;
+          margin-bottom: 20px;
           padding: 10px 14px;
           border-radius: 12px;
-          background: rgba(255,255,255,0.12);
-          border: 1px solid rgba(255,255,255,0.18);
+          background: rgba(0,200,255,0.15);
+          border: 1px solid rgba(0,200,255,0.3);
           color: white;
           text-decoration: none;
-          transition: all 0.2s ease;
+          transition: 0.2s;
         }
 
         .nav-btn:hover {
-          background: rgba(255,255,255,0.2);
+          background: rgba(0,200,255,0.25);
           transform: scale(1.05);
         }
       `}</style>
 
-      <div style={{ marginBottom: "20px" }}>
-        <Link className="nav-btn" to="/">← Back</Link>
-      </div>
+      <Link className="nav-btn" to="/">← Back</Link>
 
       {error && <div className="error-box">{error}</div>}
       {success && <div className="success-box">{success}</div>}
 
-      {/* CART */}
-      <div className="glass">
-        <div className="section-title">Your Cart</div>
+      <div className="layout">
+        {/* LEFT SIDE — CART */}
+        <div className="glass">
+          <div className="section-title">Your Cart</div>
 
-        {cart.items.length === 0 && (
-          <div style={{ opacity: 0.7 }}>Your cart is empty.</div>
-        )}
+          {cart.items.length === 0 && (
+            <div style={{ opacity: 0.7 }}>Your cart is empty.</div>
+          )}
 
-        {cart.items.map((item: any) => (
-          <div key={item.product_id} className="item">
-            <div>
-              <strong>{item.name}</strong>
-              <div style={{ opacity: 0.7 }}>
-                ${item.price} × {item.quantity}
+          {cart.items.map((item: any) => (
+            <div key={item.product_id} className="item">
+              <div>
+                <strong>{item.name}</strong>
+                <div style={{ opacity: 0.7 }}>
+                  ${item.price} × {item.quantity}
+                </div>
+              </div>
+
+              <div>
+                <button
+                  className="qty-btn"
+                  onClick={() =>
+                    updateQuantity(item.product_id, item.quantity - 1)
+                  }
+                  disabled={item.quantity <= 1}
+                >
+                  -
+                </button>
+
+                <button
+                  className="qty-btn"
+                  onClick={() =>
+                    updateQuantity(item.product_id, item.quantity + 1)
+                  }
+                >
+                  +
+                </button>
+
+                <button
+                  className="remove-btn"
+                  onClick={() => removeItem(item.product_id)}
+                >
+                  Remove
+                </button>
               </div>
             </div>
+          ))}
 
-            <div>
-              <button
-                className="qty-btn"
-                onClick={() =>
-                  updateQuantity(item.product_id, item.quantity - 1)
-                }
-                disabled={item.quantity <= 1}
-              >
-                -
-              </button>
-
-              <button
-                className="qty-btn"
-                onClick={() =>
-                  updateQuantity(item.product_id, item.quantity + 1)
-                }
-              >
-                +
-              </button>
-
-              <button
-                className="remove-btn"
-                onClick={() => removeItem(item.product_id)}
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        ))}
-
-        {cart.items.length > 0 && (
-          <>
+          {cart.items.length > 0 && (
             <button className="clear-btn" onClick={clearCart}>
               Clear Cart
             </button>
+          )}
+        </div>
 
+        {/* RIGHT SIDE — CHECKOUT */}
+        <div className="glass">
+          <div className="section-title">Shipping Address</div>
+
+          <input
+            className={highlightErrors && !street ? "error" : ""}
+            placeholder="Street"
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+          />
+
+          <input
+            className={highlightErrors && !houseNumber ? "error" : ""}
+            placeholder="House Number"
+            value={houseNumber}
+            onChange={(e) => setHouseNumber(e.target.value)}
+          />
+
+          <input
+            className={highlightErrors && !city ? "error" : ""}
+            placeholder="City"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+          />
+
+          <input
+            className={highlightErrors && !postalCode ? "error" : ""}
+            placeholder="Postal Code"
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+          />
+
+          <input
+            className={highlightErrors && !country ? "error" : ""}
+            placeholder="Country"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+          />
+
+          <div className="section-title" style={{ marginTop: "20px" }}>
+            Delivery Method
+          </div>
+
+          <select
+            value={deliveryMethod}
+            onChange={(e) => setDeliveryMethod(e.target.value)}
+          >
+            <option value="standard">Standard Delivery (3–5 days)</option>
+            <option value="express">Express Delivery (1–2 days)</option>
+            <option value="pickup">Pickup Point</option>
+          </select>
+
+          <div className="section-title" style={{ marginTop: "20px" }}>
+            Totals
+          </div>
+
+          {totals ? (
+            <>
+              <div className="item">
+                <span>Subtotal</span>
+                <span>${totals.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="item">
+                <span>Tax</span>
+                <span>${totals.tax.toFixed(2)}</span>
+              </div>
+              <div className="item">
+                <strong>Total</strong>
+                <strong>${totals.total.toFixed(2)}</strong>
+              </div>
+            </>
+          ) : (
+            <div style={{ opacity: 0.7 }}>No totals available.</div>
+          )}
+
+          {cart.items.length > 0 && (
             <button className="paypal-btn" onClick={payWithPayPal}>
               Pay with PayPal
             </button>
-          </>
-        )}
-      </div>
-
-      {/* TOTALS */}
-      <div className="glass">
-        <div className="section-title">Totals</div>
-
-        {totals ? (
-          <>
-            <div className="item">
-              <span>Subtotal</span>
-              <span>${totals.subtotal.toFixed(2)}</span>
-            </div>
-            <div className="item">
-              <span>Tax</span>
-              <span>${totals.tax.toFixed(2)}</span>
-            </div>
-            <div className="item">
-              <strong>Total</strong>
-              <strong>${totals.total.toFixed(2)}</strong>
-            </div>
-          </>
-        ) : (
-          <div style={{ opacity: 0.7 }}>No totals available.</div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

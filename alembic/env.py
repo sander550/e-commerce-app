@@ -30,7 +30,7 @@ from payment.infrastructure.db.payment_model import PaymentModel
 # -------------------------------------------------------------------
 # IMPORT DATABASE BASE
 # -------------------------------------------------------------------
-from core.config.database import Base
+from core.infrastructure.database import Base
 
 # -------------------------------------------------------------------
 # ALEMBIC CONFIG

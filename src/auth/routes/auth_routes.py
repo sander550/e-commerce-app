@@ -137,6 +137,12 @@ async def logout(
 async def get_current_user(
     user=Depends(auth_required)
 ):
+    if user is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Not authenticated"
+        )
+
     return UserReadDTO(
         id=user.id,
         email=user.email,

@@ -39,10 +39,8 @@ export default function OrdersPage() {
 
       const json = await res.json();
 
-      // Open this order
       setOpenOrders((prev) => [...prev, orderId]);
 
-      // Attach details to the order
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, details: json } : o))
       );
@@ -72,14 +70,14 @@ export default function OrdersPage() {
 
   if (loading)
     return (
-      <div className="index-wrapper">
-        <div className="glass">Loading orders...</div>
+      <div className="page-wrapper">
+        <div className="glass pulse">Loading orders...</div>
       </div>
     );
 
   if (error)
     return (
-      <div className="index-wrapper">
+      <div className="page-wrapper">
         <div className="glass">{error}</div>
       </div>
     );
@@ -89,25 +87,35 @@ export default function OrdersPage() {
   // ---------------------------------------------------------
 
   return (
-    <div className="index-wrapper">
+    <div className="page-wrapper">
       <style>{`
-        .index-wrapper {
+        .page-wrapper {
           min-height: 100vh;
-          background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-          color: white;
+          background: linear-gradient(135deg, #050505, #0a0f1a);
+          color: #e8e8ff;
           font-family: Inter, sans-serif;
           padding: 24px;
         }
 
         .glass {
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.15);
-          backdrop-filter: blur(14px);
-          border-radius: 16px;
-          padding: 20px;
+          background: rgba(15, 15, 30, 0.75);
+          border: 1px solid rgba(0, 200, 255, 0.25);
+          backdrop-filter: blur(25px);
+          border-radius: 18px;
+          padding: 22px;
           margin-bottom: 24px;
-          box-shadow: 0 0 20px rgba(255,255,255,0.08);
+          box-shadow: 0 0 40px rgba(0, 200, 255, 0.15);
           animation: fadeIn 0.4s ease;
+        }
+
+        .pulse {
+          animation: pulseGlow 1.8s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+          0% { box-shadow: 0 0 20px rgba(0,200,255,0.15); }
+          50% { box-shadow: 0 0 35px rgba(0,200,255,0.35); }
+          100% { box-shadow: 0 0 20px rgba(0,200,255,0.15); }
         }
 
         @keyframes fadeIn {
@@ -121,9 +129,11 @@ export default function OrdersPage() {
         }
 
         .section-title {
-          font-size: 20px;
-          font-weight: 600;
-          margin-bottom: 12px;
+          font-size: 22px;
+          font-weight: 700;
+          margin-bottom: 14px;
+          color: #00c8ff;
+          text-shadow: 0 0 8px rgba(0,200,255,0.4);
         }
 
         .order-card {
@@ -132,12 +142,18 @@ export default function OrdersPage() {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          transition: 0.25s;
+        }
+
+        .order-card:hover {
+          transform: translateX(4px);
+          border-bottom-color: rgba(0,200,255,0.4);
         }
 
         .btn {
           padding: 8px 12px;
-          background: rgba(255,255,255,0.12);
-          border: 1px solid rgba(255,255,255,0.18);
+          background: rgba(0,200,255,0.15);
+          border: 1px solid rgba(0,200,255,0.3);
           border-radius: 10px;
           cursor: pointer;
           color: white;
@@ -146,7 +162,7 @@ export default function OrdersPage() {
         }
 
         .btn:hover {
-          background: rgba(255,255,255,0.25);
+          background: rgba(0,200,255,0.25);
           transform: scale(1.05);
         }
 
@@ -158,6 +174,21 @@ export default function OrdersPage() {
         .item {
           padding: 10px 0;
           border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-btn {
+          padding: 10px 14px;
+          border-radius: 12px;
+          background: rgba(0,200,255,0.15);
+          border: 1px solid rgba(0,200,255,0.3);
+          color: white;
+          text-decoration: none;
+          transition: 0.2s;
+        }
+
+        .nav-btn:hover {
+          background: rgba(0,200,255,0.25);
+          transform: scale(1.05);
         }
       `}</style>
 
@@ -196,13 +227,19 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            {/* ORDER DETAILS DIRECTLY UNDER THE ORDER */}
+            {/* ORDER DETAILS */}
             {openOrders.includes(order.id) && order.details && (
               <div className="glass details-box">
                 <div className="section-title">Order #{order.id} Details</div>
 
                 <div className="item">
                   <strong>Status:</strong> {order.details.status}
+                </div>
+                <div className="item">
+                  <strong>Shipping Address:</strong> {order.details.shipping_address}
+                </div>
+                <div className="item">
+                  <strong>Delivery Method:</strong> {order.details.delivery_method}
                 </div>
                 <div className="item">
                   <strong>Subtotal:</strong> ${order.details.subtotal.toFixed(2)}

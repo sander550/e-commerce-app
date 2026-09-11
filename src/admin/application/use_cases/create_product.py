@@ -1,9 +1,15 @@
 from catalog.domain.entities.product import Product
-
+from catalog.domain.interfaces.category_repo import ICategoryRepository
+from catalog.domain.interfaces.product_repo import IProductRepository
 
 
 class CreateProductUseCase:
-    def __init__(self, product_repo, category_repo, embedding_service, vector_store):
+    def __init__(self,
+                 product_repo: IProductRepository,
+                 category_repo: ICategoryRepository,
+                 embedding_service,
+                 vector_store):
+
         self.product_repo = product_repo
         self.category_repo = category_repo
         self.embedding_service = embedding_service

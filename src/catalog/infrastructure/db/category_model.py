@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, ForeignKey
-from core.config.database import Base
+from core.infrastructure.database import Base
 
 
 class CategoryModel(Base):

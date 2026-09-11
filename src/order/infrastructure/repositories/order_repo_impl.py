@@ -30,6 +30,8 @@ class OrderRepository(IOrderRepository):
         return Order(
             id=model.id,
             user_id=model.user_id,
+            shipping_address=model.shipping_address,
+            delivery_method=model.delivery_method,
             subtotal=model.subtotal,
             tax=model.tax,
             total=model.total,
@@ -49,6 +51,10 @@ class OrderRepository(IOrderRepository):
             db_order.subtotal = order.subtotal
             db_order.tax = order.tax
             db_order.total = order.total
+
+            # NEW FIELDS
+            db_order.shipping_address = order.shipping_address
+            db_order.delivery_method = order.delivery_method
 
             # delete existing items
             await self.session.execute(
@@ -76,6 +82,10 @@ class OrderRepository(IOrderRepository):
                 tax=order.tax,
                 total=order.total,
                 status=order.status,
+
+                # NEW FIELDS
+                shipping_address=order.shipping_address,
+                delivery_method=order.delivery_method,
             )
 
             self.session.add(db_order)
@@ -105,12 +115,6 @@ class OrderRepository(IOrderRepository):
         loaded = result.scalar_one()
 
         return self._to_domain(loaded)
-
-    # ---------------------------------------------------------
-    # SAVE ORDER (INSERT OR UPDATE)
-    # ---------------------------------------------------------
-
-
 
     # ---------------------------------------------------------
     # GET ORDER BY ID

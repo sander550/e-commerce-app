@@ -3,7 +3,7 @@ from auth.domain.services.auth_domain_service import AuthDomainService
 from auth.infrastructure.repositories.token_repo_impl import TokenRepository
 from auth.infrastructure.repositories.user_repo_impl import UserRepository
 from auth.infrastructure.helpers.jwt import create_access_token
-from core.config.database import get_session
+from core.infrastructure.database import get_session
 from auth.infrastructure.helpers.token_hash import hash_token
 
 

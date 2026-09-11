@@ -8,9 +8,9 @@ from payment.infrastructure.repositories.payment_repo_impl import PaymentReposit
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
-from core.config.database import get_session
-
-
+from core.infrastructure.database import get_session
+from core.infrastructure.email.redis_email_queue import RedisEmailQueue
+from core.infrastructure.redis import redis_client
 
 class RepoProvider:
     def __init__(self, session: AsyncSession):
@@ -33,7 +33,7 @@ class RepoProvider:
         # Cart
         self.cart_repo = CartRepository(session)
 
-
+        self.email_queue = RedisEmailQueue(redis_client)
 
 
 async def get_provider(

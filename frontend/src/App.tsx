@@ -14,6 +14,7 @@ import Cancel from "./pages/payment/cancel"
 import AdminDashboard from "./pages/admin/admin_dashboard"
 import AdminProduct from "./pages/admin/admin_product"
 import AdminCategories from "./pages/admin/admin_categories"
+import AdminOrder from "./pages/admin/admin_orders";
 
 
 
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/products" element={<AdminProduct />} />
         <Route path="/admin/categories" element={<AdminCategories />} />
+        <Route path="/admin/orders" element={<AdminOrder />} />
 
         {/* Temporary Home Redirect */}
         <Route path="/" element={<Navigate to="/index" replace />} />

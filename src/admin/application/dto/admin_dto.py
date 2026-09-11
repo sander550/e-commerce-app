@@ -37,3 +37,15 @@ class CreateCategoryDTO(BaseModel):
 class UpdateCategoryDTO(BaseModel):
     name: Optional[str] = None
     parent_id: Optional[int] = None
+
+
+# -------------------------
+# ORDER DTOs
+# -------------------------
+
+class UpdateOrderDTO(BaseModel):
+    status: Optional[str] = None
+    shipping_address: Optional[str] = None
+    delivery_method: Optional[str] = None
+    tracking_number: Optional[str] = None
+

@@ -17,13 +17,19 @@ class PlaceOrderUseCase:
         self.product_repo = product_repo
         self.tax_rate = settings.TAX_RATE
 
-    async def execute(self, user_id: int) -> Order:
+    async def execute(
+        self,
+        user_id: int,
+        shipping_address: str,
+        delivery_method: str
+    ) -> Order:
+
         cart = await self.cart_repo.get_by_user_id(user_id)
         if not cart or not cart.items:
             raise ValueError("Cart is empty")
 
         # ---------------------------------------------------------
-        # ⭐ TEMU-STYLE AUTO-FIX STOCK BEFORE ORDER CREATION
+        # Auto-fix stock
         # ---------------------------------------------------------
         updated_items = []
 
@@ -44,7 +50,7 @@ class PlaceOrderUseCase:
         await self.cart_repo.save(cart)
 
         # ---------------------------------------------------------
-        # ⭐ HARD STOCK CHECK
+        # Hard stock check
         # ---------------------------------------------------------
         for item in cart.items:
             product = await self.product_repo.get_by_id(item.product_id)
@@ -52,7 +58,7 @@ class PlaceOrderUseCase:
                 raise ValueError(f"Not enough stock for product {product.id}")
 
         # ---------------------------------------------------------
-        # ⭐ Build order items
+        # Build order items
         # ---------------------------------------------------------
         order_items = [
             OrderItem(
@@ -71,9 +77,12 @@ class PlaceOrderUseCase:
         order = Order(
             id=None,
             user_id=user_id,
+            shipping_address=shipping_address,
+            delivery_method=delivery_method,
             items=order_items,
             status="pending"
         )
+
         order.calculate_totals(self.tax_rate)
 
         saved_order = await self.order_repo.save(order)

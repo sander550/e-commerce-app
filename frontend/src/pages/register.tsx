@@ -6,11 +6,8 @@ export default function RegisterPage() {
 
   const loggedIn = localStorage.getItem("logged_in") === "true";
 
-  // ⭐ Redirect if already logged in
   useEffect(() => {
-    if (loggedIn) {
-      navigate("/");
-    }
+    if (loggedIn) navigate("/");
   }, [loggedIn, navigate]);
 
   const [email, setEmail] = useState("");
@@ -36,13 +33,11 @@ export default function RegisterPage() {
 
       const json = await res.json();
 
-      // ⭐ If backend returned error (400), do NOT log in
       if (!res.ok) {
         setErrorMsg(json.detail || json.error || "Registration failed");
-        return; // STOP HERE — do NOT continue
+        return;
       }
 
-      // ⭐ Success
       setSuccessMsg(json.message || "Registered!");
 
       localStorage.setItem("logged_in", "true");
@@ -64,9 +59,21 @@ export default function RegisterPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+          background: linear-gradient(135deg, #050505, #0a0f1a);
           font-family: Inter, sans-serif;
           padding: 20px;
+          animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseGlow {
+          0% { box-shadow: 0 0 20px rgba(0,200,255,0.15); }
+          50% { box-shadow: 0 0 35px rgba(0,200,255,0.35); }
+          100% { box-shadow: 0 0 20px rgba(0,200,255,0.15); }
         }
 
         .glass-card {
@@ -74,18 +81,21 @@ export default function RegisterPage() {
           max-width: 420px;
           padding: 32px;
           border-radius: 20px;
-          background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(18px);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+          background: rgba(15, 15, 30, 0.75);
+          backdrop-filter: blur(25px);
+          border: 1px solid rgba(0, 200, 255, 0.25);
+          box-shadow: 0 0 40px rgba(0,200,255,0.15);
           color: white;
+          animation: pulseGlow 2.5s infinite ease-in-out;
         }
 
         .title {
           text-align: center;
-          font-size: 28px;
+          font-size: 30px;
           font-weight: 700;
           margin-bottom: 24px;
+          color: #00c8ff;
+          text-shadow: 0 0 10px rgba(0,200,255,0.4);
         }
 
         .input-label {
@@ -104,6 +114,13 @@ export default function RegisterPage() {
           color: white;
           font-size: 15px;
           margin-bottom: 18px;
+          transition: 0.25s;
+        }
+
+        .input-field:focus {
+          background: rgba(0,200,255,0.25);
+          border: 1px solid rgba(0,200,255,0.4);
+          transform: scale(1.02);
         }
 
         .btn {
@@ -111,11 +128,18 @@ export default function RegisterPage() {
           padding: 12px;
           border-radius: 12px;
           border: none;
-          background: linear-gradient(135deg, #6a5acd, #7b68ee);
+          background: rgba(0,200,255,0.25);
+          border: 1px solid rgba(0,200,255,0.4);
           color: white;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
+          transition: 0.25s;
+        }
+
+        .btn:hover {
+          background: rgba(0,200,255,0.35);
+          transform: scale(1.05);
         }
 
         .msg {
@@ -141,9 +165,15 @@ export default function RegisterPage() {
         }
 
         .switcher a {
-          color: #cfcfff;
+          color: #7feaff;
           text-decoration: none;
           font-size: 14px;
+          transition: 0.25s;
+        }
+
+        .switcher a:hover {
+          color: #b8f3ff;
+          transform: scale(1.05);
         }
       `}</style>
 
@@ -182,4 +212,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

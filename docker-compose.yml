@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:15
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma
+    environment:
+      CHROMA_DB_IMPL: "duckdb+parquet"
+      CHROMA_SERVER_HOST: "0.0.0.0"
+      CHROMA_SERVER_PORT: "8000"
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./ollama-init.sh:/root/ollama-init.sh
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 2 && /root/ollama-init.sh && tail -f /dev/null"]
+
+  backend:
+    build: .
+    env_file:
+      - .env
+    environment:
+      OLLAMA_HOST: ${OLLAMA_HOST_DOCKER}
+      CHROMA_HOST: http://chroma:8000
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - postgres
+      - ollama
+      - chroma
+    volumes:
+      - .:/app
+
+  worker:
+    build: .
+    env_file:
+      - .env
+    environment:
+      OLLAMA_HOST: ${OLLAMA_HOST_DOCKER}
+      CHROMA_HOST: http://chroma:8000
+    command: python -m src.workers.email_worker
+    depends_on:
+      - redis
+      - postgres
+      - ollama
+      - chroma
+    volumes:
+      - .:/app
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    command: [ "npm", "run", "dev", "--", "--host" ]
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  ollama_data:
+  chroma_data:
