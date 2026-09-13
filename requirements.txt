@@ -34,4 +34,4 @@ redis
 aiosmtplib
 passlib[bcrypt]
 alembic
-
+pytest
