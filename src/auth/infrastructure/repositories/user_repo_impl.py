@@ -1,12 +1,4 @@
 from typing import Optional
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from auth.domain.entities.user import User
-from auth.domain.interfaces.user_repo import IUserRepository
-from auth.infrastructure.db.user_model import UserModel
-
-from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -90,4 +82,3 @@ class UserRepository(IUserRepository):
         await self.db.refresh(model)
 
         return self._to_domain(model)
-

@@ -3,7 +3,7 @@ from core.application.providers.repo_provider import RepoProvider, get_provider
 from payment.application.use_cases.complete_payment import CompletePaymentUseCase
 from payment.application.use_cases.capture_paypal_payment import CapturePayPalPaymentUseCase
 from payment.application.use_cases.create_paypal_payment import CreatePayPalPaymentUseCase
-from payment.application.use_cases.update_payment_statu import UpdatePaymentStatusUseCase
+from payment.application.use_cases.update_payment_status import UpdatePaymentStatusUseCase
 from payment.domain.services.paypal_services import paypal_service
 
 

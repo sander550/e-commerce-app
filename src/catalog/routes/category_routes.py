@@ -1,4 +1,4 @@
-from catalog.application.use_cases.list_categorys import ListCategoriesUseCase
+from catalog.application.use_cases.list_categories import ListCategoriesUseCase
 from fastapi import APIRouter, Depends
 from core.application.use_case_factories.catalog_factories import get_list_categories_use_case
 

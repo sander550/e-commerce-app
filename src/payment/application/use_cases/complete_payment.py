@@ -5,6 +5,8 @@ from payment.domain.entities.payment import PaymentStatus
 from core.events.event_bus import event_bus
 from core.events.payment_completed_event import PaymentCompletedEvent
 from payment.domain.entities.payment import Payment
+
+
 class CompletePaymentUseCase:
     def __init__(
         self,

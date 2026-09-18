@@ -60,5 +60,6 @@ async def startup_event():
 #@app.get("/")
 #async def serve_frontend():
 #    return FileResponse("../frontend/dist/index.html")
+#".list_categorys
 
 

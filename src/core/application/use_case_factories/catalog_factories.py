@@ -4,7 +4,7 @@ from core.application.providers.repo_provider import get_provider
 from catalog.application.use_cases.list_products import ListProductsUseCase
 from catalog.application.use_cases.get_product_details import GetProductDetailsUseCase
 from catalog.application.use_cases.get_products_by_category import GetProductsByCategoryUseCase
-from catalog.application.use_cases.list_categorys import ListCategoriesUseCase
+from catalog.application.use_cases.list_categories import ListCategoriesUseCase
 
 def get_list_products_use_case(
     provider = Depends(get_provider)

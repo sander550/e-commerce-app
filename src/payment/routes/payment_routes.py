@@ -5,7 +5,7 @@ from core.security.dependencies import auth_required
 from payment.application.use_cases.create_paypal_payment import CreatePayPalPaymentUseCase
 from payment.application.use_cases.capture_paypal_payment import CapturePayPalPaymentUseCase
 from payment.application.dtos.payment_dtos import CreatePayPalPaymentRequestDTO
-from payment.application.use_cases.update_payment_statu import UpdatePaymentStatusUseCase
+from payment.application.use_cases.update_payment_status import UpdatePaymentStatusUseCase
 from payment.domain.entities.payment import PaymentStatus
 from core.application.use_case_factories.payment_factories import (get_create_paypal_payment_use_case,
                                                                    get_capture_paypal_payment_use_case,
