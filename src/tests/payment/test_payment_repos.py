@@ -1,8 +1,7 @@
+import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
-
-from payment.infrastructure.db.payment_repository import PaymentRepository
+from payment.infrastructure.repositories.payment_repo_impl import PaymentRepository
 
 
 # ---------------------------------------------------------
@@ -52,16 +51,6 @@ async def test_create():
     payment.method = "paypal"
     payment.status = "completed"
 
-    model = MagicMock()
-    model.id = 1
-    model.order_id = 10
-    model.user_id = 5
-    model.paypal_order_id = "PAYPAL123"
-    model.amount = 49.99
-    model.method = "paypal"
-    model.status = "completed"
-    model.created_at = None
-
     session.add = MagicMock()
     session.refresh = AsyncMock()
 
@@ -95,7 +84,10 @@ async def test_get_by_id():
     model.status = "completed"
     model.created_at = None
 
-    session.execute.return_value.scalar_one_or_none.return_value = model
+    # FIX: execute() is async, so configure its awaited result
+    db_result = MagicMock()
+    db_result.scalar_one_or_none.return_value = model
+    session.execute.return_value = db_result
 
     result = await repo.get_by_id(1)
 
@@ -124,7 +116,10 @@ async def test_get_by_order_id():
     model.status = "completed"
     model.created_at = None
 
-    session.execute.return_value.scalar_one_or_none.return_value = model
+    # FIX
+    db_result = MagicMock()
+    db_result.scalar_one_or_none.return_value = model
+    session.execute.return_value = db_result
 
     result = await repo.get_by_order_id(10)
 
@@ -151,7 +146,10 @@ async def test_update():
     model = MagicMock()
     model.id = 1
 
-    session.execute.return_value.scalar_one_or_none.return_value = model
+    # FIX
+    db_result = MagicMock()
+    db_result.scalar_one_or_none.return_value = model
+    session.execute.return_value = db_result
 
     repo._to_domain = MagicMock(return_value=payment)
 
@@ -186,10 +184,14 @@ async def test_get_by_paypal_order_id():
     model.status = "completed"
     model.created_at = None
 
-    session.execute.return_value.scalar_one_or_none.return_value = model
+    # FIX
+    db_result = MagicMock()
+    db_result.scalar_one_or_none.return_value = model
+    session.execute.return_value = db_result
 
     result = await repo.get_by_paypal_order_id("PAYPAL123")
 
     assert result.id == 1
     assert result.paypal_order_id == "PAYPAL123"
     assert result.order_id == 10
+
