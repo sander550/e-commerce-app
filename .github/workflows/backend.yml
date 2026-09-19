@@ -18,3 +18,5 @@ jobs:
       - run: pip install -r requirements.txt
 
       - run: cd src && pytest tests -q
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///:memory:"
