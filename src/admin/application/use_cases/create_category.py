@@ -1,4 +1,3 @@
-from catalog.domain.entities.category import Category
 
 class CreateCategoryUseCase:
     def __init__(self, category_repo):

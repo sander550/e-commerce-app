@@ -1,7 +1,6 @@
 from catalog.domain.entities.product import Product
 from catalog.domain.interfaces.product_repo import IProductRepository
 from catalog.domain.interfaces.category_repo import ICategoryRepository
-from search.infrastructure.vector_store.chroma_vector_store import ChromaVectorStore
 
 class UpdateProductUseCase:
     def __init__(self,
