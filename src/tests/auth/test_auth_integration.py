@@ -28,11 +28,11 @@ async def test_register_integration(db_session):
 
     uc = RegisterUserUseCase(user_repo, token_repo, domain)
 
-    result = await uc.execute("new@example.com", "pw123")
+    result = await uc.execute("new@example.com", "pw123123123")
 
     user = result["user"]
     assert user.email == "new@example.com"
-    assert verify_password("pw123", user.hashed_password)
+    assert verify_password("pw123123123", user.hashed_password)
 
     raw = result["refresh_token"]
     hashed = hash_token(raw)
@@ -54,7 +54,7 @@ async def test_login_integration(db_session):
     user = User(
         id=None,
         email="test@example.com",
-        hashed_password=hash_password("pw123"),
+        hashed_password=hash_password("pw123123123"),
         is_admin=False,
         is_active=True,
         created_at=datetime.utcnow(),
@@ -63,7 +63,7 @@ async def test_login_integration(db_session):
 
     uc = LoginUserUseCase(user_repo, token_repo, domain)
 
-    result = await uc.execute("test@example.com", "pw123")
+    result = await uc.execute("test@example.com", "pw123123123")
 
     raw = result["refresh_token"]
     hashed = hash_token(raw)
