@@ -20,3 +20,7 @@ jobs:
       - run: cd src && pytest tests -q
         env:
           DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+          JWT_SECRET: "test-secret-key-for-ci"
+          JWT_ALGORITHM: "HS256"
+          ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+          REFRESH_TOKEN_EXPIRE_DAYS: "7"
