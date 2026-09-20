@@ -35,3 +35,4 @@ aiosmtplib
 passlib[bcrypt]
 alembic
 pytest
+aiosqlite
