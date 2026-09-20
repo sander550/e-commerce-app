@@ -36,3 +36,4 @@ alembic
 pytest
 aiosqlite
 pytest-asyncio
+passlib
