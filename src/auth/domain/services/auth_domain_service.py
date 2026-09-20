@@ -11,7 +11,7 @@ class AuthDomainService:
 
     async def validate_new_user(self, password: str):
         if not await validate_password_strength(password):
-            return None
+            raise Exception("Password strength error")
 
 
 

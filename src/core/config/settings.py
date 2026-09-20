@@ -43,7 +43,7 @@ class Settings:
     # ---------------------------------------------------------
     # PASSWORD HASHING
     # ---------------------------------------------------------
-    PASSWORD_HASH_SCHEME = os.getenv("HASHING_SCHEME", "bcrypt")
+    PASSWORD_HASH_SCHEME = os.getenv("HASHING_SCHEME", "argon2")
 
     # ---------------------------------------------------------
     # REDIS
