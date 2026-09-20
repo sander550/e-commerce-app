@@ -32,7 +32,6 @@ ollama
 chromadb
 redis
 aiosmtplib
-passlib[bcrypt]
 alembic
 pytest
 aiosqlite
