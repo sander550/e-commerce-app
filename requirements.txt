@@ -36,3 +36,4 @@ passlib[bcrypt]
 alembic
 pytest
 aiosqlite
+pytest-asyncio
