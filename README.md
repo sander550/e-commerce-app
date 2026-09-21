@@ -1,121 +1,344 @@
-E‑Commerce App — Hybrid Search, DDD, PayPal Sandbox
-A modern e‑commerce application built with Domain‑Driven Design (DDD), a hybrid search engine (Postgres keyword search + ChromaDB vector embeddings), and PayPal sandbox payments.
-Includes a full admin panel, product management, category management, cart, orders, and email notifications.
+# 🛒 E-Commerce App — DDD, Hybrid Search & PayPal Sandbox
 
-📁 Project Structure
-Code
-/src        → Backend (FastAPI, DDD architecture)
-/frontend   → Frontend (React + Neon‑Glass UI)
-/docker     → Docker configs
-Backend (src/)
-Organized using Domain‑Driven Design:
+A modern, full-stack e-commerce application built with **Domain-Driven Design (DDD)**, a **hybrid search engine**, and **PayPal Sandbox** payments.
 
-domain/ — entities, value objects, repository interfaces
+The application includes a complete shopping flow with products, categories, carts, orders, payments, email notifications, and an admin panel. The backend is fully containerized and supported by automated CI testing.
 
-application/ — use cases
+---
 
-infrastructure/ — database, email worker, repositories
+## ✨ Features
 
-presentation/ — FastAPI routes
+* 🛍️ Full e-commerce shopping flow
+* 🔍 Hybrid product search
+* 🧠 Semantic search using vector embeddings
+* 🗄️ PostgreSQL keyword search
+* 🧮 ChromaDB vector database
+* 💳 PayPal Sandbox payments
+* 🛒 Shopping cart
+* 📦 Order management
+* 📧 Email notifications and background worker
+* 👨‍💼 Admin panel
+* 🏷️ Product and category management
+* 🏗️ Domain-Driven Design backend architecture
+* 🎨 Neon-glass cyber UI
+* 🐳 Fully containerized with Docker Compose
+* ✅ Automated CI testing with GitHub Actions
 
-Frontend (frontend/)
-React application with:
+---
 
-Product pages
+# 🏗️ Architecture
 
-Category pages
+The backend is organized using **Domain-Driven Design (DDD)** principles.
 
-Cart
+domain/
+├── application/
+│   ├── dto/
+│   ├── use_cases/
+│   └── __init__.py
+│
+├── domain/
+│   ├── entities/
+│   ├── interfaces/
+│   ├── rules/
+│   ├── services/
+│   └── __init__.py
+│
+├── infrastructure/
+│   ├── db/
+│   ├── helpers/
+│   ├── repositories/
+│   └── __init__.py
+│
+├── routes/
+│   ├── __init__.py
+│   └── auth_routes.py
+│
+└── ...
 
-Orders
+### Domain
 
-Admin dashboard
+Contains the core business logic, entities, value objects, and repository interfaces.
 
-Neon‑glass cyber UI aesthetic
+### Application
 
-🔍 Hybrid Search (Keywords + Embeddings)
-Search combines:
+Contains the application's use cases and coordinates business operations.
 
-Postgres keyword search
+### Infrastructure
 
-ChromaDB vector embeddings for semantic search
+Handles external concerns such as:
 
-This allows users to find products even with fuzzy or descriptive queries.
+* PostgreSQL
+* ChromaDB
+* Redis
+* Email
+* Repository implementations
+* Background workers
 
-💳 PayPal Sandbox Payments
-Checkout uses PayPal sandbox mode, allowing safe test payments without real money.
+### Presentation
 
-🛠 Starting the App (Docker Compose)
-Make sure Docker is installed, then run:
+Contains the FastAPI API routes and HTTP-related functionality.
 
-Code
+---
+
+# 🎨 Frontend
+
+The frontend is built with **React** and uses a neon-glass cyber aesthetic.
+
+It includes:
+
+* 🏠 Product pages
+* 🏷️ Category pages
+* 🛒 Shopping cart
+* 📦 Orders
+* 👨‍💼 Admin dashboard
+* 🔐 Authentication
+* 💳 Checkout
+
+---
+
+# 🔍 Hybrid Search
+
+The application uses a hybrid search system combining **keyword search** and **semantic vector search**.
+
+### How it works
+
+```text
+User query
+    │
+    ├── PostgreSQL keyword search
+    │
+    └── ChromaDB semantic search
+             │
+             ▼
+       Results are merged
+             │
+             ▼
+       Products returned
+```
+
+The semantic search uses **embeddings** to find products based on meaning rather than only exact keywords.
+
+For example, a descriptive query can potentially find relevant products even when the exact product name is not present in the search.
+
+---
+
+# 💳 PayPal Sandbox
+
+Checkout uses **PayPal Sandbox**, allowing payments to be tested without using real money.
+
+The application integrates PayPal into the checkout flow and tracks payment information through the backend.
+
+---
+
+# 🐳 Running the Application
+
+Make sure **Docker** and **Docker Compose** are installed.
+
+Clone the repository and run:
+
+```bash
 docker compose up --build
-This starts:
+```
 
+Docker Compose starts the application's required services:
+
+```text
 Backend
-
 Frontend
-
-Postgres
-
+PostgreSQL
 Redis
-
-Worker
-
+Email Worker
 ChromaDB
+Ollama
+```
 
-The app becomes available at:
+Once the containers are running:
 
-Code
-http://localhost:3000   → Frontend
-http://localhost:8000   → Backend API
-🔐 Accessing the Admin Panel
-By default, no user is an admin.
-To promote yourself:
+| Service     | URL                   |
+| ----------- | --------------------- |
+| Frontend    | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
 
-1️⃣ Enter Postgres inside Docker
-Code
+---
+
+# 🔐 Admin Panel
+
+By default, newly registered users are **not administrators**.
+
+To promote a user to administrator, enter the PostgreSQL container:
+
+```bash
 docker compose exec postgres psql -U postgres -d your_db
-2️⃣ Set your user as admin
-Code
-UPDATE users SET is_admin = TRUE WHERE id = 1;
-3️⃣ Open the admin panel
-Code
+```
+
+Then run:
+
+```sql
+UPDATE users
+SET is_admin = TRUE
+WHERE id = 1;
+```
+
+After that, open:
+
+```text
 http://localhost:3000/admin
-You now have access to:
+```
 
-Product management
+The admin panel provides tools for:
 
-Category management
+* 📦 Product management
+* 🏷️ Category management
+* 📋 Order management
+* 🔧 Admin-only operations
 
-Order management
+---
 
-Admin-only tools
+# 🧪 Automated Testing & CI
 
-📦 Features
-Full e‑commerce flow
+The project includes a comprehensive automated test suite located in:
 
-Hybrid search engine
+```text
+src/tests/
+```
 
-PayPal sandbox payments
+The tests cover different parts of the backend, including:
 
-Cart + order system
+```text
+src/tests/
+├── auth/
+├── cart/
+├── catalog/
+├── order/
+├── payment/
+├── search/
+├── admin/
+└── ...
+```
 
-Email worker (SMTP)
+The project also uses **GitHub Actions for Continuous Integration (CI)**.
 
-Admin dashboard
+Whenever changes are pushed to the repository or a Pull Request is created, GitHub Actions automatically installs the project dependencies and runs:
 
-DDD backend architecture
+```bash
+cd src && pytest tests -q
+```
 
-Neon‑glass UI
+This means the backend test suite is automatically executed in CI whenever the project is pushed.
 
-🚀 Ready for Deployment
-The project is fully containerized and can be deployed to:
+### CI workflow
 
-Docker servers
+```text
+Git push / Pull Request
+        │
+        ▼
+GitHub Actions
+        │
+        ▼
+Install dependencies
+        │
+        ▼
+Run src/tests
+        │
+        ├── ✅ All tests pass
+        │
+        └── ❌ A test fails → CI check fails
+```
 
-VPS
+The CI configuration can be found at:
 
-Kubernetes
+```text
+.github/workflows/backend.yml
+```
 
-Render / Railway / Fly.io
+---
+
+# 📁 Project Structure
+
+```text
+e-commerce-app/
+│
+├── .github/
+│   └── workflows/
+│       └── backend.yml
+│
+├── src/
+│   ├── auth/
+│   ├── admin/
+│   ├── cart/
+│   ├── catalog/
+│   ├── order/
+│   ├── payment/
+│   ├── search/
+│   ├── notifications/
+│   ├── core/
+│   └── tests/
+│
+├── frontend/
+│
+├── alembic/
+│
+├── chroma_data/
+│
+├── docker-compose.yml
+├── Dockerfile
+├── requirements.txt
+├── alembic.ini
+├── .env.example
+└── README.md
+```
+
+---
+
+# 🚀 Deployment
+
+The application is fully containerized and can be deployed to environments capable of running Docker containers.
+
+Potential deployment environments include:
+
+* Docker servers
+* VPS infrastructure
+* Cloud environments supporting Docker
+* Self-hosted servers
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+
+* **Python**
+* **FastAPI**
+* **SQLAlchemy**
+* **PostgreSQL**
+* **Redis**
+* **ChromaDB**
+* **Pytest**
+* **GitHub Actions**
+
+### Frontend
+
+* **React**
+
+### Payments
+
+* **PayPal Sandbox**
+
+### Infrastructure
+
+* **Docker**
+* **Docker Compose**
+* **Alembic**
+
+---
+
+# 📌 Project Highlights
+
+This project combines several backend concepts into one application:
+
+**Domain-Driven Design** for organizing business logic,
+**hybrid search** for combining keyword and semantic search,
+**PayPal Sandbox** for payment integration,
+**Redis and background workers** for asynchronous tasks,
+**Docker Compose** for local infrastructure, and
+**GitHub Actions CI** for automatically running the backend test suite on every push and Pull Request.
