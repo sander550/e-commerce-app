@@ -8,21 +8,21 @@ The application includes a complete shopping flow with products, categories, car
 
 ## ✨ Features
 
-* 🛍️ Full e-commerce shopping flow
-* 🔍 Hybrid product search
-* 🧠 Semantic search using vector embeddings
-* 🗄️ PostgreSQL keyword search
-* 🧮 ChromaDB vector database
-* 💳 PayPal Sandbox payments
-* 🛒 Shopping cart
-* 📦 Order management
-* 📧 Email notifications and background worker
-* 👨‍💼 Admin panel
-* 🏷️ Product and category management
-* 🏗️ Domain-Driven Design backend architecture
-* 🎨 Neon-glass cyber UI
-* 🐳 Fully containerized with Docker Compose
-* ✅ Automated CI testing with GitHub Actions
+- 🛍️ Full e-commerce shopping flow
+- 🔍 Hybrid product search
+- 🧠 Semantic search using vector embeddings
+- 🗄️ PostgreSQL keyword search
+- 🧮 ChromaDB vector database
+- 💳 PayPal Sandbox payments
+- 🛒 Shopping cart
+- 📦 Order management
+- 📧 Email notifications and background worker
+- 👨‍💼 Admin panel
+- 🏷️ Product and category management
+- 🏗️ Domain-Driven Design backend architecture
+- 🎨 Neon-glass cyber UI
+- 🐳 Fully containerized with Docker Compose
+- ✅ Automated CI testing with GitHub Actions
 
 ---
 
@@ -30,6 +30,7 @@ The application includes a complete shopping flow with products, categories, car
 
 The backend is organized using **Domain-Driven Design (DDD)** principles.
 
+```text
 domain/
 ├── application/
 │   ├── dto/
@@ -54,6 +55,7 @@ domain/
 │   └── auth_routes.py
 │
 └── ...
+```
 
 ### Domain
 
