@@ -26,7 +26,6 @@ class SendPaymentCompletedEmailUseCase:
         payment = await self.payment_repo.get_by_id(payment_id)
 
         if not user or not order or not payment:
-            print("error here", user, order, payment)
             raise HTTPException(status_code=404, detail="Information not available")
 
         # 2. Build email content

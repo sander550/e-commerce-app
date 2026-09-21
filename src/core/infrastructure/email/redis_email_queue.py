@@ -10,7 +10,4 @@ class RedisEmailQueue:
             "subject": subject,
             "body": body
         })
-        print("redis queue hit")
-        print(payload)
-
         await self.redis.lpush("email_queue", payload)

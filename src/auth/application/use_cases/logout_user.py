@@ -12,6 +12,4 @@ class LogoutUseCase:
             return  # token not found or already revoked
 
         # Revoke ONLY this session's token
-        print("1" * 20)
-        print(db_token)
         await self.token_repo.revoke(db_token.id)

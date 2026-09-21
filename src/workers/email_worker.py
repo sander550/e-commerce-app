@@ -4,7 +4,6 @@ from core.infrastructure.redis import redis_client
 from core.infrastructure.email.smtp_sender import SmtpSender
 
 async def main():
-    print("EMAIL WORKER hit")
     sender = SmtpSender()
 
     while True:
