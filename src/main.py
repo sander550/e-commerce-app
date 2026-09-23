@@ -12,6 +12,7 @@ from cart.application.handlers.clear_cart_handler import clear_cart_handler
 from catalog.application.handlers.update_stock_handler import update_stock_handler
 from notifications.application.handlers.send_payment_completed_email_handler import send_payment_completed_handler
 
+from core.security.rate_limiting import rate_limit_middleware
 
 app = FastAPI(
     title="E‑Commerce API",
@@ -30,10 +31,11 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------
-# Include all routers
+# Include all routers and middlewares
 # ---------------------------------------------------------
 app.include_router(router)
 
+app.middleware("http")(rate_limit_middleware)
 
 # ---------------------------------------------------------
 # STARTUP: SUBSCRIBE TO EVENTS
@@ -60,6 +62,5 @@ async def startup_event():
 #@app.get("/")
 #async def serve_frontend():
 #    return FileResponse("../frontend/dist/index.html")
-#".list_categorys
 
 
