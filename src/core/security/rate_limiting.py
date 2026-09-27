@@ -1,7 +1,5 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
-
-from core.config import settings
 from core.security.dependency_helpers import get_user_id_from_request
 from core.security.rate_limiting_service import RedisRateLimitService
 
@@ -22,7 +20,11 @@ class RateLimitMiddleware:
         # IP LIMIT
         # -----------------------------------------------------
 
-        client_ip = request.client.host
+        client_ip = (
+            request.client.host
+            if request.client is not None
+            else "testclient"
+        )
 
         ip_allowed = await self.rate_limiter.check_ip_limit(
             client_ip,
