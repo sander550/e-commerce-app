@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+function getErrorMessage(json: any, fallback: string) {
+  if (typeof json?.detail === "string") return json.detail;
+  if (typeof json?.message === "string") return json.message;
+  if (typeof json?.error === "string") return json.error;
+  return fallback;
+}
+
 export default function Index() {
   const navigate = useNavigate();
 
@@ -15,27 +22,130 @@ export default function Index() {
 
   const [cartMessage, setCartMessage] = useState<string | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
+  const [rateLimited, setRateLimited] = useState(false);
+
+  const redirectToLogin = () => {
+    navigate("/login", {
+      replace: true,
+      state: { from: "/" },
+    });
+  };
+
+  const handleRateLimit = () => {
+    setRateLimited(true);
+    setError(null);
+    setCartMessage(null);
+  };
+
+  const handleServerError = (status: number) => {
+    setError(
+      status >= 500
+        ? "Something went wrong on the server. Please try again later."
+        : `Something went wrong (${status}). Please try again.`
+    );
+
+    setCartMessage(null);
+  };
+
+  const handleUnexpectedError = (message: string) => {
+    setError(message);
+    setCartMessage(null);
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setLoggedIn(localStorage.getItem("logged_in") === "true");
     }, 200);
+
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     async function load() {
       try {
-        const prodRes = await fetch("http://localhost:8000/products/");
-        const prodJson = await prodRes.json();
-        setProducts(prodJson);
+        const prodRes = await fetch("/api/products/");
 
-        const catRes = await fetch("http://localhost:8000/categories/");
-        const catJson = await catRes.json();
-        setCategories(catJson.categories || []);
+        let prodJson: any = {};
+        try {
+          prodJson = await prodRes.json();
+        } catch {
+          prodJson = {};
+        }
+
+        if (prodRes.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        if (prodRes.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        if (prodRes.status >= 500) {
+          handleServerError(prodRes.status);
+          return;
+        }
+
+        if (!prodRes.ok) {
+          handleUnexpectedError(
+            getErrorMessage(
+              prodJson,
+              `Failed to load products (${prodRes.status})`
+            )
+          );
+          return;
+        }
+
+        setProducts(Array.isArray(prodJson) ? prodJson : []);
+
+        const catRes = await fetch("/api/categories/");
+
+        let catJson: any = {};
+        try {
+          catJson = await catRes.json();
+        } catch {
+          catJson = {};
+        }
+
+        if (catRes.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        if (catRes.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        if (catRes.status >= 500) {
+          handleServerError(catRes.status);
+          return;
+        }
+
+        if (!catRes.ok) {
+          handleUnexpectedError(
+            getErrorMessage(
+              catJson,
+              `Failed to load categories (${catRes.status})`
+            )
+          );
+          return;
+        }
+
+        setCategories(
+          Array.isArray(catJson.categories) ? catJson.categories : []
+        );
       } catch (err) {
         console.error("Load failed:", err);
+
+        handleUnexpectedError(
+          "Unable to connect to the server. Please check your connection and try again."
+        );
       }
     }
+
     load();
   }, []);
 
@@ -47,57 +157,288 @@ export default function Index() {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/search/?q=${encodeURIComponent(q)}`
+        `/api/search/?q=${encodeURIComponent(q)}`
       );
 
-      if (!res.ok) {
-        setSearchResults([]);
-        setSearchActive(true);
+      let json: any = {};
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        redirectToLogin();
         return;
       }
 
-      const json = await res.json();
+      if (res.status === 429) {
+        handleRateLimit();
+        return;
+      }
+
+      if (res.status >= 500) {
+        handleServerError(res.status);
+        return;
+      }
+
+      if (!res.ok) {
+        handleUnexpectedError(
+          getErrorMessage(json, `Search failed (${res.status})`)
+        );
+
+        setSearchResults([]);
+        setSearchActive(false);
+        return;
+      }
+
       const safe = Array.isArray(json) ? json : [];
 
       setSearchResults(safe);
       setSearchActive(true);
+      setError(null);
     } catch (err) {
       console.error("Search failed:", err);
+
       setSearchResults([]);
-      setSearchActive(true);
+      setSearchActive(false);
+
+      handleUnexpectedError(
+        "Unable to connect to the server. Please check your connection and try again."
+      );
     }
   }
 
   function clearSearch() {
     setSearchActive(false);
     setSearchResults([]);
+    setError(null);
   }
 
   async function addToCart(productId: number) {
     if (!loggedIn) {
       setCartMessage("Please log in to add items to cart.");
-      setTimeout(() => navigate("/login"), 1500);
+
+      setTimeout(() => {
+        navigate("/login", {
+          replace: true,
+          state: { from: "/" },
+        });
+      }, 1000);
+
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:8000/cart/add", {
+      const res = await fetch("/api/cart/add", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id: productId, quantity: 1 }),
+        body: JSON.stringify({
+          product_id: productId,
+          quantity: 1,
+        }),
       });
 
-      if (!res.ok) {
-        setCartMessage("Product out of stock.");
+      let json: any = {};
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        redirectToLogin();
         return;
       }
 
-      setCartMessage("Added to cart!");
+      if (res.status === 429) {
+        handleRateLimit();
+        return;
+      }
+
+      if (res.status >= 500) {
+        handleServerError(res.status);
+        return;
+      }
+
+      if (!res.ok) {
+        setCartMessage(
+          getErrorMessage(
+            json,
+            `Failed to add to cart (${res.status})`
+          )
+        );
+
+        setTimeout(() => setCartMessage(null), 2000);
+        return;
+      }
+
+      setCartMessage(
+        getErrorMessage(json, "Added to cart!")
+      );
+
+      setError(null);
+
       setTimeout(() => setCartMessage(null), 1500);
-    } catch {
-      setCartMessage("Failed to add to cart.");
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+
+      handleUnexpectedError(
+        "Unable to connect to the server. Please check your connection and try again."
+      );
     }
+  }
+
+  if (rateLimited) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #050505, #0a0f1a)",
+          color: "#e8e8ff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "520px",
+            background: "rgba(15,15,30,0.85)",
+            border: "1px solid rgba(255,170,0,0.35)",
+            borderRadius: "18px",
+            padding: "36px",
+            textAlign: "center",
+            boxShadow: "0 0 40px rgba(255,170,0,0.12)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px",
+            }}
+          >
+            ⏳
+          </div>
+
+          <h1
+            style={{
+              margin: "0 0 12px",
+              color: "#ffdd7f",
+              fontSize: "28px",
+            }}
+          >
+            Too Many Requests
+          </h1>
+
+          <p
+            style={{
+              margin: "0 0 24px",
+              opacity: 0.8,
+              lineHeight: 1.6,
+            }}
+          >
+            You are sending requests too quickly. Please wait a moment and
+            try again.
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "11px 20px",
+              borderRadius: "12px",
+              border: "1px solid rgba(0,200,255,0.4)",
+              background: "rgba(0,200,255,0.2)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #050505, #0a0f1a)",
+          color: "#e8e8ff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "520px",
+            background: "rgba(15,15,30,0.85)",
+            border: "1px solid rgba(255,80,80,0.3)",
+            borderRadius: "18px",
+            padding: "36px",
+            textAlign: "center",
+            boxShadow: "0 0 40px rgba(255,80,80,0.1)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px",
+            }}
+          >
+            ⚠️
+          </div>
+
+          <h1
+            style={{
+              margin: "0 0 12px",
+              color: "#ff8a8a",
+              fontSize: "28px",
+            }}
+          >
+            Something went wrong
+          </h1>
+
+          <p
+            style={{
+              margin: "0 0 24px",
+              opacity: 0.8,
+              lineHeight: 1.6,
+            }}
+          >
+            {error}
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "11px 20px",
+              borderRadius: "12px",
+              border: "1px solid rgba(0,200,255,0.4)",
+              background: "rgba(0,200,255,0.2)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -111,7 +452,6 @@ export default function Index() {
           padding: 24px;
         }
 
-        /* TOP BAR */
         .topbar {
           display: flex;
           justify-content: space-between;
@@ -152,7 +492,6 @@ export default function Index() {
           transform: scale(1.02);
         }
 
-        /* LOGIN + REGISTER BUTTONS */
         .nav-btn {
           padding: 10px 18px;
           background: rgba(255,255,255,0.15);
@@ -170,7 +509,6 @@ export default function Index() {
           transform: scale(1.05);
         }
 
-        /* CART + PROFILE BUTTONS */
         .icon-btn {
           width: 42px;
           height: 42px;
@@ -192,7 +530,6 @@ export default function Index() {
           background: rgba(0,200,255,0.25);
         }
 
-        /* GLASS BOX */
         .glass {
           background: rgba(15,15,30,0.75);
           border: 1px solid rgba(0,200,255,0.25);
@@ -222,7 +559,6 @@ export default function Index() {
           text-shadow: 0 0 8px rgba(0,200,255,0.4);
         }
 
-        /* CATEGORY BUBBLES */
         .category-grid {
           display: flex;
           flex-wrap: wrap;
@@ -246,7 +582,6 @@ export default function Index() {
           transform: scale(1.08);
         }
 
-        /* PRODUCT GRID — ALWAYS 5 PER ROW */
         .product-grid {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
@@ -289,7 +624,7 @@ export default function Index() {
         .product-name {
           font-weight: 600;
           margin-bottom: 4px;
-          color: white; /* FIXED: no more blue/purple */
+          color: white;
         }
 
         .product-price {
@@ -303,7 +638,6 @@ export default function Index() {
           opacity: 0.9;
         }
 
-        /* SMALL ADD TO CART BUTTON */
         .add-btn {
           position: absolute;
           bottom: 12px;
@@ -344,11 +678,45 @@ export default function Index() {
           color: #7feaff;
           font-weight: 600;
           transition: 0.25s;
+          display: inline-block;
         }
 
         .clear-search:hover {
           background: rgba(0,200,255,0.25);
           transform: scale(1.05);
+        }
+
+        @media (max-width: 1000px) {
+          .product-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        @media (max-width: 700px) {
+          .topbar {
+            flex-wrap: wrap;
+            gap: 12px;
+          }
+
+          .search-input {
+            order: 3;
+            flex-basis: 100%;
+            margin: 0;
+          }
+
+          .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 450px) {
+          .product-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .index-wrapper {
+            padding: 12px;
+          }
         }
       `}</style>
 
@@ -366,48 +734,87 @@ export default function Index() {
 
         {loggedIn ? (
           <>
-            <Link to="/cart" className="icon-btn">🛒</Link>
-            <Link to="/orders" className="icon-btn">📦</Link>
-            <Link to="/profile" className="icon-btn">👤</Link>
+            <Link to="/cart" className="icon-btn">
+              🛒
+            </Link>
+
+            <Link to="/orders" className="icon-btn">
+              📦
+            </Link>
+
+            <Link to="/profile" className="icon-btn">
+              👤
+            </Link>
           </>
         ) : (
           <>
-            <Link className="nav-btn" to="/login">Login</Link>
-            <Link className="nav-btn" to="/register">Register</Link>
+            <Link className="nav-btn" to="/login">
+              Login
+            </Link>
+
+            <Link className="nav-btn" to="/register">
+              Register
+            </Link>
           </>
         )}
       </div>
 
       {/* CART MESSAGE */}
-      {cartMessage && <div className="cart-message">{cartMessage}</div>}
+      {cartMessage && (
+        <div className="cart-message">
+          {cartMessage}
+        </div>
+      )}
 
       {/* SEARCH RESULTS */}
       {searchActive && (
         <div className="glass">
-          <div className="section-title">Search Results</div>
+          <div className="section-title">
+            Search Results
+          </div>
 
           {searchResults.length === 0 && (
-            <div style={{ opacity: 0.7 }}>No products found.</div>
+            <div style={{ opacity: 0.7 }}>
+              No products found.
+            </div>
           )}
 
           <div className="product-grid">
             {searchResults.map((p: any) => (
               <div key={p.id} className="product-card">
                 <Link to={`/product/${p.id}`}>
-                  <img src={p.image_url} className="product-img" />
-                  <div className="product-name">{p.name}</div>
-                  <div className="product-price">${p.price}</div>
-                  <div className="product-stock">Stock: {p.stock}</div>
+                  <img
+                    src={p.image_url}
+                    className="product-img"
+                  />
+
+                  <div className="product-name">
+                    {p.name}
+                  </div>
+
+                  <div className="product-price">
+                    ${p.price}
+                  </div>
+
+                  <div className="product-stock">
+                    Stock: {p.stock}
+                  </div>
                 </Link>
 
-                <div className="add-btn" onClick={() => addToCart(p.id)}>
+                <div
+                  className="add-btn"
+                  onClick={() => addToCart(p.id)}
+                >
                   🛒 +
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="clear-search" onClick={clearSearch}>
+          <div
+            className="clear-search"
+            onClick={clearSearch}
+          >
             Clear Search
           </div>
         </div>
@@ -418,10 +825,17 @@ export default function Index() {
         <>
           {/* CATEGORIES */}
           <div className="glass">
-            <div className="section-title">Categories</div>
+            <div className="section-title">
+              Categories
+            </div>
+
             <div className="category-grid">
               {categories.map((c: any) => (
-                <Link key={c.id} to={`/category/${c.id}`} className="category-bubble">
+                <Link
+                  key={c.id}
+                  to={`/category/${c.id}`}
+                  className="category-bubble"
+                >
                   {c.name}
                 </Link>
               ))}
@@ -430,18 +844,39 @@ export default function Index() {
 
           {/* PRODUCTS */}
           <div className="glass">
-            <div className="section-title">Products</div>
+            <div className="section-title">
+              Products
+            </div>
+
             <div className="product-grid">
               {products.map((p: any) => (
-                <div key={p.id} className="product-card">
+                <div
+                  key={p.id}
+                  className="product-card"
+                >
                   <Link to={`/product/${p.id}`}>
-                    <img src={p.image_url} className="product-img" />
-                    <div className="product-name">{p.name}</div>
-                    <div className="product-price">${p.price}</div>
-                    <div className="product-stock">Stock: {p.stock}</div>
+                    <img
+                      src={p.image_url}
+                      className="product-img"
+                    />
+
+                    <div className="product-name">
+                      {p.name}
+                    </div>
+
+                    <div className="product-price">
+                      ${p.price}
+                    </div>
+
+                    <div className="product-stock">
+                      Stock: {p.stock}
+                    </div>
                   </Link>
 
-                  <div className="add-btn" onClick={() => addToCart(p.id)}>
+                  <div
+                    className="add-btn"
+                    onClick={() => addToCart(p.id)}
+                  >
                     🛒 +
                   </div>
                 </div>

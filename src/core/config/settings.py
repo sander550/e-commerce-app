@@ -80,5 +80,17 @@ class Settings:
     # ---------------------------------------------------------
     TAX_RATE: float = 0.20
 
+    # ---------------------------------------------------------
+    # RATE LIMITING
+    # ---------------------------------------------------------
+
+    GLOBAL_IP_LIMIT = 300
+    GLOBAL_USER_LIMIT = 60
+    GLOBAL_WINDOW_SECONDS = 60
+
+    LOGIN_IP_LIMIT = 50
+    LOGIN_USER_LIMIT = 5
+    LOGIN_WINDOW_SECONDS = 15 * 60
+
 
 settings = Settings()

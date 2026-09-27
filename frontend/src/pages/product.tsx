@@ -12,6 +12,22 @@ type Product = {
   is_active: boolean;
 };
 
+function getErrorMessage(json: any, fallback: string) {
+  if (typeof json?.detail === "string") {
+    return json.detail;
+  }
+
+  if (typeof json?.message === "string") {
+    return json.message;
+  }
+
+  if (typeof json?.error === "string") {
+    return json.error;
+  }
+
+  return fallback;
+}
+
 export default function ProductPage() {
   const { product_id } = useParams();
   const navigate = useNavigate();
@@ -22,6 +38,9 @@ export default function ProductPage() {
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("");
 
+  const [pageError, setPageError] = useState<string | null>(null);
+  const [rateLimited, setRateLimited] = useState(false);
+
   const [animateAdd, setAnimateAdd] = useState(false);
   const [floatBubble, setFloatBubble] = useState(false);
 
@@ -29,10 +48,42 @@ export default function ProductPage() {
     localStorage.getItem("logged_in") === "true"
   );
 
+  const redirectToLogin = () => {
+    navigate("/login", {
+      replace: true,
+      state: { from: `/product/${product_id}` },
+    });
+  };
+
+  const handleRateLimit = () => {
+    setRateLimited(true);
+    setPageError(null);
+    setErrorMsg("");
+    setSuccessMsg("");
+  };
+
+  const handleServerError = (status: number) => {
+    setPageError(
+      status >= 500
+        ? "Something went wrong on the server. Please try again later."
+        : `Something went wrong (${status}). Please try again.`
+    );
+
+    setErrorMsg("");
+    setSuccessMsg("");
+  };
+
+  const handleUnexpectedError = (message: string) => {
+    setPageError(message);
+    setErrorMsg("");
+    setSuccessMsg("");
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setLoggedIn(localStorage.getItem("logged_in") === "true");
     }, 200);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -41,30 +92,34 @@ export default function ProductPage() {
 
     setErrorMsg("");
     setSuccessMsg("");
+    setPageError(null);
 
-    // Out of stock check
     if (product.stock <= 0) {
       setErrorMsg("Out of stock");
       return;
     }
 
-    // If user tries to add more than stock
     if (quantity > product.stock) {
       setErrorMsg("Cannot add more, out of stock");
       return;
     }
 
-    // If not logged in → show message then redirect
     if (!loggedIn) {
       setErrorMsg("Please log in to add items to cart.");
-      setTimeout(() => navigate("/login"), 1500);
+
+      setTimeout(() => {
+        redirectToLogin();
+      }, 1000);
+
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:8000/cart/add", {
+      const res = await fetch("/api/cart/add", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
         body: JSON.stringify({
           product_id: product.id,
@@ -72,59 +127,322 @@ export default function ProductPage() {
         }),
       });
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      if (res.status === 429) {
+        handleRateLimit();
+        return;
+      }
+
+      if (res.status >= 500) {
+        handleServerError(res.status);
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Failed to add to cart");
+        setErrorMsg(
+          getErrorMessage(
+            json,
+            `Failed to add to cart (${res.status})`
+          )
+        );
         return;
       }
 
-      // If adding exceeds stock
-      if (quantity > product.stock) {
-        setErrorMsg("Cannot add more, out of stock");
-        return;
-      }
-
-      setSuccessMsg("Added to cart!");
+      setSuccessMsg(json?.message || "Added to cart!");
 
       setAnimateAdd(true);
       setFloatBubble(true);
 
-      setTimeout(() => setAnimateAdd(false), 400);
-      setTimeout(() => setFloatBubble(false), 700);
+      setTimeout(() => {
+        setAnimateAdd(false);
+      }, 400);
 
-    } catch (err: any) {
-      setErrorMsg(err.message || "Failed to add to cart");
+      setTimeout(() => {
+        setFloatBubble(false);
+      }, 700);
+    } catch (err) {
+      console.error("Add to cart fetch error:", err);
+
+      handleUnexpectedError(
+        "Unable to connect to the server. Please try again."
+      );
     }
   }
 
   useEffect(() => {
     async function load() {
+      setErrorMsg("");
+      setPageError(null);
+      setRateLimited(false);
+
       try {
-        const res = await fetch(`http://localhost:8000/products/${product_id}`);
-        const json = await res.json();
+        const res = await fetch(`/api/products/${product_id}`, {
+          credentials: "include",
+        });
+
+        let json: any = {};
+
+        try {
+          json = await res.json();
+        } catch {
+          json = {};
+        }
+
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        if (res.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        if (res.status >= 500) {
+          handleServerError(res.status);
+          return;
+        }
 
         if (!res.ok) {
-          setErrorMsg(json.detail || "Product not found");
+          setErrorMsg(
+            getErrorMessage(
+              json,
+              `Product not found (${res.status})`
+            )
+          );
           return;
         }
 
         setProduct(json);
-      } catch (err: any) {
-        setErrorMsg(err.message || "Failed to load product");
+      } catch (err) {
+        console.error("Product fetch error:", err);
+
+        handleUnexpectedError(
+          "Unable to connect to the server. Please try again."
+        );
       }
     }
 
     load();
   }, [product_id]);
 
+  if (rateLimited) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #050505, #0a0f1a)",
+          color: "#e8e8ff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "520px",
+            background: "rgba(15,15,30,0.85)",
+            border: "1px solid rgba(255,170,0,0.35)",
+            borderRadius: "18px",
+            padding: "36px",
+            textAlign: "center",
+            boxShadow: "0 0 40px rgba(255,170,0,0.12)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px",
+            }}
+          >
+            ⏳
+          </div>
+
+          <h1
+            style={{
+              margin: "0 0 12px",
+              color: "#ffdd7f",
+              fontSize: "28px",
+            }}
+          >
+            Too Many Requests
+          </h1>
+
+          <p
+            style={{
+              margin: "0 0 24px",
+              opacity: 0.8,
+              lineHeight: 1.6,
+            }}
+          >
+            You are sending requests too quickly. Please wait a moment and
+            try again.
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "11px 20px",
+              borderRadius: "12px",
+              border: "1px solid rgba(0,200,255,0.4)",
+              background: "rgba(0,200,255,0.2)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #050505, #0a0f1a)",
+          color: "#e8e8ff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "520px",
+            background: "rgba(15,15,30,0.85)",
+            border: "1px solid rgba(255,80,80,0.3)",
+            borderRadius: "18px",
+            padding: "36px",
+            textAlign: "center",
+            boxShadow: "0 0 40px rgba(255,80,80,0.1)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px",
+            }}
+          >
+            ⚠️
+          </div>
+
+          <h1
+            style={{
+              margin: "0 0 12px",
+              color: "#ff8a8a",
+              fontSize: "28px",
+            }}
+          >
+            Something went wrong
+          </h1>
+
+          <p
+            style={{
+              margin: "0 0 24px",
+              opacity: 0.8,
+              lineHeight: 1.6,
+            }}
+          >
+            {pageError}
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "11px 20px",
+              borderRadius: "12px",
+              border: "1px solid rgba(0,200,255,0.4)",
+              background: "rgba(0,200,255,0.2)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (errorMsg && !product) {
     return (
       <div className="product-wrapper">
+        <style>{`
+          .product-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 40px;
+          }
+
+          .glass {
+            background: rgba(15,15,30,0.75);
+            border: 1px solid rgba(0,200,255,0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 750px;
+            margin: auto;
+            box-shadow: 0 0 40px rgba(0,200,255,0.15);
+          }
+
+          .error-box {
+            background: rgba(255, 80, 80, 0.2);
+            border: 1px solid rgba(255, 80, 80, 0.4);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+          }
+
+          .back-btn {
+            display: inline-block;
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+          }
+        `}</style>
+
         <div className="glass">
           <h2>Error</h2>
-          <p>{errorMsg}</p>
-          <Link to="/index" className="back-btn">← Back to Store</Link>
+
+          <div className="error-box">
+            {errorMsg}
+          </div>
+
+          <Link to="/" className="back-btn">
+            ← Back to Store
+          </Link>
         </div>
       </div>
     );
@@ -133,7 +451,30 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="product-wrapper">
-        <div className="glass">Loading product...</div>
+        <style>{`
+          .product-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 40px;
+          }
+
+          .glass {
+            background: rgba(15,15,30,0.75);
+            border: 1px solid rgba(0,200,255,0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 750px;
+            margin: auto;
+            box-shadow: 0 0 40px rgba(0,200,255,0.15);
+          }
+        `}</style>
+
+        <div className="glass">
+          Loading product...
+        </div>
       </div>
     );
   }
@@ -151,11 +492,17 @@ export default function ProductPage() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
-        /* TOP BAR */
         .topbar {
           display: flex;
           justify-content: space-between;
@@ -228,11 +575,21 @@ export default function ProductPage() {
           background: rgba(0,200,255,0.25);
         }
 
-        /* Neon Ripple Animation */
         @keyframes ripple {
-          0% { transform: scale(0.9); opacity: 0.4; }
-          50% { transform: scale(1.05); opacity: 0.8; }
-          100% { transform: scale(0.9); opacity: 0.4; }
+          0% {
+            transform: scale(0.9);
+            opacity: 0.4;
+          }
+
+          50% {
+            transform: scale(1.05);
+            opacity: 0.8;
+          }
+
+          100% {
+            transform: scale(0.9);
+            opacity: 0.4;
+          }
         }
 
         .glass {
@@ -337,6 +694,12 @@ export default function ProductPage() {
           transform: scale(1.05);
         }
 
+        .qty-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
+
         .qty-number {
           font-size: 20px;
           font-weight: 600;
@@ -380,8 +743,15 @@ export default function ProductPage() {
         }
 
         @keyframes bubbleUp {
-          0% { opacity: 1; transform: translateY(0px); }
-          100% { opacity: 0; transform: translateY(-25px); }
+          0% {
+            opacity: 1;
+            transform: translateY(0px);
+          }
+
+          100% {
+            opacity: 0;
+            transform: translateY(-25px);
+          }
         }
 
         .error-box {
@@ -401,46 +771,102 @@ export default function ProductPage() {
           margin-bottom: 20px;
           font-weight: 600;
         }
+
+        @media (max-width: 700px) {
+          .product-wrapper {
+            padding: 20px;
+          }
+
+          .topbar {
+            flex-wrap: wrap;
+            gap: 12px;
+          }
+
+          .img-container {
+            height: 280px;
+          }
+
+          .img,
+          .img-ripple {
+            width: 230px;
+            height: 230px;
+          }
+        }
       `}</style>
 
       {/* TOP BAR */}
       <div className="topbar">
         <div className="topbar-left">
-          <Link to="/index" className="back-btn-top">← Back</Link>
+          <Link to="/" className="back-btn-top">
+            ← Back
+          </Link>
         </div>
 
         <div className="topbar-right">
           {loggedIn ? (
             <>
-              <Link to="/cart" className="icon-btn">🛒</Link>
-              <Link to="/orders" className="icon-btn">📦</Link>
-              <Link to="/profile" className="icon-btn">👤</Link>
+              <Link to="/cart" className="icon-btn">
+                🛒
+              </Link>
+
+              <Link to="/orders" className="icon-btn">
+                📦
+              </Link>
+
+              <Link to="/profile" className="icon-btn">
+                👤
+              </Link>
             </>
           ) : (
             <>
-              <Link className="nav-btn" to="/login">Login</Link>
-              <Link className="nav-btn" to="/register">Register</Link>
+              <Link className="nav-btn" to="/login">
+                Login
+              </Link>
+
+              <Link className="nav-btn" to="/register">
+                Register
+              </Link>
             </>
           )}
         </div>
       </div>
 
       <div className="glass">
-        {errorMsg && <div className="error-box">{errorMsg}</div>}
-        {successMsg && <div className="success-box">{successMsg}</div>}
+        {errorMsg && (
+          <div className="error-box">
+            {errorMsg}
+          </div>
+        )}
 
-        <div className="title">{product.name}</div>
+        {successMsg && (
+          <div className="success-box">
+            {successMsg}
+          </div>
+        )}
+
+        <div className="title">
+          {product.name}
+        </div>
 
         <div className="img-container">
           <div className="img-ripple"></div>
+
           {product.image_url && (
-            <img src={product.image_url} alt={product.name} className="img" />
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="img"
+            />
           )}
         </div>
 
-        <div className="price">${product.price}</div>
+        <div className="price">
+          ${Number(product.price).toFixed(2)}
+        </div>
 
-        <div className="desc">{product.description || "No description"}</div>
+        <div className="desc">
+          {product.description || "No description"}
+        </div>
 
         <div className="info-row">
           <strong>Stock:</strong> {product.stock}
@@ -448,7 +874,10 @@ export default function ProductPage() {
 
         <div className="info-row">
           <strong>Category:</strong>{" "}
-          <Link to={`/category/${product.category_id}`} style={{ color: "#7feaff" }}>
+          <Link
+            to={`/category/${product.category_id}`}
+            style={{ color: "#7feaff" }}
+          >
             Category {product.category_id}
           </Link>
         </div>
@@ -456,17 +885,25 @@ export default function ProductPage() {
         <div className="qty-box">
           <button
             className="qty-btn"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={() =>
+              setQuantity(Math.max(1, quantity - 1))
+            }
             disabled={quantity <= 1}
           >
             -
           </button>
 
-          <div className="qty-number">{quantity}</div>
+          <div className="qty-number">
+            {quantity}
+          </div>
 
           <button
             className="qty-btn"
-            onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+            onClick={() =>
+              setQuantity(
+                Math.min(product.stock, quantity + 1)
+              )
+            }
             disabled={quantity >= product.stock}
           >
             +
@@ -474,11 +911,18 @@ export default function ProductPage() {
         </div>
 
         <div style={{ position: "relative" }}>
-          {floatBubble && <div className="float-bubble">+{quantity}</div>}
+          {floatBubble && (
+            <div className="float-bubble">
+              +{quantity}
+            </div>
+          )}
 
           <button
-            className={`add-btn ${animateAdd ? "animate" : ""}`}
+            className={`add-btn ${
+              animateAdd ? "animate" : ""
+            }`}
             onClick={addToCart}
+            disabled={product.stock <= 0}
           >
             🛒 Add {quantity}
           </button>

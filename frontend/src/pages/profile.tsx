@@ -1,62 +1,314 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+function getErrorMessage(json: any, fallback: string) {
+  if (typeof json?.detail === "string") return json.detail;
+  if (typeof json?.message === "string") return json.message;
+  if (typeof json?.error === "string") return json.error;
+  return fallback;
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [rateLimited, setRateLimited] = useState(false);
 
   const loggedIn = localStorage.getItem("logged_in") === "true";
 
+  const redirectToLogin = () => {
+    navigate("/login", {
+      replace: true,
+      state: { from: "/profile" },
+    });
+  };
+
+  const handleRateLimit = () => {
+    setRateLimited(true);
+    setErrorMsg(null);
+  };
+
+  const handleServerError = (status: number) => {
+    setErrorMsg(
+      status >= 500
+        ? "Something went wrong on the server. Please try again later."
+        : `Something went wrong (${status}). Please try again.`
+    );
+  };
+
+  const handleUnexpectedError = (message: string) => {
+    setErrorMsg(message);
+  };
+
   useEffect(() => {
-    if (!loggedIn) navigate("/login");
-  }, [loggedIn, navigate]);
+    if (!loggedIn) {
+      redirectToLogin();
+    }
+  }, [loggedIn]);
 
   useEffect(() => {
     async function loadProfile() {
       try {
-        const res = await fetch("http://localhost:8000/auth/profile", {
+        const res = await fetch("/api/auth/profile", {
           credentials: "include",
         });
 
-        const json = await res.json();
+        let json: any = {};
+
+        try {
+          json = await res.json();
+        } catch {
+          json = {};
+        }
+
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        if (res.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        if (res.status >= 500) {
+          handleServerError(res.status);
+          return;
+        }
 
         if (!res.ok) {
-          setErrorMsg(json.detail || json.error || "Failed to load profile");
+          setErrorMsg(
+            getErrorMessage(
+              json,
+              `Request failed (${res.status})`
+            )
+          );
           return;
         }
 
         setUser(json);
-      } catch (err: any) {
-        setErrorMsg(err.message || "Failed to load profile");
+        setErrorMsg(null);
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+
+        handleUnexpectedError(
+          "Unable to connect to the server. Please check your connection and try again."
+        );
       } finally {
         setLoading(false);
       }
     }
 
-    loadProfile();
-  }, []);
+    if (loggedIn) {
+      loadProfile();
+    } else {
+      setLoading(false);
+    }
+  }, [loggedIn]);
 
   async function handleLogout() {
     try {
-      await fetch("http://localhost:8000/auth/logout", {
+      const res = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
-    } catch {}
+
+      if (res.status === 429) {
+        handleRateLimit();
+        return;
+      }
+
+      if (res.status >= 500) {
+        handleServerError(res.status);
+        return;
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
 
     localStorage.removeItem("logged_in");
     localStorage.removeItem("user_email");
 
-    navigate("/");
+    navigate("/", {
+      replace: true,
+    });
   }
 
   if (loading) {
     return (
       <div className="profile-wrapper">
         <div className="loading">Loading profile...</div>
+
+        <style>{`
+          .profile-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .loading {
+            font-size: 20px;
+            color: #7feaff;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (rateLimited) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #050505, #0a0f1a)",
+          color: "#e8e8ff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "520px",
+            background: "rgba(15,15,30,0.85)",
+            border: "1px solid rgba(255,170,0,0.35)",
+            borderRadius: "18px",
+            padding: "36px",
+            textAlign: "center",
+            boxShadow: "0 0 40px rgba(255,170,0,0.12)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px",
+            }}
+          >
+            ⏳
+          </div>
+
+          <h1
+            style={{
+              margin: "0 0 12px",
+              color: "#ffdd7f",
+              fontSize: "28px",
+            }}
+          >
+            Too Many Requests
+          </h1>
+
+          <p
+            style={{
+              margin: "0 0 24px",
+              opacity: 0.8,
+              lineHeight: 1.6,
+            }}
+          >
+            You are sending requests too quickly. Please wait a moment and
+            try again.
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "11px 20px",
+              borderRadius: "12px",
+              border: "1px solid rgba(0,200,255,0.4)",
+              background: "rgba(0,200,255,0.2)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #050505, #0a0f1a)",
+          color: "#e8e8ff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "520px",
+            background: "rgba(15,15,30,0.85)",
+            border: "1px solid rgba(255,80,80,0.3)",
+            borderRadius: "18px",
+            padding: "36px",
+            textAlign: "center",
+            boxShadow: "0 0 40px rgba(255,80,80,0.1)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px",
+            }}
+          >
+            ⚠️
+          </div>
+
+          <h1
+            style={{
+              margin: "0 0 12px",
+              color: "#ff8a8a",
+              fontSize: "28px",
+            }}
+          >
+            Something went wrong
+          </h1>
+
+          <p
+            style={{
+              margin: "0 0 24px",
+              opacity: 0.8,
+              lineHeight: 1.6,
+            }}
+          >
+            {errorMsg}
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "11px 20px",
+              borderRadius: "12px",
+              border: "1px solid rgba(0,200,255,0.4)",
+              background: "rgba(0,200,255,0.2)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "15px",
+            }}
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -77,24 +329,48 @@ export default function ProfilePage() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
-        /* NEW CYBER ANIMATION */
         @keyframes waveMove {
-          0% { transform: translateX(-40px); opacity: 0.4; }
-          50% { transform: translateX(40px); opacity: 0.8; }
-          100% { transform: translateX(-40px); opacity: 0.4; }
+          0% {
+            transform: translateX(-40px);
+            opacity: 0.4;
+          }
+
+          50% {
+            transform: translateX(40px);
+            opacity: 0.8;
+          }
+
+          100% {
+            transform: translateX(-40px);
+            opacity: 0.4;
+          }
         }
 
         @keyframes floatAvatar {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-          100% { transform: translateY(0px); }
+          0% {
+            transform: translateY(0px);
+          }
+
+          50% {
+            transform: translateY(-8px);
+          }
+
+          100% {
+            transform: translateY(0px);
+          }
         }
 
-        /* Avatar Container */
         .avatar-container {
           position: relative;
           width: 180px;
@@ -128,7 +404,6 @@ export default function ProfilePage() {
           z-index: 2;
         }
 
-        /* Profile Card */
         .glass-card {
           width: 100%;
           max-width: 520px;
@@ -154,7 +429,6 @@ export default function ProfilePage() {
           margin-bottom: 10px;
         }
 
-        /* Buttons */
         .logout-btn,
         .back-btn {
           margin-top: 20px;
@@ -169,12 +443,12 @@ export default function ProfilePage() {
         }
 
         .logout-btn {
-          background: rgba(255, 80, 80, 0.25);
-          border: 1px solid rgba(255, 80, 80, 0.4);
+          background: rgba(255,80,80,0.25);
+          border: 1px solid rgba(255,80,80,0.4);
         }
 
         .logout-btn:hover {
-          background: rgba(255, 80, 80, 0.35);
+          background: rgba(255,80,80,0.35);
           transform: scale(1.05);
         }
 
@@ -187,34 +461,58 @@ export default function ProfilePage() {
           background: rgba(0,200,255,0.35);
           transform: scale(1.05);
         }
+
+        @media (max-width: 600px) {
+          .profile-wrapper {
+            padding: 20px;
+          }
+
+          .glass-card {
+            padding: 24px;
+          }
+        }
       `}</style>
 
-      {/* Neon Avatar */}
       <div className="avatar-container">
         <div className="avatar-wave"></div>
         <div className="avatar-icon">👤</div>
       </div>
 
-      {/* Profile Card */}
       <div className="glass-card">
         <div className="title">Your Profile</div>
 
-        {errorMsg && <div className="info" style={{ color: "red" }}>{errorMsg}</div>}
-
         {user && (
           <>
-            <div className="info"><strong>ID:</strong> {user.id}</div>
-            <div className="info"><strong>Email:</strong> {user.email}</div>
-            <div className="info"><strong>Active:</strong> {user.is_active.toString()}</div>
-            <div className="info"><strong>Created:</strong> {user.created_at}</div>
+            <div className="info">
+              <strong>ID:</strong> {user.id}
+            </div>
+
+            <div className="info">
+              <strong>Email:</strong> {user.email}
+            </div>
+
+            <div className="info">
+              <strong>Active:</strong>{" "}
+              {user.is_active?.toString()}
+            </div>
+
+            <div className="info">
+              <strong>Created:</strong> {user.created_at}
+            </div>
           </>
         )}
 
-        <button className="logout-btn" onClick={handleLogout}>
+        <button
+          className="logout-btn"
+          onClick={handleLogout}
+        >
           Logout
         </button>
 
-        <button className="back-btn" onClick={() => navigate("/")}>
+        <button
+          className="back-btn"
+          onClick={() => navigate("/")}
+        >
           ← Back to Store
         </button>
       </div>

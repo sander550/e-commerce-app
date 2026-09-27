@@ -12,7 +12,9 @@ from cart.application.handlers.clear_cart_handler import clear_cart_handler
 from catalog.application.handlers.update_stock_handler import update_stock_handler
 from notifications.application.handlers.send_payment_completed_email_handler import send_payment_completed_handler
 
-from core.security.rate_limiting import rate_limit_middleware
+from core.security.rate_limiting_service import RedisRateLimitService
+from core.infrastructure.redis import redis_client
+from core.security.rate_limiting import RateLimitMiddleware
 
 app = FastAPI(
     title="E‑Commerce API",
@@ -35,7 +37,10 @@ app.add_middleware(
 # ---------------------------------------------------------
 app.include_router(router)
 
-app.middleware("http")(rate_limit_middleware)
+rate_limiter = RedisRateLimitService(redis_client)
+rate_limit_middleware = RateLimitMiddleware(rate_limiter)
+
+app.middleware("http")(rate_limit_middleware.rate_limiting_middleware)
 
 # ---------------------------------------------------------
 # STARTUP: SUBSCRIBE TO EVENTS

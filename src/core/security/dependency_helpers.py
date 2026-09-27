@@ -1,9 +1,7 @@
 from fastapi import Request
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 
-from core.config import settings
-
-
+from core.config.settings import settings
 
 
 def get_user_id_from_request(request: Request) -> str | None:
@@ -13,7 +11,6 @@ def get_user_id_from_request(request: Request) -> str | None:
     Returns None if the request is unauthenticated or the token
     cannot be decoded.
     """
-
     token = request.cookies.get("access_token")
 
     if not token:

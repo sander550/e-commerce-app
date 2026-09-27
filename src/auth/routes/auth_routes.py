@@ -70,6 +70,7 @@ async def register(
 # ---------------------------------------------------------
 @router.post("/login")
 async def login(
+    request: Request,
     dto: UserRequestDTO,
     user = Depends(auth_optional),
     use_case: LoginUserUseCase = Depends(get_login_use_case)
@@ -77,8 +78,10 @@ async def login(
     if user:
         raise HTTPException(400, "Already logged in")
 
+    ip = request.client.host
+
     try:
-        result = await use_case.execute(dto.email, dto.password)
+        result = await use_case.execute(dto.email, dto.password, ip)
     except Exception as e:
         raise HTTPException(400, detail=str(e))
 

@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+function getErrorMessage(json: any, fallback: string) {
+  if (typeof json?.detail === "string") return json.detail;
+  if (typeof json?.message === "string") return json.message;
+  if (typeof json?.error === "string") return json.error;
+  return fallback;
+}
 
 export default function CartPage() {
-  const [cart, setCart] = useState<any>(null);
+  const navigate = useNavigate();
+
+  const [cart, setCart] = useState<any>({
+    items: [],
+  });
+
   const [totals, setTotals] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,209 +25,866 @@ export default function CartPage() {
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
 
-  const [deliveryMethod, setDeliveryMethod] = useState("standard");
+  const [deliveryMethod, setDeliveryMethod] =
+    useState("standard");
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [rateLimited, setRateLimited] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
+
   // Track which fields should be highlighted red
-  const [highlightErrors, setHighlightErrors] = useState(false);
+  const [highlightErrors, setHighlightErrors] =
+    useState(false);
 
   // -----------------------------
-  // LOAD CART + TOTALS + PROFILE
+  // AUTH REDIRECT
   // -----------------------------
+
+  const redirectToLogin = () => {
+    navigate("/login", {
+      replace: true,
+      state: { from: "/cart" },
+    });
+  };
+
+  // -----------------------------
+  // RATE LIMIT
+  // -----------------------------
+
+  const handleRateLimit = () => {
+    setRateLimited(true);
+    setPageError(null);
+    setError(null);
+    setSuccess(null);
+  };
+
+  // -----------------------------
+  // SERVER / NETWORK ERROR
+  // -----------------------------
+
+  const handleServerError = (message?: string) => {
+    setPageError(
+      message ||
+        "Something went wrong on the server. Please try again later."
+    );
+    setRateLimited(false);
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleUnexpectedError = () => {
+    setPageError(
+      "Something went wrong. Please check your connection and try again."
+    );
+    setRateLimited(false);
+    setError(null);
+    setSuccess(null);
+  };
+
+  // -----------------------------
+  // LOAD CART
+  // -----------------------------
+
   const fetchCart = async () => {
     try {
-      const res = await fetch("http://localhost:8000/cart/", {
+      const res = await fetch("/api/cart/", {
         credentials: "include",
       });
-      const json = await res.json();
-      if (!res.ok) return setError(json.detail || "Failed to load cart.");
-      setCart(json);
-    } catch {
-      setError("Failed to load cart.");
+
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (!res.ok) {
+        // Not authenticated → login
+        if (res.status === 401) {
+          redirectToLogin();
+          return false;
+        }
+
+        // Rate limited → full-page error
+        if (res.status === 429) {
+          handleRateLimit();
+          return false;
+        }
+
+        // Server error → full-page error
+        if (res.status >= 500) {
+          handleServerError(
+            "Something went wrong on the server. Please try again later."
+          );
+          return false;
+        }
+
+        // Other expected API error
+        setError(
+          getErrorMessage(
+            json,
+            `Failed to load cart (${res.status}).`
+          )
+        );
+
+        return false;
+      }
+
+      setCart(
+        json && Array.isArray(json.items)
+          ? json
+          : { items: [] }
+      );
+
+      return true;
+    } catch (err) {
+      console.error("Load cart failed:", err);
+
+      handleUnexpectedError();
+
+      return false;
     }
   };
+
+  // -----------------------------
+  // LOAD TOTALS
+  // -----------------------------
 
   const fetchTotals = async () => {
     try {
-      const res = await fetch("http://localhost:8000/cart/totals", {
+      const res = await fetch("/api/cart/totals", {
         credentials: "include",
       });
-      const json = await res.json();
-      if (!res.ok) return setError(json.detail || "Failed to load totals.");
+
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (!res.ok) {
+        // Not authenticated → login
+        if (res.status === 401) {
+          redirectToLogin();
+          return false;
+        }
+
+        // Rate limited → full-page error
+        if (res.status === 429) {
+          handleRateLimit();
+          return false;
+        }
+
+        // Server error → full-page error
+        if (res.status >= 500) {
+          handleServerError(
+            "Something went wrong while calculating your cart total."
+          );
+          return false;
+        }
+
+        // Other expected API error
+        setError(
+          getErrorMessage(
+            json,
+            `Failed to load totals (${res.status}).`
+          )
+        );
+
+        return false;
+      }
+
       setTotals(json);
-    } catch {
-      setError("Failed to load totals.");
+
+      return true;
+    } catch (err) {
+      console.error("Load totals failed:", err);
+
+      handleUnexpectedError();
+
+      return false;
     }
   };
 
+  // -----------------------------
+  // LOAD PROFILE
+  // -----------------------------
+
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:8000/auth/profile", {
+      const res = await fetch("/api/auth/profile", {
         credentials: "include",
       });
-      const json = await res.json();
+
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      // Profile is optional here.
+      // Cart authentication is handled separately.
       if (!res.ok) return;
 
       if (json.shipping_address) {
-        const parts = json.shipping_address.split(",").map((p: string) => p.trim());
+        const parts = json.shipping_address
+          .split(",")
+          .map((p: string) => p.trim());
+
         setStreet(parts[0] || "");
         setHouseNumber(parts[1] || "");
         setCity(parts[2] || "");
         setPostalCode(parts[3] || "");
         setCountry(parts[4] || "");
       }
-    } catch {}
+    } catch (err) {
+      console.error("Load profile failed:", err);
+    }
   };
 
+  // -----------------------------
+  // INITIAL LOAD
+  // -----------------------------
+
   useEffect(() => {
-    (async () => {
-      await fetchCart();
-      await fetchTotals();
+    const load = async () => {
+      const cartLoaded = await fetchCart();
+
+      if (!cartLoaded) {
+        setLoading(false);
+        return;
+      }
+
+      const totalsLoaded = await fetchTotals();
+
+      if (!totalsLoaded) {
+        setLoading(false);
+        return;
+      }
+
+      // Profile is optional and should not prevent
+      // the cart from being displayed.
       await fetchProfile();
+
       setLoading(false);
-    })();
+    };
+
+    load();
   }, []);
 
   // -----------------------------
   // UPDATE QUANTITY
   // -----------------------------
-  const updateQuantity = async (productId: number, quantity: number) => {
+
+  const updateQuantity = async (
+    productId: number,
+    quantity: number
+  ) => {
     setError(null);
     setSuccess(null);
 
     try {
-      const res = await fetch(`http://localhost:8000/cart/item/${productId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity }),
-      });
+      const res = await fetch(
+        `/api/cart/item/${productId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity }),
+        }
+      );
 
-      const json = await res.json();
-      if (!res.ok) return setError(json.detail || "Failed to update quantity.");
+      let json: any = {};
 
-      setCart(json);
-      fetchTotals();
-      setSuccess("Quantity updated!");
-    } catch {
-      setError("Failed to update quantity.");
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (!res.ok) {
+        // Not authenticated → login
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        // Rate limited → full-page error
+        if (res.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        // Server error → full-page error
+        if (res.status >= 500) {
+          handleServerError(
+            "Something went wrong while updating your cart."
+          );
+          return;
+        }
+
+        // Other expected API error
+        setError(
+          getErrorMessage(
+            json,
+            `Failed to update quantity (${res.status}).`
+          )
+        );
+
+        return;
+      }
+
+      setCart(
+        json && Array.isArray(json.items)
+          ? json
+          : { items: [] }
+      );
+
+      await fetchTotals();
+
+      if (!rateLimited && !pageError) {
+        setSuccess("Quantity updated!");
+      }
+    } catch (err) {
+      console.error("Update quantity failed:", err);
+
+      handleUnexpectedError();
     }
   };
 
   // -----------------------------
   // REMOVE ITEM
   // -----------------------------
+
   const removeItem = async (productId: number) => {
     setError(null);
     setSuccess(null);
 
     try {
-      const res = await fetch(`http://localhost:8000/cart/item/${productId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/cart/item/${productId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
-      const json = await res.json();
-      if (!res.ok) return setError(json.detail || "Failed to remove item.");
+      let json: any = {};
 
-      setCart(json);
-      fetchTotals();
-      setSuccess("Item removed!");
-    } catch {
-      setError("Failed to remove item.");
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (!res.ok) {
+        // Not authenticated → login
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        // Rate limited → full-page error
+        if (res.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        // Server error → full-page error
+        if (res.status >= 500) {
+          handleServerError(
+            "Something went wrong while removing this item."
+          );
+          return;
+        }
+
+        // Other expected API error
+        setError(
+          getErrorMessage(
+            json,
+            `Failed to remove item (${res.status}).`
+          )
+        );
+
+        return;
+      }
+
+      setCart(
+        json && Array.isArray(json.items)
+          ? json
+          : { items: [] }
+      );
+
+      await fetchTotals();
+
+      if (!rateLimited && !pageError) {
+        setSuccess("Item removed!");
+      }
+    } catch (err) {
+      console.error("Remove item failed:", err);
+
+      handleUnexpectedError();
     }
   };
 
   // -----------------------------
   // CLEAR CART
   // -----------------------------
+
   const clearCart = async () => {
     setError(null);
     setSuccess(null);
 
     try {
-      const res = await fetch("http://localhost:8000/cart/clear", {
+      const res = await fetch("/api/cart/clear", {
         method: "POST",
         credentials: "include",
       });
 
-      const json = await res.json();
-      if (!res.ok) return setError(json.detail || "Failed to clear cart.");
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (!res.ok) {
+        // Not authenticated → login
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        // Rate limited → full-page error
+        if (res.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        // Server error → full-page error
+        if (res.status >= 500) {
+          handleServerError(
+            "Something went wrong while clearing your cart."
+          );
+          return;
+        }
+
+        // Other expected API error
+        setError(
+          getErrorMessage(
+            json,
+            `Failed to clear cart (${res.status}).`
+          )
+        );
+
+        return;
+      }
 
       setCart({ items: [] });
-      setTotals({ subtotal: 0, tax: 0, total: 0 });
+
+      setTotals({
+        subtotal: 0,
+        tax: 0,
+        total: 0,
+      });
+
       setSuccess("Cart cleared!");
-    } catch {
-      setError("Failed to clear cart.");
+    } catch (err) {
+      console.error("Clear cart failed:", err);
+
+      handleUnexpectedError();
     }
   };
 
   // -----------------------------
   // PAY WITH PAYPAL
   // -----------------------------
+
   const payWithPayPal = async () => {
     setError(null);
     setSuccess(null);
 
-    // Enable red highlighting
     setHighlightErrors(true);
 
     const missing =
-      !street || !houseNumber || !city || !postalCode || !country;
+      !street ||
+      !houseNumber ||
+      !city ||
+      !postalCode ||
+      !country;
 
     if (missing) {
       setError("Please fill in all shipping fields.");
       return;
     }
 
-    const fullAddress = `${street}, ${houseNumber}, ${city}, ${postalCode}, ${country}`;
+    const fullAddress =
+      `${street}, ${houseNumber}, ${city}, ${postalCode}, ${country}`;
 
     try {
-      const orderRes = await fetch("http://localhost:8000/orders/", {
+      // -----------------------------
+      // CREATE ORDER
+      // -----------------------------
+
+      const orderRes = await fetch("/api/orders/", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           shipping_address: fullAddress,
           delivery_method: deliveryMethod,
         }),
       });
 
-      const orderJson = await orderRes.json();
-      if (!orderRes.ok)
-        return setError(orderJson.detail || "Failed to create order.");
+      let orderJson: any = {};
+
+      try {
+        orderJson = await orderRes.json();
+      } catch {
+        orderJson = {};
+      }
+
+      if (!orderRes.ok) {
+        // Not authenticated → login
+        if (orderRes.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        // Rate limited → full-page error
+        if (orderRes.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        // Server error → full-page error
+        if (orderRes.status >= 500) {
+          handleServerError(
+            "Something went wrong while creating your order. Please try again later."
+          );
+          return;
+        }
+
+        // Other expected API error
+        setError(
+          getErrorMessage(
+            orderJson,
+            `Failed to create order (${orderRes.status}).`
+          )
+        );
+
+        return;
+      }
 
       const orderId = orderJson.id;
 
-      const payRes = await fetch("http://localhost:8000/payment/create", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order_id: orderId }),
-      });
+      if (!orderId) {
+        setError(
+          "The order was created, but no order ID was returned."
+        );
+        return;
+      }
 
-      const payJson = await payRes.json();
-      if (!payRes.ok)
-        return setError(payJson.detail || "Failed to start PayPal payment.");
+      // -----------------------------
+      // CREATE PAYPAL PAYMENT
+      // -----------------------------
+
+      const payRes = await fetch(
+        "/api/payment/create",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            order_id: orderId,
+          }),
+        }
+      );
+
+      let payJson: any = {};
+
+      try {
+        payJson = await payRes.json();
+      } catch {
+        payJson = {};
+      }
+
+      if (!payRes.ok) {
+        // Not authenticated → login
+        if (payRes.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        // Rate limited → full-page error
+        if (payRes.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        // Server error → full-page error
+        if (payRes.status >= 500) {
+          handleServerError(
+            "Something went wrong while starting the payment. Please try again later."
+          );
+          return;
+        }
+
+        // Other expected API error
+        setError(
+          getErrorMessage(
+            payJson,
+            `Failed to start PayPal payment (${payRes.status}).`
+          )
+        );
+
+        return;
+      }
+
+      if (!payJson.approval_url) {
+        setError(
+          "PayPal did not return a payment link. Please try again."
+        );
+        return;
+      }
 
       window.location.href = payJson.approval_url;
-    } catch {
-      setError("Failed to start PayPal payment.");
+    } catch (err) {
+      console.error("PayPal payment failed:", err);
+
+      handleUnexpectedError();
     }
   };
 
-  if (loading)
+  // -----------------------------
+  // LOADING SCREEN
+  // -----------------------------
+
+  if (loading) {
     return (
       <div className="page-wrapper fade-in">
-        <div className="glass pulse">Loading cart...</div>
+        <style>{`
+          .page-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .glass {
+            background: rgba(15,15,30,0.75);
+            border: 1px solid rgba(0,200,255,0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(0,200,255,0.15);
+            color: #00c8ff;
+            font-weight: 700;
+          }
+        `}</style>
+
+        <div className="glass">
+          Loading cart...
+        </div>
       </div>
     );
+  }
 
   // -----------------------------
-  // UI
+  // RATE LIMIT ERROR SCREEN
   // -----------------------------
+
+  if (rateLimited) {
+    return (
+      <div className="auth-wrapper">
+        <style>{`
+          .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            font-family: Inter, sans-serif;
+            padding: 20px;
+          }
+
+          .error-screen {
+            width: 100%;
+            max-width: 550px;
+            padding: 45px;
+            border-radius: 20px;
+            background: rgba(15,15,30,0.75);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,180,0,0.35);
+            box-shadow: 0 0 40px rgba(255,180,0,0.12);
+            color: white;
+            text-align: center;
+          }
+
+          .error-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen h2 {
+            color: #ffd166;
+            font-size: 30px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen p {
+            color: #d0d0df;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+          }
+
+          .retry-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: rgba(255,180,0,0.15);
+            border: 1px solid rgba(255,180,0,0.35);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+          }
+
+          .retry-btn:hover {
+            background: rgba(255,180,0,0.25);
+            transform: scale(1.05);
+          }
+        `}</style>
+
+        <div className="error-screen">
+          <div className="error-icon">⏳</div>
+
+          <h2>Too Many Requests</h2>
+
+          <p>
+            You are sending requests too quickly. Please wait a moment and
+            try again.
+          </p>
+
+          <button
+            className="retry-btn"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // -----------------------------
+  // PAGE ERROR SCREEN
+  // -----------------------------
+
+  if (pageError) {
+    return (
+      <div className="auth-wrapper">
+        <style>{`
+          .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            font-family: Inter, sans-serif;
+            padding: 20px;
+          }
+
+          .error-screen {
+            width: 100%;
+            max-width: 550px;
+            padding: 45px;
+            border-radius: 20px;
+            background: rgba(15,15,30,0.75);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,80,80,0.35);
+            box-shadow: 0 0 40px rgba(255,80,80,0.12);
+            color: white;
+            text-align: center;
+          }
+
+          .error-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen h2 {
+            color: #ff7070;
+            font-size: 30px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen p {
+            color: #d0d0df;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+          }
+
+          .retry-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: rgba(255,80,80,0.15);
+            border: 1px solid rgba(255,80,80,0.35);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+          }
+
+          .retry-btn:hover {
+            background: rgba(255,80,80,0.25);
+            transform: scale(1.05);
+          }
+        `}</style>
+
+        <div className="error-screen">
+          <div className="error-icon">⚠️</div>
+
+          <h2>Something went wrong</h2>
+
+          <p>{pageError}</p>
+
+          <button
+            className="retry-btn"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // -----------------------------
+  // NORMAL UI
+  // -----------------------------
+
   return (
     <div className="page-wrapper fade-in">
       <style>{`
@@ -268,6 +937,7 @@ export default function CartPage() {
           color: white;
           font-size: 15px;
           outline: none;
+          box-sizing: border-box;
         }
 
         input.error {
@@ -304,7 +974,9 @@ export default function CartPage() {
           transform: scale(1.03);
         }
 
-        .qty-btn, .remove-btn, .clear-btn {
+        .qty-btn,
+        .remove-btn,
+        .clear-btn {
           padding: 8px 12px;
           margin-left: 6px;
           border-radius: 8px;
@@ -351,6 +1023,7 @@ export default function CartPage() {
         }
 
         .nav-btn {
+          display: inline-block;
           margin-bottom: 20px;
           padding: 10px 14px;
           border-radius: 12px;
@@ -365,26 +1038,46 @@ export default function CartPage() {
           background: rgba(0,200,255,0.25);
           transform: scale(1.05);
         }
+
+        @media (max-width: 800px) {
+          .layout {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
 
-      <Link className="nav-btn" to="/">← Back</Link>
+      <Link className="nav-btn" to="/">
+        ← Back
+      </Link>
 
       {error && <div className="error-box">{error}</div>}
-      {success && <div className="success-box">{success}</div>}
+
+      {success && (
+        <div className="success-box">{success}</div>
+      )}
 
       <div className="layout">
         {/* LEFT SIDE — CART */}
+
         <div className="glass">
-          <div className="section-title">Your Cart</div>
+          <div className="section-title">
+            Your Cart
+          </div>
 
           {cart.items.length === 0 && (
-            <div style={{ opacity: 0.7 }}>Your cart is empty.</div>
+            <div style={{ opacity: 0.7 }}>
+              Your cart is empty.
+            </div>
           )}
 
           {cart.items.map((item: any) => (
-            <div key={item.product_id} className="item">
+            <div
+              key={item.product_id}
+              className="item"
+            >
               <div>
                 <strong>{item.name}</strong>
+
                 <div style={{ opacity: 0.7 }}>
                   ${item.price} × {item.quantity}
                 </div>
@@ -394,7 +1087,10 @@ export default function CartPage() {
                 <button
                   className="qty-btn"
                   onClick={() =>
-                    updateQuantity(item.product_id, item.quantity - 1)
+                    updateQuantity(
+                      item.product_id,
+                      item.quantity - 1
+                    )
                   }
                   disabled={item.quantity <= 1}
                 >
@@ -404,7 +1100,10 @@ export default function CartPage() {
                 <button
                   className="qty-btn"
                   onClick={() =>
-                    updateQuantity(item.product_id, item.quantity + 1)
+                    updateQuantity(
+                      item.product_id,
+                      item.quantity + 1
+                    )
                   }
                 >
                   +
@@ -412,7 +1111,9 @@ export default function CartPage() {
 
                 <button
                   className="remove-btn"
-                  onClick={() => removeItem(item.product_id)}
+                  onClick={() =>
+                    removeItem(item.product_id)
+                  }
                 >
                   Remove
                 </button>
@@ -421,65 +1122,117 @@ export default function CartPage() {
           ))}
 
           {cart.items.length > 0 && (
-            <button className="clear-btn" onClick={clearCart}>
+            <button
+              className="clear-btn"
+              onClick={clearCart}
+            >
               Clear Cart
             </button>
           )}
         </div>
 
         {/* RIGHT SIDE — CHECKOUT */}
+
         <div className="glass">
-          <div className="section-title">Shipping Address</div>
+          <div className="section-title">
+            Shipping Address
+          </div>
 
           <input
-            className={highlightErrors && !street ? "error" : ""}
+            className={
+              highlightErrors && !street
+                ? "error"
+                : ""
+            }
             placeholder="Street"
             value={street}
-            onChange={(e) => setStreet(e.target.value)}
+            onChange={(e) =>
+              setStreet(e.target.value)
+            }
           />
 
           <input
-            className={highlightErrors && !houseNumber ? "error" : ""}
+            className={
+              highlightErrors && !houseNumber
+                ? "error"
+                : ""
+            }
             placeholder="House Number"
             value={houseNumber}
-            onChange={(e) => setHouseNumber(e.target.value)}
+            onChange={(e) =>
+              setHouseNumber(e.target.value)
+            }
           />
 
           <input
-            className={highlightErrors && !city ? "error" : ""}
+            className={
+              highlightErrors && !city
+                ? "error"
+                : ""
+            }
             placeholder="City"
             value={city}
-            onChange={(e) => setCity(e.target.value)}
+            onChange={(e) =>
+              setCity(e.target.value)
+            }
           />
 
           <input
-            className={highlightErrors && !postalCode ? "error" : ""}
+            className={
+              highlightErrors && !postalCode
+                ? "error"
+                : ""
+            }
             placeholder="Postal Code"
             value={postalCode}
-            onChange={(e) => setPostalCode(e.target.value)}
+            onChange={(e) =>
+              setPostalCode(e.target.value)
+            }
           />
 
           <input
-            className={highlightErrors && !country ? "error" : ""}
+            className={
+              highlightErrors && !country
+                ? "error"
+                : ""
+            }
             placeholder="Country"
             value={country}
-            onChange={(e) => setCountry(e.target.value)}
+            onChange={(e) =>
+              setCountry(e.target.value)
+            }
           />
 
-          <div className="section-title" style={{ marginTop: "20px" }}>
+          <div
+            className="section-title"
+            style={{ marginTop: "20px" }}
+          >
             Delivery Method
           </div>
 
           <select
             value={deliveryMethod}
-            onChange={(e) => setDeliveryMethod(e.target.value)}
+            onChange={(e) =>
+              setDeliveryMethod(e.target.value)
+            }
           >
-            <option value="standard">Standard Delivery (3–5 days)</option>
-            <option value="express">Express Delivery (1–2 days)</option>
-            <option value="pickup">Pickup Point</option>
+            <option value="standard">
+              Standard Delivery (3–5 days)
+            </option>
+
+            <option value="express">
+              Express Delivery (1–2 days)
+            </option>
+
+            <option value="pickup">
+              Pickup Point
+            </option>
           </select>
 
-          <div className="section-title" style={{ marginTop: "20px" }}>
+          <div
+            className="section-title"
+            style={{ marginTop: "20px" }}
+          >
             Totals
           </div>
 
@@ -487,23 +1240,48 @@ export default function CartPage() {
             <>
               <div className="item">
                 <span>Subtotal</span>
-                <span>${totals.subtotal.toFixed(2)}</span>
+
+                <span>
+                  $
+                  {Number(
+                    totals.subtotal
+                  ).toFixed(2)}
+                </span>
               </div>
+
               <div className="item">
                 <span>Tax</span>
-                <span>${totals.tax.toFixed(2)}</span>
+
+                <span>
+                  $
+                  {Number(
+                    totals.tax
+                  ).toFixed(2)}
+                </span>
               </div>
+
               <div className="item">
                 <strong>Total</strong>
-                <strong>${totals.total.toFixed(2)}</strong>
+
+                <strong>
+                  $
+                  {Number(
+                    totals.total
+                  ).toFixed(2)}
+                </strong>
               </div>
             </>
           ) : (
-            <div style={{ opacity: 0.7 }}>No totals available.</div>
+            <div style={{ opacity: 0.7 }}>
+              No totals available.
+            </div>
           )}
 
           {cart.items.length > 0 && (
-            <button className="paypal-btn" onClick={payWithPayPal}>
+            <button
+              className="paypal-btn"
+              onClick={payWithPayPal}
+            >
               Pay with PayPal
             </button>
           )}

@@ -1,13 +1,28 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+function getErrorMessage(json: any, fallback: string) {
+  if (typeof json?.detail === "string") return json.detail;
+  if (typeof json?.message === "string") return json.message;
+  if (typeof json?.error === "string") return json.error;
+  return fallback;
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const loggedIn = localStorage.getItem("logged_in") === "true";
 
+  const from =
+    typeof location.state?.from === "string"
+      ? location.state.from
+      : "/";
+
   useEffect(() => {
-    if (loggedIn) navigate("/");
+    if (loggedIn) {
+      navigate("/", { replace: true });
+    }
   }, [loggedIn, navigate]);
 
   const [email, setEmail] = useState("");
@@ -17,38 +32,282 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+  const [rateLimited, setRateLimited] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
+
+  function handleRateLimit() {
+    setRateLimited(true);
+    setPageError(null);
+    setErrorMsg("");
+    setSuccessMsg("");
+  }
+
+  function handleServerError(status: number) {
+    setPageError(
+      status >= 500
+        ? "Something went wrong on the server. Please try again later."
+        : `Something went wrong (${status}). Please try again.`
+    );
+
+    setRateLimited(false);
+    setErrorMsg("");
+    setSuccessMsg("");
+  }
+
+  function handleUnexpectedError() {
+    setPageError(
+      "Something went wrong. Please check your connection and try again."
+    );
+
+    setRateLimited(false);
+    setErrorMsg("");
+    setSuccessMsg("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
+    setPageError(null);
+    setRateLimited(false);
 
     try {
-      const res = await fetch("http://localhost:8000/auth/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
-      const json = await res.json();
+      let json: any = {};
 
-      if (!res.ok) {
-        setErrorMsg(json.detail || json.error || "Login failed");
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      /*
+       * 429 = rate limited.
+       * Show the same full-page rate-limit screen as the other pages.
+       */
+      if (res.status === 429) {
+        handleRateLimit();
         return;
       }
 
-      setSuccessMsg(json.message || "Logged in!");
+      /*
+       * 500+ = server/unexpected error.
+       * Show the full-page error screen.
+       */
+      if (res.status >= 500) {
+        handleServerError(res.status);
+        return;
+      }
+
+      /*
+       * 401 on LOGIN normally means incorrect credentials.
+       * Keep this as the normal login error box rather than
+       * redirecting back to /login, which would just reload
+       * the exact same page.
+       */
+      if (!res.ok) {
+        setErrorMsg(
+          getErrorMessage(
+            json,
+            `Login failed (${res.status})`
+          )
+        );
+        return;
+      }
+
+      setSuccessMsg(json?.message || "Logged in!");
 
       localStorage.setItem("logged_in", "true");
       localStorage.setItem("user_email", email);
 
-      setTimeout(() => navigate("/"), 800);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Login failed");
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 800);
+    } catch (err) {
+      console.error("Login fetch error:", err);
+
+      handleUnexpectedError();
     } finally {
       setLoading(false);
     }
+  }
+
+  if (rateLimited) {
+    return (
+      <div className="auth-wrapper">
+        <style>{`
+          .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            font-family: Inter, sans-serif;
+            padding: 20px;
+          }
+
+          .error-screen {
+            width: 100%;
+            max-width: 550px;
+            padding: 45px;
+            border-radius: 20px;
+            background: rgba(15,15,30,0.75);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,180,0,0.35);
+            box-shadow: 0 0 40px rgba(255,180,0,0.12);
+            color: white;
+            text-align: center;
+          }
+
+          .error-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen h2 {
+            color: #ffd166;
+            font-size: 30px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen p {
+            color: #d0d0df;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+          }
+
+          .retry-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: rgba(255,180,0,0.15);
+            border: 1px solid rgba(255,180,0,0.35);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+          }
+
+          .retry-btn:hover {
+            background: rgba(255,180,0,0.25);
+            transform: scale(1.05);
+          }
+        `}</style>
+
+        <div className="error-screen">
+          <div className="error-icon">⏳</div>
+
+          <h2>Too Many Requests</h2>
+
+          <p>
+            You are sending requests too quickly. Please wait a moment and
+            try again.
+          </p>
+
+          <button
+            className="retry-btn"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <div className="auth-wrapper">
+        <style>{`
+          .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            font-family: Inter, sans-serif;
+            padding: 20px;
+          }
+
+          .error-screen {
+            width: 100%;
+            max-width: 550px;
+            padding: 45px;
+            border-radius: 20px;
+            background: rgba(15,15,30,0.75);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,80,80,0.35);
+            box-shadow: 0 0 40px rgba(255,80,80,0.12);
+            color: white;
+            text-align: center;
+          }
+
+          .error-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen h2 {
+            color: #ff7070;
+            font-size: 30px;
+            margin-bottom: 15px;
+          }
+
+          .error-screen p {
+            color: #d0d0df;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+          }
+
+          .retry-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: rgba(255,80,80,0.15);
+            border: 1px solid rgba(255,80,80,0.35);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+          }
+
+          .retry-btn:hover {
+            background: rgba(255,80,80,0.25);
+            transform: scale(1.05);
+          }
+        `}</style>
+
+        <div className="error-screen">
+          <div className="error-icon">⚠️</div>
+
+          <h2>Something went wrong</h2>
+
+          <p>{pageError}</p>
+
+          <button
+            className="retry-btn"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -66,14 +325,26 @@ export default function LoginPage() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         @keyframes pulseGlow {
-          0% { box-shadow: 0 0 20px rgba(0,200,255,0.15); }
-          50% { box-shadow: 0 0 35px rgba(0,200,255,0.35); }
-          100% { box-shadow: 0 0 20px rgba(0,200,255,0.15); }
+          0% {
+            box-shadow: 0 0 20px rgba(0,200,255,0.15);
+          }
+          50% {
+            box-shadow: 0 0 35px rgba(0,200,255,0.35);
+          }
+          100% {
+            box-shadow: 0 0 20px rgba(0,200,255,0.15);
+          }
         }
 
         .glass-card {
@@ -99,6 +370,7 @@ export default function LoginPage() {
         }
 
         .input-label {
+          display: block;
           margin-bottom: 6px;
           font-size: 14px;
           opacity: 0.9;
@@ -115,6 +387,7 @@ export default function LoginPage() {
           font-size: 15px;
           margin-bottom: 18px;
           transition: 0.25s;
+          box-sizing: border-box;
         }
 
         .input-field:focus {
@@ -127,9 +400,8 @@ export default function LoginPage() {
           width: 100%;
           padding: 12px;
           border-radius: 12px;
-          border: none;
-          background: rgba(0,200,255,0.25);
           border: 1px solid rgba(0,200,255,0.4);
+          background: rgba(0,200,255,0.25);
           color: white;
           font-size: 16px;
           font-weight: 600;
@@ -137,9 +409,14 @@ export default function LoginPage() {
           transition: 0.25s;
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
           background: rgba(0,200,255,0.35);
           transform: scale(1.05);
+        }
+
+        .btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .msg {
@@ -181,32 +458,55 @@ export default function LoginPage() {
         <div className="title">Welcome Back</div>
 
         <form onSubmit={handleSubmit}>
-          <label className="input-label">Email</label>
+          <label className="input-label">
+            Email
+          </label>
+
           <input
             className="input-field"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
-          <label className="input-label">Password</label>
+          <label className="input-label">
+            Password
+          </label>
+
           <input
             className="input-field"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
-          <button className="btn" type="submit" disabled={loading}>
+          <button
+            className="btn"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? "Loading..." : "Login"}
           </button>
 
-          {errorMsg && <div className="msg error">{errorMsg}</div>}
-          {successMsg && <div className="msg success">{successMsg}</div>}
+          {errorMsg && (
+            <div className="msg error">
+              {errorMsg}
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="msg success">
+              {successMsg}
+            </div>
+          )}
         </form>
 
         <div className="switcher">
-          <Link to="/register">Switch to Register</Link>
+          <Link to="/register">
+            Switch to Register
+          </Link>
         </div>
       </div>
     </div>

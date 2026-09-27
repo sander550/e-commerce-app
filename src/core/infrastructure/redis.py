@@ -1,4 +1,3 @@
-
 from redis.asyncio import Redis
 from core.config.settings import settings
 
