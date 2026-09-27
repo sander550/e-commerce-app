@@ -37,3 +37,4 @@ pytest
 aiosqlite
 pytest-asyncio
 passlib
+SQLAlchemy[asyncio]
