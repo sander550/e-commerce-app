@@ -31,4 +31,4 @@ jobs:
           ACCESS_TOKEN_EXPIRE_MINUTES: "30"
           REFRESH_TOKEN_EXPIRE_DAYS: "7"
           REDIS_HOST: "localhost"
-          REDIS_PORT: "6379"
+          REDIS_PORT: "6379"      

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 # All routers combined in one place
 from api.router import router
@@ -37,11 +38,15 @@ app.add_middleware(
 # ---------------------------------------------------------
 app.include_router(router)
 
-rate_limiter = RedisRateLimitService(redis_client)
-rate_limit_middleware = RateLimitMiddleware(rate_limiter)
 
-app.middleware("http")(rate_limit_middleware.rate_limiting_middleware)
+# Dont add rate limiting for testing
+if os.getenv("TESTING") != "true":
+    rate_limiter = RedisRateLimitService(redis_client)
+    rate_limit_middleware = RateLimitMiddleware(rate_limiter)
 
+    app.middleware("http")(
+        rate_limit_middleware.rate_limiting_middleware
+    )
 # ---------------------------------------------------------
 # STARTUP: SUBSCRIBE TO EVENTS
 # ---------------------------------------------------------

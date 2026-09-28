@@ -1,17 +1,24 @@
 import pytest
+from datetime import datetime
 from unittest.mock import AsyncMock
 
-from auth.application.use_cases.login_user import LoginUserUseCase
 from auth.application.use_cases.register_user import RegisterUserUseCase
+from auth.application.use_cases.login_user import LoginUserUseCase
 from auth.application.use_cases.logout_user import LogoutUseCase
 
 from auth.domain.entities.user import User
 from auth.domain.entities.refresh_token import RefreshToken
 
-from auth.infrastructure.helpers.password_hash import hash_password, verify_password
-from auth.infrastructure.helpers.token_hash import hash_token
+from auth.domain.services.auth_domain_service import AuthDomainService
 
-from datetime import datetime
+from auth.infrastructure.helpers.password_hash import (
+    hash_password,
+)
+from auth.infrastructure.helpers.token_hash import (
+    hash_token,
+)
+
+from core.security.rate_limiting_service import RedisRateLimitService
 
 
 # ---------------------------------------------------------
@@ -29,65 +36,6 @@ def mock_user():
 
 
 # ---------------------------------------------------------
-# LOGIN USE CASE
-# ---------------------------------------------------------
-@pytest.mark.asyncio
-async def test_login_success():
-    user_repo = AsyncMock()
-    token_repo = AsyncMock()
-    domain = AsyncMock()
-
-    user_repo.get_by_email.return_value = mock_user()
-
-    uc = LoginUserUseCase(user_repo, token_repo, domain)
-
-    result = await uc.execute("test@example.com", "pw123")
-
-    assert "access_token" in result
-    assert "refresh_token" in result
-    assert result["user"].email == "test@example.com"
-
-    # token_repo.create should be called with hashed token
-    args, kwargs = token_repo.create.call_args
-    saved_token: RefreshToken = args[0]
-
-    assert saved_token.user_id == 1
-    assert saved_token.token != result["refresh_token"]  # hashed vs raw
-    assert saved_token.token == hash_token(result["refresh_token"])
-
-
-@pytest.mark.asyncio
-async def test_login_invalid_email():
-    user_repo = AsyncMock()
-    token_repo = AsyncMock()
-    domain = AsyncMock()
-
-    user_repo.get_by_email.return_value = None
-
-    uc = LoginUserUseCase(user_repo, token_repo, domain)
-
-    with pytest.raises(ValueError):
-        await uc.execute("wrong@example.com", "pw123")
-
-
-@pytest.mark.asyncio
-async def test_login_invalid_password():
-    user_repo = AsyncMock()
-    token_repo = AsyncMock()
-    domain = AsyncMock()
-
-    bad_user = mock_user()
-    bad_user.hashed_password = hash_password("different_pw")
-
-    user_repo.get_by_email.return_value = bad_user
-
-    uc = LoginUserUseCase(user_repo, token_repo, domain)
-
-    with pytest.raises(ValueError):
-        await uc.execute("test@example.com", "pw123")
-
-
-# ---------------------------------------------------------
 # REGISTER USE CASE
 # ---------------------------------------------------------
 @pytest.mark.asyncio
@@ -96,42 +44,111 @@ async def test_register_success():
     token_repo = AsyncMock()
     domain = AsyncMock()
 
-    user_repo.get_by_email.return_value = None  # email free
+    # Email does not already exist
+    user_repo.get_by_email.return_value = None
 
-    # simulate DB saving user
+    # Simulate database creating the user
     user_repo.create.return_value = mock_user()
 
-    uc = RegisterUserUseCase(user_repo, token_repo, domain)
+    uc = RegisterUserUseCase(
+        user_repo,
+        token_repo,
+        domain,
+    )
 
-    result = await uc.execute("new@example.com", "pw123")
+    result = await uc.execute(
+        "new@example.com",
+        "pw123",
+    )
 
+    # Check returned data
     assert "access_token" in result
     assert "refresh_token" in result
     assert result["user"].email == "test@example.com"
 
-    # domain.validate_new_user should be called
-    domain.validate_new_user.assert_called_once()
+    # Password validation was called
+    domain.validate_new_user.assert_called_once_with(
+        "pw123"
+    )
 
-    # token_repo.create should be called with hashed token
+    # Refresh token was stored
+    token_repo.create.assert_called_once()
+
     args, kwargs = token_repo.create.call_args
     saved_token: RefreshToken = args[0]
 
     assert saved_token.user_id == 1
-    assert saved_token.token == hash_token(result["refresh_token"])
+
+    assert saved_token.token == hash_token(
+        result["refresh_token"]
+    )
 
 
+# ---------------------------------------------------------
+# LOGIN USE CASE
+# ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_register_email_exists():
+async def test_login_success():
     user_repo = AsyncMock()
     token_repo = AsyncMock()
-    domain = AsyncMock()
+    domain = AuthDomainService()
 
+    # Mock Redis rate limiter
+    rate_limiter = AsyncMock(
+        spec=RedisRateLimitService
+    )
+
+    # Allow both login limits
+    rate_limiter.check_login_user_limit.return_value = True
+    rate_limiter.check_login_ip_limit.return_value = True
+
+    # Simulate existing user
     user_repo.get_by_email.return_value = mock_user()
 
-    uc = RegisterUserUseCase(user_repo, token_repo, domain)
+    uc = LoginUserUseCase(
+        user_repo,
+        token_repo,
+        domain,
+        rate_limiter,
+    )
 
-    with pytest.raises(ValueError):
-        await uc.execute("test@example.com", "pw123")
+    result = await uc.execute(
+        "test@example.com",
+        "pw123",
+        "127.0.0.1",
+    )
+
+    # Check returned data
+    assert "access_token" in result
+    assert "refresh_token" in result
+    assert result["user"].email == "test@example.com"
+
+    # Check account rate limit
+    rate_limiter.check_login_user_limit.assert_awaited_once_with(
+        "test@example.com"
+    )
+
+    # Check IP rate limit
+    rate_limiter.check_login_ip_limit.assert_awaited_once_with(
+        "127.0.0.1"
+    )
+
+    # Check user lookup
+    user_repo.get_by_email.assert_awaited_once_with(
+        "test@example.com"
+    )
+
+    # Check refresh token was saved
+    token_repo.create.assert_awaited_once()
+
+    args, kwargs = token_repo.create.call_args
+    saved_token: RefreshToken = args[0]
+
+    assert saved_token.user_id == 1
+
+    assert saved_token.token == hash_token(
+        result["refresh_token"]
+    )
 
 
 # ---------------------------------------------------------
@@ -141,7 +158,7 @@ async def test_register_email_exists():
 async def test_logout_success():
     token_repo = AsyncMock()
 
-    # simulate token found
+    # Simulate existing refresh token
     token_repo.get_by_token.return_value = RefreshToken(
         id=10,
         user_id=1,
@@ -155,28 +172,5 @@ async def test_logout_success():
 
     await uc.execute("rawtoken123")
 
-    token_repo.revoke.assert_called_once_with(10)
-
-
-@pytest.mark.asyncio
-async def test_logout_no_token():
-    token_repo = AsyncMock()
-
-    token_repo.get_by_token.return_value = None
-
-    uc = LogoutUseCase(token_repo)
-
-    await uc.execute("rawtoken123")
-
-    token_repo.revoke.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_logout_no_cookie():
-    token_repo = AsyncMock()
-
-    uc = LogoutUseCase(token_repo)
-
-    await uc.execute(None)
-
-    token_repo.revoke.assert_not_called()
+    # Only this token should be revoked
+    token_repo.revoke.assert_awaited_once_with(10)

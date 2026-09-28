@@ -78,7 +78,7 @@ async def login(
     if user:
         raise HTTPException(400, "Already logged in")
 
-    ip = request.client.host
+    ip = request.client.host if request.client else "testclient"
 
     try:
         result = await use_case.execute(dto.email, dto.password, ip)
