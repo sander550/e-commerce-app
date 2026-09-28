@@ -178,7 +178,11 @@ export default function CategoryPage() {
   async function addToCart(productId: number, stock: number) {
     if (stock <= 0) {
       setCartMessage("Out of stock");
-      setTimeout(() => setCartMessage(null), 1500);
+
+      setTimeout(() => {
+        setCartMessage(null);
+      }, 1500);
+
       return;
     }
 
@@ -233,13 +237,18 @@ export default function CategoryPage() {
           getErrorMessage(json, "Failed to add to cart.")
         );
 
-        setTimeout(() => setCartMessage(null), 1500);
+        setTimeout(() => {
+          setCartMessage(null);
+        }, 1500);
+
         return;
       }
 
-      setCartMessage("Added to cart!");
+      setCartMessage("✓ Added to cart!");
 
-      setTimeout(() => setCartMessage(null), 1500);
+      setTimeout(() => {
+        setCartMessage(null);
+      }, 1500);
     } catch {
       handleUnexpectedError();
     }
@@ -413,6 +422,41 @@ export default function CategoryPage() {
   if (errorMsg) {
     return (
       <div className="category-wrapper">
+        <style>{`
+          .category-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+          }
+
+          .glass {
+            background: rgba(15,15,30,0.75);
+            border: 1px solid rgba(0,200,255,0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+          }
+
+          .back-btn {
+            margin-top: 25px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            background: rgba(0,200,255,0.15);
+            border: 1px solid rgba(0,200,255,0.3);
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+          }
+        `}</style>
+
         <div className="glass">
           <h2>Error</h2>
           <p>{errorMsg}</p>
@@ -428,6 +472,38 @@ export default function CategoryPage() {
   if (!products.length) {
     return (
       <div className="category-wrapper">
+        <style>{`
+          .category-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Inter, sans-serif;
+          }
+
+          .glass {
+            background: rgba(15,15,30,0.75);
+            border: 1px solid rgba(0,200,255,0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+          }
+
+          .back-btn {
+            margin-top: 25px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            background: rgba(0,200,255,0.15);
+            border: 1px solid rgba(0,200,255,0.3);
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+          }
+        `}</style>
+
         <div className="glass">
           <h2>No products found in this category</h2>
 
@@ -442,25 +518,84 @@ export default function CategoryPage() {
   return (
     <div className="category-wrapper">
       <style>{`
-        .category-wrapper {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #050505, #0a0f1a);
-          color: #e8e8ff;
-          font-family: Inter, sans-serif;
-          padding: 40px;
-          animation: fadeIn 0.6s ease;
+        * {
+          box-sizing: border-box;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+        .category-wrapper {
+          min-height: 100vh;
+          position: relative;
+          overflow: hidden;
+          background:
+            radial-gradient(circle at 10% 20%, rgba(0,200,255,0.10), transparent 30%),
+            radial-gradient(circle at 90% 80%, rgba(0,100,255,0.10), transparent 30%),
+            linear-gradient(135deg, #030405, #080d16 50%, #04070c);
+          color: #e8e8ff;
+          font-family: Inter, Arial, sans-serif;
+          padding: 35px 40px 60px;
+          animation: pageFade 0.6s ease;
+        }
+
+        .category-wrapper::before {
+          content: "";
+          position: absolute;
+          width: 500px;
+          height: 500px;
+          border-radius: 50%;
+          background: rgba(0,200,255,0.07);
+          filter: blur(100px);
+          top: -250px;
+          left: -200px;
+          pointer-events: none;
+        }
+
+        .category-wrapper::after {
+          content: "";
+          position: absolute;
+          width: 450px;
+          height: 450px;
+          border-radius: 50%;
+          background: rgba(0,110,255,0.06);
+          filter: blur(100px);
+          bottom: -250px;
+          right: -200px;
+          pointer-events: none;
+        }
+
+        @keyframes pageFade {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .topbar {
+          position: relative;
+          z-index: 5;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 30px;
+          margin-bottom: 35px;
+        }
+
+        .app-name {
+          font-size: 31px;
+          font-weight: 800;
+          letter-spacing: -1px;
+          color: #00c8ff;
+          cursor: pointer;
+          text-shadow: 0 0 18px rgba(0,200,255,0.45);
+          transition: 0.25s;
+        }
+
+        .app-name:hover {
+          transform: translateY(-2px) scale(1.04);
+          color: #8ceeff;
         }
 
         .topbar-right {
@@ -469,99 +604,175 @@ export default function CategoryPage() {
           gap: 12px;
         }
 
-        .app-name {
-          font-size: 30px;
-          font-weight: 700;
-          color: #00c8ff;
-          cursor: pointer;
-          transition: 0.25s;
-          text-shadow: 0 0 10px rgba(0,200,255,0.4);
-        }
-
-        .app-name:hover {
-          transform: scale(1.08);
-          color: #7feaff;
-        }
-
         .nav-btn {
           padding: 10px 18px;
-          background: rgba(255,255,255,0.15);
-          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.18);
           border-radius: 12px;
           color: white;
           font-weight: 600;
           text-decoration: none;
           transition: 0.25s;
+          backdrop-filter: blur(10px);
         }
 
         .nav-btn:hover {
-          background: rgba(255,255,255,0.25);
-          transform: scale(1.05);
+          background: rgba(0,200,255,0.14);
+          border-color: rgba(0,200,255,0.4);
+          transform: translateY(-2px);
         }
 
         .icon-btn {
-          width: 42px;
-          height: 42px;
+          width: 43px;
+          height: 43px;
           border-radius: 50%;
-          background: rgba(0,200,255,0.15);
-          border: 1px solid rgba(0,200,255,0.3);
+          background: rgba(0,200,255,0.09);
+          border: 1px solid rgba(0,200,255,0.25);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 20px;
+          font-size: 19px;
           cursor: pointer;
           transition: 0.25s;
           text-decoration: none;
           color: white;
+          backdrop-filter: blur(10px);
         }
 
         .icon-btn:hover {
-          transform: scale(1.12);
-          background: rgba(0,200,255,0.25);
+          transform: translateY(-3px) scale(1.08);
+          background: rgba(0,200,255,0.2);
+          box-shadow: 0 0 18px rgba(0,200,255,0.18);
         }
 
         .glass {
-          background: rgba(15,15,30,0.75);
-          border: 1px solid rgba(0,200,255,0.25);
-          backdrop-filter: blur(25px);
-          border-radius: 20px;
-          padding: 28px;
-          max-width: 1100px;
+          position: relative;
+          z-index: 2;
+          background: rgba(9,13,23,0.70);
+          border: 1px solid rgba(0,200,255,0.20);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border-radius: 24px;
+          padding: 32px;
+          max-width: 1250px;
           margin: auto;
-          box-shadow: 0 0 40px rgba(0,200,255,0.15);
+          box-shadow:
+            0 25px 80px rgba(0,0,0,0.35),
+            0 0 35px rgba(0,200,255,0.06);
+        }
+
+        .category-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 30px;
+          gap: 20px;
+        }
+
+        .title-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
         }
 
         .title {
-          font-size: 34px;
-          font-weight: 700;
-          margin-bottom: 25px;
-          color: #00c8ff;
-          text-shadow: 0 0 12px rgba(0,200,255,0.5);
-          text-align: center;
+          font-size: 36px;
+          font-weight: 800;
+          letter-spacing: -1px;
+          color: #ffffff;
+          margin: 0;
+        }
+
+        .title-accent {
+          width: 65px;
+          height: 4px;
+          border-radius: 20px;
+          background: #00c8ff;
+          box-shadow: 0 0 15px rgba(0,200,255,0.7);
+        }
+
+        .product-count {
+          padding: 8px 14px;
+          border-radius: 20px;
+          background: rgba(0,200,255,0.08);
+          border: 1px solid rgba(0,200,255,0.18);
+          color: #7feaff;
+          font-size: 14px;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .product-grid {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 20px;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 18px;
         }
 
         .product-card {
-          background: rgba(15,15,30,0.75);
-          border: 1px solid rgba(0,200,255,0.25);
-          border-radius: 14px;
-          padding: 14px;
-          text-decoration: none;
+          min-width: 0;
+          min-height: 315px;
+          background: linear-gradient(
+            145deg,
+            rgba(22,28,42,0.90),
+            rgba(8,13,23,0.92)
+          );
+          border: 1px solid rgba(0,200,255,0.16);
+          border-radius: 18px;
+          padding: 13px;
           color: white;
-          transition: 0.25s;
+          transition: 0.3s ease;
           position: relative;
-          animation: fadeIn 0.4s ease;
+          animation: cardIn 0.5s ease both;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .product-card::before {
+          content: "";
+          position: absolute;
+          top: -80px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 180px;
+          height: 180px;
+          border-radius: 50%;
+          background: rgba(0,200,255,0.08);
+          filter: blur(45px);
+          opacity: 0;
+          transition: 0.3s;
+          pointer-events: none;
         }
 
         .product-card:hover {
-          background: rgba(0,200,255,0.15);
-          transform: translateY(-6px) scale(1.03);
-          box-shadow: 0 0 25px rgba(0,200,255,0.25);
+          transform: translateY(-8px);
+          border-color: rgba(0,200,255,0.42);
+          box-shadow:
+            0 18px 40px rgba(0,0,0,0.35),
+            0 0 25px rgba(0,200,255,0.10);
+        }
+
+        .product-card:hover::before {
+          opacity: 1;
+        }
+
+        @keyframes cardIn {
+          from {
+            opacity: 0;
+            transform: translateY(15px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .product-link {
+          color: white;
+          text-decoration: none;
+          display: block;
+          flex: 1;
         }
 
         .product-img-container {
@@ -572,97 +783,174 @@ export default function CategoryPage() {
           align-items: center;
           justify-content: center;
           margin-bottom: 10px;
+          overflow: hidden;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.025);
         }
 
         .product-img-glow {
           position: absolute;
-          width: 85%;
-          height: 85%;
+          width: 75%;
+          height: 75%;
           border-radius: 50%;
           background: radial-gradient(
             circle,
-            rgba(0,200,255,0.25) 0%,
-            rgba(0,200,255,0.05) 70%,
+            rgba(0,200,255,0.25),
+            rgba(0,200,255,0.04) 65%,
             transparent 100%
           );
-          filter: blur(12px);
-          animation: ripple 3.5s infinite ease-in-out;
+          filter: blur(14px);
+          animation: ripple 4s infinite ease-in-out;
         }
 
         @keyframes ripple {
-          0% { transform: scale(0.9); opacity: 0.4; }
-          50% { transform: scale(1.05); opacity: 0.8; }
-          100% { transform: scale(0.9); opacity: 0.4; }
+          0%, 100% {
+            transform: scale(0.92);
+            opacity: 0.45;
+          }
+
+          50% {
+            transform: scale(1.08);
+            opacity: 0.8;
+          }
         }
 
         .product-img {
-          width: 85%;
-          height: 85%;
+          width: 86%;
+          height: 86%;
           object-fit: contain;
           z-index: 2;
-          transition: 0.25s;
+          transition: 0.35s ease;
         }
 
         .product-card:hover .product-img {
-          transform: scale(1.05);
+          transform: scale(1.08) translateY(-3px);
+        }
+
+        .stock-badge {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          z-index: 4;
+          padding: 5px 8px;
+          border-radius: 8px;
+          font-size: 11px;
+          font-weight: 700;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .stock-good {
+          background: rgba(50,220,140,0.12);
+          color: #68f0b0;
+        }
+
+        .stock-low {
+          background: rgba(255,190,50,0.13);
+          color: #ffd166;
+        }
+
+        .stock-out {
+          background: rgba(255,70,70,0.13);
+          color: #ff8585;
         }
 
         .product-name {
-          font-size: 18px;
-          font-weight: 600;
-          margin-bottom: 4px;
-          color: white;
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 1.3;
+          margin: 4px 2px 7px;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .product-bottom {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          margin-top: auto;
+          padding: 0 2px 2px;
         }
 
         .product-price {
           color: #7feaff;
-          font-weight: 600;
-          margin-bottom: 6px;
-        }
-
-        .product-desc {
-          opacity: 0.7;
-          font-size: 14px;
+          font-size: 17px;
+          font-weight: 800;
+          text-shadow: 0 0 10px rgba(0,200,255,0.25);
         }
 
         .add-btn {
-          position: absolute;
-          bottom: 12px;
-          right: 12px;
-          padding: 6px 10px;
-          background: rgba(0,200,255,0.25);
-          border: 1px solid rgba(0,200,255,0.4);
-          border-radius: 10px;
-          cursor: pointer;
+          width: 36px;
+          height: 36px;
+          border-radius: 11px;
+          background: rgba(0,200,255,0.13);
+          border: 1px solid rgba(0,200,255,0.28);
           color: white;
-          font-size: 14px;
-          font-weight: 600;
+          cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 4px;
+          justify-content: center;
+          font-size: 16px;
           transition: 0.25s;
         }
 
         .add-btn:hover {
-          background: rgba(0,200,255,0.35);
+          background: rgba(0,200,255,0.28);
+          border-color: rgba(0,200,255,0.55);
           transform: scale(1.08);
+          box-shadow: 0 0 15px rgba(0,200,255,0.18);
+        }
+
+        .add-btn.disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .add-btn.disabled:hover {
+          transform: none;
+          box-shadow: none;
         }
 
         .cart-message {
-          margin-top: 10px;
+          position: fixed;
+          z-index: 20;
+          top: 25px;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 12px 20px;
+          border-radius: 14px;
+          background: rgba(8,15,25,0.92);
+          border: 1px solid rgba(0,200,255,0.35);
           color: #7feaff;
-          font-weight: 600;
-          text-align: center;
+          font-weight: 700;
+          box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+          backdrop-filter: blur(15px);
+          animation: messageIn 0.3s ease;
+        }
+
+        @keyframes messageIn {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -10px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
         }
 
         .back-btn {
-          margin-top: 25px;
-          padding: 12px 20px;
+          margin-top: 28px;
+          padding: 11px 18px;
           border-radius: 12px;
-          background: rgba(0,200,255,0.15);
-          border: 1px solid rgba(0,200,255,0.3);
-          color: white;
-          font-size: 16px;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.13);
+          color: #d9eaff;
+          font-size: 14px;
           font-weight: 600;
           cursor: pointer;
           text-decoration: none;
@@ -671,8 +959,62 @@ export default function CategoryPage() {
         }
 
         .back-btn:hover {
-          background: rgba(0,200,255,0.25);
-          transform: scale(1.05);
+          background: rgba(0,200,255,0.10);
+          border-color: rgba(0,200,255,0.3);
+          color: white;
+          transform: translateX(-3px);
+        }
+
+        @media (max-width: 1100px) {
+          .product-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 850px) {
+          .category-wrapper {
+            padding: 25px 20px 45px;
+          }
+
+          .glass {
+            padding: 22px;
+          }
+
+          .product-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 620px) {
+          .topbar {
+            align-items: flex-start;
+          }
+
+          .app-name {
+            font-size: 25px;
+          }
+
+          .topbar-right {
+            gap: 6px;
+          }
+
+          .product-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+          }
+
+          .category-header {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .title {
+            font-size: 30px;
+          }
+
+          .glass {
+            padding: 16px;
+          }
         }
       `}</style>
 
@@ -717,48 +1059,100 @@ export default function CategoryPage() {
       )}
 
       <div className="glass">
-        <div className="title">
-          {categoryName}
+        <div className="category-header">
+          <div className="title-wrapper">
+            <h1 className="title">{categoryName}</h1>
+            <div className="title-accent"></div>
+          </div>
+
+          <div className="product-count">
+            {products.length}{" "}
+            {products.length === 1 ? "product" : "products"}
+          </div>
         </div>
 
         <div className="product-grid">
-          {products.map((p) => (
-            <div key={p.id} className="product-card">
-              <Link to={`/product/${p.id}`}>
-                <div className="product-img-container">
-                  <div className="product-img-glow"></div>
+          {products.map((p, index) => {
+            const stockClass =
+              p.stock <= 0
+                ? "stock-out"
+                : p.stock <= 5
+                ? "stock-low"
+                : "stock-good";
 
-                  <img
-                    src={
-                      p.image_url ||
-                      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2NjY2NjYyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjUwIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
-                    }
-                    alt={p.name}
-                    className="product-img"
-                  />
-                </div>
+            const stockText =
+              p.stock <= 0
+                ? "Out of stock"
+                : p.stock <= 5
+                ? `Only ${p.stock} left`
+                : "In stock";
 
-                <div className="product-name">
-                  {p.name}
-                </div>
-
-                <div className="product-price">
-                  ${p.price}
-                </div>
-
-                <div className="product-desc">
-                  {p.description || "No description"}
-                </div>
-              </Link>
-
+            return (
               <div
-                className="add-btn"
-                onClick={() => addToCart(p.id, p.stock)}
+                key={p.id}
+                className="product-card"
+                style={{
+                  animationDelay: `${index * 60}ms`,
+                }}
               >
-                🛒 +
+                <Link
+                  to={`/product/${p.id}`}
+                  className="product-link"
+                >
+                  <div className="product-img-container">
+                    <div className="product-img-glow"></div>
+
+                    <div className={`stock-badge ${stockClass}`}>
+                      {stockText}
+                    </div>
+
+                    <img
+                      src={
+                        p.image_url ||
+                        "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2NjY2NjYyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjUwIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
+                      }
+                      alt={p.name}
+                      className="product-img"
+                    />
+                  </div>
+
+                  <div className="product-name">
+                    {p.name}
+                  </div>
+
+                  <div className="product-bottom">
+                    <div className="product-price">
+                      ${Number(p.price).toFixed(2)}
+                    </div>
+                  </div>
+                </Link>
+
+                <div className="product-bottom">
+                  <div></div>
+
+                  <button
+                    type="button"
+                    className={`add-btn ${
+                      p.stock <= 0 ? "disabled" : ""
+                    }`}
+                    disabled={p.stock <= 0}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addToCart(p.id, p.stock);
+                    }}
+                    title={
+                      p.stock <= 0
+                        ? "Out of stock"
+                        : "Add to cart"
+                    }
+                  >
+                    🛒
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <Link className="back-btn" to="/index">
@@ -768,3 +1162,4 @@ export default function CategoryPage() {
     </div>
   );
 }
+
