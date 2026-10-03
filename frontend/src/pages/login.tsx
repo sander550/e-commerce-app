@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function getErrorMessage(json: any, fallback: string) {
   if (typeof json?.detail === "string") return json.detail;
@@ -12,18 +13,12 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const loggedIn = localStorage.getItem("logged_in") === "true";
+  const { user, loading: authLoading, refreshUser } = useAuth();
 
   const from =
     typeof location.state?.from === "string"
       ? location.state.from
       : "/";
-
-  useEffect(() => {
-    if (loggedIn) {
-      navigate("/", { replace: true });
-    }
-  }, [loggedIn, navigate]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,6 +29,21 @@ export default function LoginPage() {
 
   const [rateLimited, setRateLimited] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+
+  /*
+   * If AuthContext already knows that the user is logged in,
+   * there is no reason to show the login page.
+   *
+   * We wait until authLoading is finished so that we don't
+   * redirect incorrectly while /api/auth/profile is still loading.
+   */
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [authLoading, user, navigate, from]);
 
   function handleRateLimit() {
     setRateLimited(true);
@@ -96,7 +106,6 @@ export default function LoginPage() {
 
       /*
        * 429 = rate limited.
-       * Show the same full-page rate-limit screen as the other pages.
        */
       if (res.status === 429) {
         handleRateLimit();
@@ -104,8 +113,7 @@ export default function LoginPage() {
       }
 
       /*
-       * 500+ = server/unexpected error.
-       * Show the full-page error screen.
+       * 500+ = server error.
        */
       if (res.status >= 500) {
         handleServerError(res.status);
@@ -113,10 +121,8 @@ export default function LoginPage() {
       }
 
       /*
-       * 401 on LOGIN normally means incorrect credentials.
-       * Keep this as the normal login error box rather than
-       * redirecting back to /login, which would just reload
-       * the exact same page.
+       * Login 401/400/etc. means the login itself failed.
+       * Do NOT redirect to /login because we're already there.
        */
       if (!res.ok) {
         setErrorMsg(
@@ -128,11 +134,22 @@ export default function LoginPage() {
         return;
       }
 
+      /*
+       * Login succeeded.
+       *
+       * The backend should have set the authentication cookie.
+       * refreshUser() now calls /api/auth/profile so AuthContext
+       * gets the actual logged-in user.
+       */
+      await refreshUser();
+
       setSuccessMsg(json?.message || "Logged in!");
 
-      localStorage.setItem("logged_in", "true");
-      localStorage.setItem("user_email", email);
-
+      /*
+       * Small delay so the user can see the success message.
+       * AuthContext is now the source of truth — no
+       * localStorage.logged_in is needed anymore.
+       */
       setTimeout(() => {
         navigate(from, { replace: true });
       }, 800);
@@ -143,6 +160,34 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="auth-wrapper">
+        <style>{`
+          .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            font-family: Inter, sans-serif;
+            padding: 20px;
+          }
+
+          .loading-text {
+            color: #00c8ff;
+            font-size: 18px;
+            text-shadow: 0 0 10px rgba(0,200,255,0.4);
+          }
+        `}</style>
+
+        <div className="loading-text">
+          Checking authentication...
+        </div>
+      </div>
+    );
   }
 
   if (rateLimited) {

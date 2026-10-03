@@ -1,145 +1,57 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-function getErrorMessage(json: any, fallback: string) {
-  if (typeof json?.detail === "string") return json.detail;
-  if (typeof json?.message === "string") return json.message;
-  if (typeof json?.error === "string") return json.error;
-  return fallback;
-}
+import { useAuth } from "../context/AuthContext";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    user,
+    loading: authLoading,
+    logout,
+  } = useAuth();
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
-
-  const loggedIn = localStorage.getItem("logged_in") === "true";
-
-  const redirectToLogin = () => {
-    navigate("/login", {
-      replace: true,
-      state: { from: "/profile" },
-    });
-  };
-
-  const handleRateLimit = () => {
-    setRateLimited(true);
-    setErrorMsg(null);
-  };
-
-  const handleServerError = (status: number) => {
-    setErrorMsg(
-      status >= 500
-        ? "Something went wrong on the server. Please try again later."
-        : `Something went wrong (${status}). Please try again.`
-    );
-  };
-
-  const handleUnexpectedError = (message: string) => {
-    setErrorMsg(message);
-  };
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
-    if (!loggedIn) {
-      redirectToLogin();
+    if (!authLoading && !user) {
+      navigate("/login", {
+        replace: true,
+        state: { from: "/profile" },
+      });
     }
-  }, [loggedIn]);
-
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await fetch("/api/auth/profile", {
-          credentials: "include",
-        });
-
-        let json: any = {};
-
-        try {
-          json = await res.json();
-        } catch {
-          json = {};
-        }
-
-        if (res.status === 401) {
-          redirectToLogin();
-          return;
-        }
-
-        if (res.status === 429) {
-          handleRateLimit();
-          return;
-        }
-
-        if (res.status >= 500) {
-          handleServerError(res.status);
-          return;
-        }
-
-        if (!res.ok) {
-          setErrorMsg(
-            getErrorMessage(
-              json,
-              `Request failed (${res.status})`
-            )
-          );
-          return;
-        }
-
-        setUser(json);
-        setErrorMsg(null);
-      } catch (err) {
-        console.error("Profile fetch error:", err);
-
-        handleUnexpectedError(
-          "Unable to connect to the server. Please check your connection and try again."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (loggedIn) {
-      loadProfile();
-    } else {
-      setLoading(false);
-    }
-  }, [loggedIn]);
+  }, [authLoading, user, navigate]);
 
   async function handleLogout() {
+    setLoggingOut(true);
+    setErrorMsg(null);
+    setRateLimited(false);
+
     try {
-      const res = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
+      await logout();
+
+      navigate("/", {
+        replace: true,
       });
-
-      if (res.status === 429) {
-        handleRateLimit();
-        return;
-      }
-
-      if (res.status >= 500) {
-        handleServerError(res.status);
-        return;
-      }
     } catch (err) {
       console.error("Logout error:", err);
+
+      setErrorMsg(
+        "Unable to log out properly. Please try again."
+      );
+
+      setLoggingOut(false);
     }
-
-    localStorage.removeItem("logged_in");
-    localStorage.removeItem("user_email");
-
-    navigate("/", {
-      replace: true,
-    });
   }
 
-  if (loading) {
+  if (authLoading || !user) {
     return (
       <div className="profile-wrapper">
-        <div className="loading">Loading profile...</div>
+        <div className="loading">
+          Loading profile...
+        </div>
 
         <style>{`
           .profile-wrapper {
@@ -414,6 +326,7 @@ export default function ProfilePage() {
           border: 1px solid rgba(0,200,255,0.25);
           box-shadow: 0 0 40px rgba(0,200,255,0.15);
           text-align: center;
+          box-sizing: border-box;
         }
 
         .title {
@@ -447,9 +360,14 @@ export default function ProfilePage() {
           border: 1px solid rgba(255,80,80,0.4);
         }
 
-        .logout-btn:hover {
+        .logout-btn:hover:not(:disabled) {
           background: rgba(255,80,80,0.35);
           transform: scale(1.05);
+        }
+
+        .logout-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .back-btn {
@@ -479,34 +397,33 @@ export default function ProfilePage() {
       </div>
 
       <div className="glass-card">
-        <div className="title">Your Profile</div>
+        <div className="title">
+          Your Profile
+        </div>
 
-        {user && (
-          <>
-            <div className="info">
-              <strong>ID:</strong> {user.id}
-            </div>
+        <div className="info">
+          <strong>ID:</strong> {user.id}
+        </div>
 
-            <div className="info">
-              <strong>Email:</strong> {user.email}
-            </div>
+        <div className="info">
+          <strong>Email:</strong> {user.email}
+        </div>
 
-            <div className="info">
-              <strong>Active:</strong>{" "}
-              {user.is_active?.toString()}
-            </div>
+        <div className="info">
+          <strong>Active:</strong>{" "}
+          {user.is_active?.toString()}
+        </div>
 
-            <div className="info">
-              <strong>Created:</strong> {user.created_at}
-            </div>
-          </>
-        )}
+        <div className="info">
+          <strong>Created:</strong> {user.created_at}
+        </div>
 
         <button
           className="logout-btn"
           onClick={handleLogout}
+          disabled={loggingOut}
         >
-          Logout
+          {loggingOut ? "Logging out..." : "Logout"}
         </button>
 
         <button

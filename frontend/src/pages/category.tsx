@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 type ProductDTO = {
   id: number;
@@ -28,6 +29,8 @@ export default function CategoryPage() {
   const { category_id } = useParams();
   const navigate = useNavigate();
 
+  const { user, loading: authLoading } = useAuth();
+
   const [products, setProducts] = useState<ProductDTO[]>([]);
   const [categoryName, setCategoryName] = useState<string>("");
 
@@ -36,18 +39,6 @@ export default function CategoryPage() {
 
   const [pageError, setPageError] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
-
-  const [loggedIn, setLoggedIn] = useState(
-    localStorage.getItem("logged_in") === "true"
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLoggedIn(localStorage.getItem("logged_in") === "true");
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const redirectToLogin = () => {
     navigate("/login", {
@@ -87,13 +78,24 @@ export default function CategoryPage() {
     setCartMessage(null);
   };
 
+  // -----------------------------
+  // LOAD CATEGORY PRODUCTS
+  // -----------------------------
+
   useEffect(() => {
+    if (authLoading) return;
+
+    let cancelled = false;
+
     async function loadProducts() {
       setErrorMsg("");
 
       try {
         const res = await fetch(
-          `http://localhost:8000/products/category/${category_id}`
+          `/api/products/category/${category_id}`,
+          {
+            credentials: "include",
+          }
         );
 
         let json: any = null;
@@ -104,8 +106,21 @@ export default function CategoryPage() {
           json = null;
         }
 
+        if (cancelled) return;
+
+        /*
+         * Category/product pages are public.
+         *
+         * A 401 here should NOT automatically send
+         * the user to login.
+         */
         if (res.status === 401) {
-          redirectToLogin();
+          setErrorMsg(
+            getErrorMessage(
+              json,
+              "You are not authorized to view these products."
+            )
+          );
           return;
         }
 
@@ -121,21 +136,49 @@ export default function CategoryPage() {
 
         if (!res.ok) {
           setErrorMsg(
-            getErrorMessage(json, "Failed to load category products")
+            getErrorMessage(
+              json,
+              "Failed to load category products."
+            )
           );
           return;
         }
 
-        setProducts(json);
-      } catch {
-        handleUnexpectedError();
+        setProducts(
+          Array.isArray(json) ? json : []
+        );
+      } catch (err) {
+        console.error("Load category products failed:", err);
+
+        if (!cancelled) {
+          handleUnexpectedError();
+        }
       }
     }
+
+    loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [category_id, authLoading]);
+
+  // -----------------------------
+  // LOAD CATEGORY NAME
+  // -----------------------------
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    let cancelled = false;
 
     async function loadCategoryName() {
       try {
         const res = await fetch(
-          `http://localhost:8000/categories/${category_id}`
+          `/api/categories/${category_id}`,
+          {
+            credentials: "include",
+          }
         );
 
         let json: CategoryDTO | any = null;
@@ -146,8 +189,14 @@ export default function CategoryPage() {
           json = null;
         }
 
+        if (cancelled) return;
+
+        /*
+         * Categories are public.
+         * Do not redirect to login for 401.
+         */
         if (res.status === 401) {
-          redirectToLogin();
+          setCategoryName(`Category ${category_id}`);
           return;
         }
 
@@ -166,16 +215,30 @@ export default function CategoryPage() {
         } else {
           setCategoryName(`Category ${category_id}`);
         }
-      } catch {
-        handleUnexpectedError();
+      } catch (err) {
+        console.error("Load category name failed:", err);
+
+        if (!cancelled) {
+          handleUnexpectedError();
+        }
       }
     }
 
-    loadProducts();
     loadCategoryName();
-  }, [category_id]);
 
-  async function addToCart(productId: number, stock: number) {
+    return () => {
+      cancelled = true;
+    };
+  }, [category_id, authLoading]);
+
+  // -----------------------------
+  // ADD TO CART
+  // -----------------------------
+
+  async function addToCart(
+    productId: number,
+    stock: number
+  ) {
     if (stock <= 0) {
       setCartMessage("Out of stock");
 
@@ -186,28 +249,36 @@ export default function CategoryPage() {
       return;
     }
 
-    if (!loggedIn) {
-      setCartMessage("Please log in to add items to cart.");
+    /*
+     * AuthContext is now the source of truth.
+     */
+    if (!user) {
+      setCartMessage(
+        "Please log in to add items to cart."
+      );
 
       setTimeout(() => {
         redirectToLogin();
-      }, 1500);
+      }, 800);
 
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:8000/cart/add", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: productId,
-          quantity: 1,
-        }),
-      });
+      const res = await fetch(
+        "/api/cart/add",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_id: productId,
+            quantity: 1,
+          }),
+        }
+      );
 
       let json: any = null;
 
@@ -234,7 +305,10 @@ export default function CategoryPage() {
 
       if (!res.ok) {
         setCartMessage(
-          getErrorMessage(json, "Failed to add to cart.")
+          getErrorMessage(
+            json,
+            "Failed to add to cart."
+          )
         );
 
         setTimeout(() => {
@@ -249,10 +323,52 @@ export default function CategoryPage() {
       setTimeout(() => {
         setCartMessage(null);
       }, 1500);
-    } catch {
+    } catch (err) {
+      console.error("Add to cart failed:", err);
       handleUnexpectedError();
     }
   }
+
+  // -----------------------------
+  // AUTH LOADING
+  // -----------------------------
+
+  if (authLoading) {
+    return (
+      <div className="category-wrapper">
+        <style>{`
+          .category-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Inter, sans-serif;
+          }
+
+          .glass {
+            background: rgba(15,15,30,0.75);
+            border: 1px solid rgba(0,200,255,0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+            color: #00c8ff;
+            font-weight: 700;
+          }
+        `}</style>
+
+        <div className="glass">
+          Checking authentication...
+        </div>
+      </div>
+    );
+  }
+
+  // -----------------------------
+  // RATE LIMIT ERROR
+  // -----------------------------
 
   if (rateLimited) {
     return (
@@ -338,6 +454,10 @@ export default function CategoryPage() {
     );
   }
 
+  // -----------------------------
+  // PAGE ERROR
+  // -----------------------------
+
   if (pageError) {
     return (
       <div className="category-wrapper">
@@ -419,6 +539,10 @@ export default function CategoryPage() {
     );
   }
 
+  // -----------------------------
+  // API ERROR
+  // -----------------------------
+
   if (errorMsg) {
     return (
       <div className="category-wrapper">
@@ -461,13 +585,17 @@ export default function CategoryPage() {
           <h2>Error</h2>
           <p>{errorMsg}</p>
 
-          <Link to="/index" className="back-btn">
+          <Link to="/" className="back-btn">
             ← Back to Store
           </Link>
         </div>
       </div>
     );
   }
+
+  // -----------------------------
+  // NO PRODUCTS
+  // -----------------------------
 
   if (!products.length) {
     return (
@@ -507,13 +635,17 @@ export default function CategoryPage() {
         <div className="glass">
           <h2>No products found in this category</h2>
 
-          <Link to="/index" className="back-btn">
+          <Link to="/" className="back-btn">
             ← Back to Store
           </Link>
         </div>
       </div>
     );
   }
+
+  // -----------------------------
+  // NORMAL UI
+  // -----------------------------
 
   return (
     <div className="category-wrapper">
@@ -1019,12 +1151,15 @@ export default function CategoryPage() {
       `}</style>
 
       <div className="topbar">
-        <div className="app-name" onClick={() => navigate("/")}>
+        <div
+          className="app-name"
+          onClick={() => navigate("/")}
+        >
           AntsShop
         </div>
 
         <div className="topbar-right">
-          {loggedIn ? (
+          {user ? (
             <>
               <Link to="/cart" className="icon-btn">
                 🛒
@@ -1067,7 +1202,9 @@ export default function CategoryPage() {
 
           <div className="product-count">
             {products.length}{" "}
-            {products.length === 1 ? "product" : "products"}
+            {products.length === 1
+              ? "product"
+              : "products"}
           </div>
         </div>
 
@@ -1102,7 +1239,9 @@ export default function CategoryPage() {
                   <div className="product-img-container">
                     <div className="product-img-glow"></div>
 
-                    <div className={`stock-badge ${stockClass}`}>
+                    <div
+                      className={`stock-badge ${stockClass}`}
+                    >
                       {stockText}
                     </div>
 
@@ -1122,7 +1261,8 @@ export default function CategoryPage() {
 
                   <div className="product-bottom">
                     <div className="product-price">
-                      ${Number(p.price).toFixed(2)}
+                      $
+                      {Number(p.price).toFixed(2)}
                     </div>
                   </div>
                 </Link>
@@ -1155,11 +1295,10 @@ export default function CategoryPage() {
           })}
         </div>
 
-        <Link className="back-btn" to="/index">
+        <Link className="back-btn" to="/">
           ← Back to Store
         </Link>
       </div>
     </div>
   );
 }
-
