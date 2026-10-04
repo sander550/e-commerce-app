@@ -7,35 +7,38 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:7
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
 
   chroma:
     image: chromadb/chroma:latest
-    ports:
-      - "8001:8000"
     volumes:
       - chroma_data:/chroma
     environment:
       CHROMA_DB_IMPL: "duckdb+parquet"
       CHROMA_SERVER_HOST: "0.0.0.0"
       CHROMA_SERVER_PORT: "8000"
+    restart: unless-stopped
 
   ollama:
     image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
       - ./ollama-init.sh:/root/ollama-init.sh
-    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 2 && /root/ollama-init.sh && tail -f /dev/null"]
+    environment:
+      OLLAMA_HOST: ${OLLAMA_HOST}
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        "ollama serve & sleep 2 && /root/ollama-init.sh && tail -f /dev/null"
+      ]
+    restart: unless-stopped
 
   backend:
     build: .
@@ -44,16 +47,13 @@ services:
     environment:
       OLLAMA_HOST: ${OLLAMA_HOST}
       CHROMA_HOST: http://chroma:8000
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
-    ports:
-      - "8000:8000"
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
     depends_on:
       - redis
       - postgres
       - ollama
       - chroma
-    volumes:
-      - .:/app
+    restart: unless-stopped
 
   worker:
     build: .
@@ -68,17 +68,15 @@ services:
       - postgres
       - ollama
       - chroma
-    volumes:
-      - .:/app
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
-    command: [ "npm", "run", "dev", "--", "--host" ]
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:

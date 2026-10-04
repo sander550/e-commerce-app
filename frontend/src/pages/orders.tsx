@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function OrdersPage() {
   const navigate = useNavigate();
+
+  const { user, loading: authLoading } = useAuth();
 
   const [orders, setOrders] = useState<any[]>([]);
   const [openOrders, setOpenOrders] = useState<number[]>([]);
@@ -93,7 +96,7 @@ export default function OrdersPage() {
 
         if (res.status === 401) {
           redirectToLogin();
-          return;
+          return false;
         }
 
         // ---------------------------------------------------
@@ -102,7 +105,7 @@ export default function OrdersPage() {
 
         if (res.status === 429) {
           handleRateLimit();
-          return;
+          return false;
         }
 
         // ---------------------------------------------------
@@ -111,7 +114,7 @@ export default function OrdersPage() {
 
         if (res.status >= 500) {
           handleServerError();
-          return;
+          return false;
         }
 
         // ---------------------------------------------------
@@ -125,14 +128,18 @@ export default function OrdersPage() {
           )
         );
 
-        return;
+        return false;
       }
 
       setOrders(Array.isArray(json) ? json : []);
+
+      return true;
     } catch (err) {
       console.error("Orders fetch error:", err);
 
       handleUnexpectedError();
+
+      return false;
     }
   };
 
@@ -235,20 +242,127 @@ export default function OrdersPage() {
   };
 
   // ---------------------------------------------------------
-  // INITIAL LOAD
+  // AUTH + INITIAL LOAD
   // ---------------------------------------------------------
 
   useEffect(() => {
+    /*
+     * Wait until AuthContext has finished checking
+     * /api/auth/profile.
+     */
+    if (authLoading) {
+      return;
+    }
+
+    /*
+     * AuthContext is now the source of truth.
+     * If there is no authenticated user, go to login.
+     */
+    if (!user) {
+      setLoading(false);
+      redirectToLogin();
+      return;
+    }
+
     const load = async () => {
+      setLoading(true);
+
       await listOrders();
+
       setLoading(false);
     };
 
     load();
-  }, []);
+  }, [authLoading, user]);
 
   // ---------------------------------------------------------
-  // LOADING SCREEN
+  // AUTH LOADING SCREEN
+  // ---------------------------------------------------------
+
+  if (authLoading) {
+    return (
+      <div className="orders-page">
+        <style>{`
+          .orders-page {
+            min-height: 100vh;
+            width: 100%;
+            box-sizing: border-box;
+            background:
+              radial-gradient(
+                circle at top,
+                rgba(0, 200, 255, 0.08),
+                transparent 35%
+              ),
+              linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .orders-loading {
+            width: min(500px, 90%);
+            box-sizing: border-box;
+            padding: 35px;
+            text-align: center;
+            border-radius: 20px;
+
+            background: rgba(15, 15, 30, 0.78);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+
+            backdrop-filter: blur(25px);
+
+            box-shadow:
+              0 0 40px rgba(0, 200, 255, 0.15),
+              inset 0 0 30px rgba(0, 200, 255, 0.03);
+
+            animation: ordersPulse 1.8s infinite ease-in-out;
+          }
+
+          .loading-title {
+            color: #00c8ff;
+            font-size: 25px;
+            font-weight: 700;
+            text-shadow: 0 0 12px rgba(0, 200, 255, 0.5);
+          }
+
+          .loading-text {
+            margin-top: 10px;
+            color: rgba(232, 232, 255, 0.65);
+          }
+
+          @keyframes ordersPulse {
+            0% {
+              box-shadow: 0 0 20px rgba(0, 200, 255, 0.12);
+            }
+
+            50% {
+              box-shadow: 0 0 45px rgba(0, 200, 255, 0.32);
+            }
+
+            100% {
+              box-shadow: 0 0 20px rgba(0, 200, 255, 0.12);
+            }
+          }
+        `}</style>
+
+        <div className="orders-loading">
+          <div className="loading-title">
+            Checking authentication...
+          </div>
+
+          <div className="loading-text">
+            Please wait a moment.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------
+  // PAGE LOADING SCREEN
   // ---------------------------------------------------------
 
   if (loading) {
@@ -665,6 +779,16 @@ export default function OrdersPage() {
           animation: fadeIn 0.3s ease;
         }
 
+        .api-error {
+          margin-bottom: 18px;
+          padding: 14px 16px;
+          border-radius: 12px;
+          background: rgba(255,80,80,0.1);
+          border: 1px solid rgba(255,80,80,0.3);
+          color: #ff9b9b;
+          font-weight: 600;
+        }
+
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -704,13 +828,19 @@ export default function OrdersPage() {
           Your Orders
         </div>
 
+        {error && (
+          <div className="api-error">
+            ⚠️ {error}
+          </div>
+        )}
+
         {detailsError && (
           <div className="details-error">
             ⚡ {detailsError}
           </div>
         )}
 
-        {orders.length === 0 && (
+        {orders.length === 0 && !error && (
           <div style={{ opacity: 0.7 }}>
             You have no orders yet.
           </div>

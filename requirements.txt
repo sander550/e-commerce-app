@@ -38,3 +38,4 @@ aiosqlite
 pytest-asyncio
 passlib
 SQLAlchemy[asyncio]
+psycopg[binary]

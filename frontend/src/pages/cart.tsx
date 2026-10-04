@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function getErrorMessage(json: any, fallback: string) {
   if (typeof json?.detail === "string") return json.detail;
@@ -10,6 +11,10 @@ function getErrorMessage(json: any, fallback: string) {
 
 export default function CartPage() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+
+  const redirectingRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const [cart, setCart] = useState<any>({
     items: [],
@@ -18,7 +23,6 @@ export default function CartPage() {
   const [totals, setTotals] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Address fields
   const [street, setStreet] = useState("");
   const [houseNumber, setHouseNumber] = useState("");
   const [city, setCity] = useState("");
@@ -34,62 +38,103 @@ export default function CartPage() {
   const [rateLimited, setRateLimited] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  // Track which fields should be highlighted red
   const [highlightErrors, setHighlightErrors] =
     useState(false);
 
-  // -----------------------------
+  // --------------------------------
+  // CLEANUP
+  // --------------------------------
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // --------------------------------
   // AUTH REDIRECT
-  // -----------------------------
+  // --------------------------------
 
   const redirectToLogin = () => {
+    if (redirectingRef.current) {
+      return;
+    }
+
+    redirectingRef.current = true;
+
+    setLoading(false);
+
     navigate("/login", {
       replace: true,
-      state: { from: "/cart" },
+      state: {
+        from: "/cart",
+      },
     });
   };
 
-  // -----------------------------
+  // --------------------------------
   // RATE LIMIT
-  // -----------------------------
+  // --------------------------------
 
   const handleRateLimit = () => {
+    if (!mountedRef.current) return;
+
     setRateLimited(true);
     setPageError(null);
     setError(null);
     setSuccess(null);
+    setLoading(false);
   };
 
-  // -----------------------------
-  // SERVER / NETWORK ERROR
-  // -----------------------------
+  // --------------------------------
+  // SERVER ERROR
+  // --------------------------------
 
   const handleServerError = (message?: string) => {
+    if (!mountedRef.current) return;
+
     setPageError(
       message ||
         "Something went wrong on the server. Please try again later."
     );
+
     setRateLimited(false);
     setError(null);
     setSuccess(null);
+    setLoading(false);
   };
 
+  // --------------------------------
+  // NETWORK ERROR
+  // --------------------------------
+
   const handleUnexpectedError = () => {
+    if (!mountedRef.current) return;
+
     setPageError(
       "Something went wrong. Please check your connection and try again."
     );
+
     setRateLimited(false);
     setError(null);
     setSuccess(null);
+    setLoading(false);
   };
 
-  // -----------------------------
+  // --------------------------------
   // LOAD CART
-  // -----------------------------
+  // --------------------------------
 
-  const fetchCart = async () => {
+  const fetchCart = async (): Promise<boolean> => {
+    if (redirectingRef.current) {
+      return false;
+    }
+
     try {
       const res = await fetch("/api/cart/", {
+        method: "GET",
         credentials: "include",
       });
 
@@ -102,34 +147,36 @@ export default function CartPage() {
       }
 
       if (!res.ok) {
-        // Not authenticated → login
         if (res.status === 401) {
           redirectToLogin();
           return false;
         }
 
-        // Rate limited → full-page error
         if (res.status === 429) {
           handleRateLimit();
           return false;
         }
 
-        // Server error → full-page error
         if (res.status >= 500) {
           handleServerError(
-            "Something went wrong on the server. Please try again later."
+            "Something went wrong on the server while loading your cart."
           );
           return false;
         }
 
-        // Other expected API error
-        setError(
-          getErrorMessage(
-            json,
-            `Failed to load cart (${res.status}).`
-          )
-        );
+        if (mountedRef.current) {
+          setError(
+            getErrorMessage(
+              json,
+              `Failed to load cart (${res.status}).`
+            )
+          );
+        }
 
+        return false;
+      }
+
+      if (!mountedRef.current) {
         return false;
       }
 
@@ -141,21 +188,28 @@ export default function CartPage() {
 
       return true;
     } catch (err) {
+      if (redirectingRef.current) {
+        return false;
+      }
+
       console.error("Load cart failed:", err);
-
       handleUnexpectedError();
-
       return false;
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // LOAD TOTALS
-  // -----------------------------
+  // --------------------------------
 
-  const fetchTotals = async () => {
+  const fetchTotals = async (): Promise<boolean> => {
+    if (redirectingRef.current) {
+      return false;
+    }
+
     try {
       const res = await fetch("/api/cart/totals", {
+        method: "GET",
         credentials: "include",
       });
 
@@ -168,19 +222,16 @@ export default function CartPage() {
       }
 
       if (!res.ok) {
-        // Not authenticated → login
         if (res.status === 401) {
           redirectToLogin();
           return false;
         }
 
-        // Rate limited → full-page error
         if (res.status === 429) {
           handleRateLimit();
           return false;
         }
 
-        // Server error → full-page error
         if (res.status >= 500) {
           handleServerError(
             "Something went wrong while calculating your cart total."
@@ -188,14 +239,19 @@ export default function CartPage() {
           return false;
         }
 
-        // Other expected API error
-        setError(
-          getErrorMessage(
-            json,
-            `Failed to load totals (${res.status}).`
-          )
-        );
+        if (mountedRef.current) {
+          setError(
+            getErrorMessage(
+              json,
+              `Failed to load totals (${res.status}).`
+            )
+          );
+        }
 
+        return false;
+      }
+
+      if (!mountedRef.current) {
         return false;
       }
 
@@ -203,21 +259,28 @@ export default function CartPage() {
 
       return true;
     } catch (err) {
+      if (redirectingRef.current) {
+        return false;
+      }
+
       console.error("Load totals failed:", err);
-
       handleUnexpectedError();
-
       return false;
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // LOAD PROFILE
-  // -----------------------------
+  // --------------------------------
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (): Promise<boolean> => {
+    if (redirectingRef.current) {
+      return false;
+    }
+
     try {
       const res = await fetch("/api/auth/profile", {
+        method: "GET",
         credentials: "include",
       });
 
@@ -229,9 +292,18 @@ export default function CartPage() {
         json = {};
       }
 
-      // Profile is optional here.
-      // Cart authentication is handled separately.
-      if (!res.ok) return;
+      if (!res.ok) {
+        if (res.status === 401) {
+          redirectToLogin();
+          return false;
+        }
+
+        return false;
+      }
+
+      if (!mountedRef.current) {
+        return false;
+      }
 
       if (json.shipping_address) {
         const parts = json.shipping_address
@@ -244,18 +316,42 @@ export default function CartPage() {
         setPostalCode(parts[3] || "");
         setCountry(parts[4] || "");
       }
+
+      return true;
     } catch (err) {
+      if (redirectingRef.current) {
+        return false;
+      }
+
       console.error("Load profile failed:", err);
+      return false;
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // INITIAL LOAD
-  // -----------------------------
+  // --------------------------------
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      redirectToLogin();
+      return;
+    }
+
+    let cancelled = false;
+
     const load = async () => {
+      setLoading(true);
+
       const cartLoaded = await fetchCart();
+
+      if (cancelled || redirectingRef.current) {
+        return;
+      }
 
       if (!cartLoaded) {
         setLoading(false);
@@ -264,29 +360,43 @@ export default function CartPage() {
 
       const totalsLoaded = await fetchTotals();
 
+      if (cancelled || redirectingRef.current) {
+        return;
+      }
+
       if (!totalsLoaded) {
         setLoading(false);
         return;
       }
 
-      // Profile is optional and should not prevent
-      // the cart from being displayed.
       await fetchProfile();
+
+      if (cancelled || redirectingRef.current) {
+        return;
+      }
 
       setLoading(false);
     };
 
     load();
-  }, []);
 
-  // -----------------------------
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user]);
+
+  // --------------------------------
   // UPDATE QUANTITY
-  // -----------------------------
+  // --------------------------------
 
   const updateQuantity = async (
     productId: number,
     quantity: number
   ) => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -312,19 +422,16 @@ export default function CartPage() {
       }
 
       if (!res.ok) {
-        // Not authenticated → login
         if (res.status === 401) {
           redirectToLogin();
           return;
         }
 
-        // Rate limited → full-page error
         if (res.status === 429) {
           handleRateLimit();
           return;
         }
 
-        // Server error → full-page error
         if (res.status >= 500) {
           handleServerError(
             "Something went wrong while updating your cart."
@@ -332,7 +439,6 @@ export default function CartPage() {
           return;
         }
 
-        // Other expected API error
         setError(
           getErrorMessage(
             json,
@@ -343,29 +449,40 @@ export default function CartPage() {
         return;
       }
 
+      if (!mountedRef.current) {
+        return;
+      }
+
       setCart(
         json && Array.isArray(json.items)
           ? json
           : { items: [] }
       );
 
-      await fetchTotals();
+      const totalsLoaded = await fetchTotals();
 
-      if (!rateLimited && !pageError) {
+      if (totalsLoaded && mountedRef.current) {
         setSuccess("Quantity updated!");
       }
     } catch (err) {
-      console.error("Update quantity failed:", err);
+      if (redirectingRef.current) {
+        return;
+      }
 
+      console.error("Update quantity failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // REMOVE ITEM
-  // -----------------------------
+  // --------------------------------
 
   const removeItem = async (productId: number) => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -387,19 +504,16 @@ export default function CartPage() {
       }
 
       if (!res.ok) {
-        // Not authenticated → login
         if (res.status === 401) {
           redirectToLogin();
           return;
         }
 
-        // Rate limited → full-page error
         if (res.status === 429) {
           handleRateLimit();
           return;
         }
 
-        // Server error → full-page error
         if (res.status >= 500) {
           handleServerError(
             "Something went wrong while removing this item."
@@ -407,7 +521,6 @@ export default function CartPage() {
           return;
         }
 
-        // Other expected API error
         setError(
           getErrorMessage(
             json,
@@ -418,29 +531,40 @@ export default function CartPage() {
         return;
       }
 
+      if (!mountedRef.current) {
+        return;
+      }
+
       setCart(
         json && Array.isArray(json.items)
           ? json
           : { items: [] }
       );
 
-      await fetchTotals();
+      const totalsLoaded = await fetchTotals();
 
-      if (!rateLimited && !pageError) {
+      if (totalsLoaded && mountedRef.current) {
         setSuccess("Item removed!");
       }
     } catch (err) {
-      console.error("Remove item failed:", err);
+      if (redirectingRef.current) {
+        return;
+      }
 
+      console.error("Remove item failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // CLEAR CART
-  // -----------------------------
+  // --------------------------------
 
   const clearCart = async () => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -459,19 +583,16 @@ export default function CartPage() {
       }
 
       if (!res.ok) {
-        // Not authenticated → login
         if (res.status === 401) {
           redirectToLogin();
           return;
         }
 
-        // Rate limited → full-page error
         if (res.status === 429) {
           handleRateLimit();
           return;
         }
 
-        // Server error → full-page error
         if (res.status >= 500) {
           handleServerError(
             "Something went wrong while clearing your cart."
@@ -479,7 +600,6 @@ export default function CartPage() {
           return;
         }
 
-        // Other expected API error
         setError(
           getErrorMessage(
             json,
@@ -487,6 +607,10 @@ export default function CartPage() {
           )
         );
 
+        return;
+      }
+
+      if (!mountedRef.current) {
         return;
       }
 
@@ -500,17 +624,24 @@ export default function CartPage() {
 
       setSuccess("Cart cleared!");
     } catch (err) {
-      console.error("Clear cart failed:", err);
+      if (redirectingRef.current) {
+        return;
+      }
 
+      console.error("Clear cart failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // PAY WITH PAYPAL
-  // -----------------------------
+  // --------------------------------
 
   const payWithPayPal = async () => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -532,10 +663,6 @@ export default function CartPage() {
       `${street}, ${houseNumber}, ${city}, ${postalCode}, ${country}`;
 
     try {
-      // -----------------------------
-      // CREATE ORDER
-      // -----------------------------
-
       const orderRes = await fetch("/api/orders/", {
         method: "POST",
         credentials: "include",
@@ -557,19 +684,16 @@ export default function CartPage() {
       }
 
       if (!orderRes.ok) {
-        // Not authenticated → login
         if (orderRes.status === 401) {
           redirectToLogin();
           return;
         }
 
-        // Rate limited → full-page error
         if (orderRes.status === 429) {
           handleRateLimit();
           return;
         }
 
-        // Server error → full-page error
         if (orderRes.status >= 500) {
           handleServerError(
             "Something went wrong while creating your order. Please try again later."
@@ -577,7 +701,6 @@ export default function CartPage() {
           return;
         }
 
-        // Other expected API error
         setError(
           getErrorMessage(
             orderJson,
@@ -596,10 +719,6 @@ export default function CartPage() {
         );
         return;
       }
-
-      // -----------------------------
-      // CREATE PAYPAL PAYMENT
-      // -----------------------------
 
       const payRes = await fetch(
         "/api/payment/create",
@@ -624,19 +743,16 @@ export default function CartPage() {
       }
 
       if (!payRes.ok) {
-        // Not authenticated → login
         if (payRes.status === 401) {
           redirectToLogin();
           return;
         }
 
-        // Rate limited → full-page error
         if (payRes.status === 429) {
           handleRateLimit();
           return;
         }
 
-        // Server error → full-page error
         if (payRes.status >= 500) {
           handleServerError(
             "Something went wrong while starting the payment. Please try again later."
@@ -644,7 +760,6 @@ export default function CartPage() {
           return;
         }
 
-        // Other expected API error
         setError(
           getErrorMessage(
             payJson,
@@ -664,15 +779,64 @@ export default function CartPage() {
 
       window.location.href = payJson.approval_url;
     } catch (err) {
-      console.error("PayPal payment failed:", err);
+      if (redirectingRef.current) {
+        return;
+      }
 
+      console.error("PayPal payment failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
-  // LOADING SCREEN
-  // -----------------------------
+  // --------------------------------
+  // AUTH LOADING
+  // --------------------------------
+
+  if (authLoading) {
+    return (
+      <div className="page-wrapper fade-in">
+        <style>{`
+          .page-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .glass {
+            background: rgba(15,15,30,0.75);
+            border: 1px solid rgba(0,200,255,0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(0,200,255,0.15);
+            color: #00c8ff;
+            font-weight: 700;
+          }
+        `}</style>
+
+        <div className="glass">
+          Checking authentication...
+        </div>
+      </div>
+    );
+  }
+
+  // --------------------------------
+  // NOT AUTHENTICATED
+  // --------------------------------
+
+  if (!user) {
+    return null;
+  }
+
+  // --------------------------------
+  // CART LOADING
+  // --------------------------------
 
   if (loading) {
     return (
@@ -708,9 +872,9 @@ export default function CartPage() {
     );
   }
 
-  // -----------------------------
-  // RATE LIMIT ERROR SCREEN
-  // -----------------------------
+  // --------------------------------
+  // RATE LIMIT
+  // --------------------------------
 
   if (rateLimited) {
     return (
@@ -781,8 +945,8 @@ export default function CartPage() {
           <h2>Too Many Requests</h2>
 
           <p>
-            You are sending requests too quickly. Please wait a moment and
-            try again.
+            You are sending requests too quickly. Please wait a moment
+            and try again.
           </p>
 
           <button
@@ -796,9 +960,9 @@ export default function CartPage() {
     );
   }
 
-  // -----------------------------
-  // PAGE ERROR SCREEN
-  // -----------------------------
+  // --------------------------------
+  // PAGE ERROR
+  // --------------------------------
 
   if (pageError) {
     return (
@@ -881,9 +1045,9 @@ export default function CartPage() {
     );
   }
 
-  // -----------------------------
+  // --------------------------------
   // NORMAL UI
-  // -----------------------------
+  // --------------------------------
 
   return (
     <div className="page-wrapper fade-in">
@@ -1050,14 +1214,21 @@ export default function CartPage() {
         ← Back
       </Link>
 
-      {error && <div className="error-box">{error}</div>}
+      {error && (
+        <div className="error-box">
+          {error}
+        </div>
+      )}
 
       {success && (
-        <div className="success-box">{success}</div>
+        <div className="success-box">
+          {success}
+        </div>
       )}
 
       <div className="layout">
-        {/* LEFT SIDE — CART */}
+
+        {/* CART */}
 
         <div className="glass">
           <div className="section-title">
@@ -1131,7 +1302,7 @@ export default function CartPage() {
           )}
         </div>
 
-        {/* RIGHT SIDE — CHECKOUT */}
+        {/* CHECKOUT */}
 
         <div className="glass">
           <div className="section-title">

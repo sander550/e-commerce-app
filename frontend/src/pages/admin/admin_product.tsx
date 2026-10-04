@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-type AdminUser = {
-  id: number;
-  email: string;
-  is_admin: boolean;
-};
+function getErrorMessage(json: any, fallback: string) {
+  if (typeof json?.detail === "string") return json.detail;
+  if (typeof json?.message === "string") return json.message;
+  if (typeof json?.error === "string") return json.error;
+  return fallback;
+}
 
 export default function AdminProductPage() {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
+  const { user, loading: authLoading } = useAuth();
 
+  const [errorMsg, setErrorMsg] = useState("");
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
 
   const [createData, setCreateData] = useState({
@@ -42,29 +43,20 @@ export default function AdminProductPage() {
   // CHECK ADMIN
   // -------------------------------
   useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const res = await fetch("http://localhost:8000/auth/profile", {
-          credentials: "include",
-        });
+    if (authLoading) return;
 
-        const json = await res.json();
-
-        if (!res.ok || !json.is_admin) {
-          navigate("/index");
-          return;
-        }
-
-        setUser(json);
-      } catch {
-        navigate("/index");
-      } finally {
-        setLoading(false);
-      }
+    if (!user) {
+      navigate("/login", {
+        replace: true,
+        state: { from: "/admin/products" },
+      });
+      return;
     }
 
-    checkAdmin();
-  }, [navigate]);
+    if (!user.is_admin) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   // -------------------------------
   // VALIDATION HELPERS
@@ -74,15 +66,32 @@ export default function AdminProductPage() {
   }
 
   function validateCreate() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!createData.name.trim()) missing.push("name");
-    if (!createData.price.trim() || isNaN(parseFloat(createData.price)))
+    if (!createData.name.trim()) {
+      missing.push("name");
+    }
+
+    if (
+      !createData.price.trim() ||
+      isNaN(parseFloat(createData.price))
+    ) {
       missing.push("price");
-    if (!createData.stock.trim() || isNaN(parseInt(createData.stock)))
+    }
+
+    if (
+      !createData.stock.trim() ||
+      isNaN(parseInt(createData.stock))
+    ) {
       missing.push("stock");
-    if (!createData.category_id.trim() || isNaN(parseInt(createData.category_id)))
+    }
+
+    if (
+      !createData.category_id.trim() ||
+      isNaN(parseInt(createData.category_id))
+    ) {
       missing.push("category_id");
+    }
 
     if (missing.length > 0) {
       markInvalid(missing);
@@ -94,10 +103,14 @@ export default function AdminProductPage() {
   }
 
   function validateUpdate() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!updateData.product_id.trim() || isNaN(parseInt(updateData.product_id)))
+    if (
+      !updateData.product_id.trim() ||
+      isNaN(parseInt(updateData.product_id))
+    ) {
       missing.push("product_id");
+    }
 
     if (missing.length > 0) {
       markInvalid(missing);
@@ -109,9 +122,14 @@ export default function AdminProductPage() {
   }
 
   function validateDelete() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!deleteId.trim() || isNaN(parseInt(deleteId))) missing.push("deleteId");
+    if (
+      !deleteId.trim() ||
+      isNaN(parseInt(deleteId))
+    ) {
+      missing.push("deleteId");
+    }
 
     if (missing.length > 0) {
       markInvalid(missing);
@@ -123,6 +141,44 @@ export default function AdminProductPage() {
   }
 
   // -------------------------------
+  // HANDLE API ERRORS
+  // -------------------------------
+  function handleAuthError(status: number, json: any) {
+    if (status === 401) {
+      navigate("/login", {
+        replace: true,
+        state: { from: "/admin/products" },
+      });
+
+      return true;
+    }
+
+    if (status === 403) {
+      setErrorMsg(
+        getErrorMessage(
+          json,
+          "You do not have permission to perform this action."
+        )
+      );
+
+      return true;
+    }
+
+    if (status === 429) {
+      setErrorMsg(
+        getErrorMessage(
+          json,
+          "Too many requests. Please wait a moment and try again."
+        )
+      );
+
+      return true;
+    }
+
+    return false;
+  }
+
+  // -------------------------------
   // CREATE PRODUCT
   // -------------------------------
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -130,16 +186,19 @@ export default function AdminProductPage() {
     setErrorMsg("");
 
     const validation = validateCreate();
+
     if (validation) {
       setErrorMsg(validation);
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:8000/admin/product", {
+      const res = await fetch("/api/admin/product", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: createData.name,
           description: createData.description || null,
@@ -150,15 +209,43 @@ export default function AdminProductPage() {
         }),
       });
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (handleAuthError(res.status, json)) {
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Product created!");
+        setErrorMsg(
+          getErrorMessage(json, "Failed to create product.")
+        );
+        return;
       }
+
+      setErrorMsg("Product created!");
+
+      setCreateData({
+        name: "",
+        description: "",
+        price: "",
+        stock: "",
+        category_id: "",
+        image_url: "",
+      });
+
+      setInvalidFields([]);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      console.error("Create product error:", err);
+
+      setErrorMsg(
+        err?.message || "Unable to connect to the server."
+      );
     }
   }
 
@@ -170,6 +257,7 @@ export default function AdminProductPage() {
     setErrorMsg("");
 
     const validation = validateUpdate();
+
     if (validation) {
       setErrorMsg(validation);
       return;
@@ -177,16 +265,22 @@ export default function AdminProductPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/admin/product/${updateData.product_id}`,
+        `/api/admin/product/${updateData.product_id}`,
         {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             name: updateData.name || null,
             description: updateData.description || null,
-            price: updateData.price ? parseFloat(updateData.price) : null,
-            stock: updateData.stock ? parseInt(updateData.stock) : null,
+            price: updateData.price
+              ? parseFloat(updateData.price)
+              : null,
+            stock: updateData.stock
+              ? parseInt(updateData.stock)
+              : null,
             category_id: updateData.category_id
               ? parseInt(updateData.category_id)
               : null,
@@ -199,15 +293,33 @@ export default function AdminProductPage() {
         }
       );
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (handleAuthError(res.status, json)) {
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Product updated!");
+        setErrorMsg(
+          getErrorMessage(json, "Failed to update product.")
+        );
+        return;
       }
+
+      setErrorMsg("Product updated!");
+      setInvalidFields([]);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      console.error("Update product error:", err);
+
+      setErrorMsg(
+        err?.message || "Unable to connect to the server."
+      );
     }
   }
 
@@ -219,38 +331,82 @@ export default function AdminProductPage() {
     setErrorMsg("");
 
     const validation = validateDelete();
+
     if (validation) {
       setErrorMsg(validation);
       return;
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/admin/product/${deleteId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/admin/product/${deleteId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (handleAuthError(res.status, json)) {
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Product deleted!");
+        setErrorMsg(
+          getErrorMessage(json, "Failed to delete product.")
+        );
+        return;
       }
+
+      setErrorMsg("Product deleted!");
+      setDeleteId("");
+      setInvalidFields([]);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      console.error("Delete product error:", err);
+
+      setErrorMsg(
+        err?.message || "Unable to connect to the server."
+      );
     }
   }
 
   // -------------------------------
-  // LOADING SCREEN
+  // AUTH LOADING SCREEN
   // -------------------------------
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="admin-wrapper">
         <div className="loading">Checking admin...</div>
+
+        <style>{`
+          .admin-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 40px;
+          }
+
+          .loading {
+            text-align: center;
+            padding-top: 100px;
+            font-size: 20px;
+            color: #00c8ff;
+          }
+        `}</style>
       </div>
     );
+  }
+
+  if (!user || !user.is_admin) {
+    return null;
   }
 
   // -------------------------------
@@ -269,8 +425,15 @@ export default function AdminProductPage() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .glass {
@@ -301,12 +464,14 @@ export default function AdminProductPage() {
           color: white;
           font-size: 15px;
           transition: 0.25s;
+          box-sizing: border-box;
         }
 
         .input:focus {
           background: rgba(0,200,255,0.15);
           border-color: rgba(0,200,255,0.35);
           transform: scale(1.02);
+          outline: none;
         }
 
         .input.invalid {
@@ -368,58 +533,102 @@ export default function AdminProductPage() {
         }
       `}</style>
 
-      {errorMsg && <div className="error-box">{errorMsg}</div>}
+      {errorMsg && (
+        <div className="error-box">
+          {errorMsg}
+        </div>
+      )}
 
       {/* CREATE PRODUCT */}
       <div className="glass">
         <div className="title">Create Product</div>
+
         <form onSubmit={handleCreate}>
           <input
-            className={`input ${invalidFields.includes("name") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("name")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Name"
             value={createData.name}
             onChange={(e) =>
-              setCreateData({ ...createData, name: e.target.value })
+              setCreateData({
+                ...createData,
+                name: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Description (optional)"
             value={createData.description}
             onChange={(e) =>
-              setCreateData({ ...createData, description: e.target.value })
+              setCreateData({
+                ...createData,
+                description: e.target.value,
+              })
             }
           />
+
           <input
-            className={`input ${invalidFields.includes("price") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("price")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Price"
             value={createData.price}
             onChange={(e) =>
-              setCreateData({ ...createData, price: e.target.value })
+              setCreateData({
+                ...createData,
+                price: e.target.value,
+              })
             }
           />
+
           <input
-            className={`input ${invalidFields.includes("stock") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("stock")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Stock"
             value={createData.stock}
             onChange={(e) =>
-              setCreateData({ ...createData, stock: e.target.value })
+              setCreateData({
+                ...createData,
+                stock: e.target.value,
+              })
             }
           />
+
           <input
-            className={`input ${invalidFields.includes("category_id") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("category_id")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Category ID"
             value={createData.category_id}
             onChange={(e) =>
-              setCreateData({ ...createData, category_id: e.target.value })
+              setCreateData({
+                ...createData,
+                category_id: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Image URL (optional)"
             value={createData.image_url}
             onChange={(e) =>
-              setCreateData({ ...createData, image_url: e.target.value })
+              setCreateData({
+                ...createData,
+                image_url: e.target.value,
+              })
             }
           />
 
@@ -432,69 +641,105 @@ export default function AdminProductPage() {
       {/* UPDATE PRODUCT */}
       <div className="glass">
         <div className="title">Update Product</div>
+
         <form onSubmit={handleUpdate}>
           <input
-            className={`input ${invalidFields.includes("product_id") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("product_id")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Product ID"
             value={updateData.product_id}
             onChange={(e) =>
-              setUpdateData({ ...updateData, product_id: e.target.value })
+              setUpdateData({
+                ...updateData,
+                product_id: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Name (optional)"
             value={updateData.name}
             onChange={(e) =>
-              setUpdateData({ ...updateData, name: e.target.value })
+              setUpdateData({
+                ...updateData,
+                name: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Description (optional)"
             value={updateData.description}
             onChange={(e) =>
-              setUpdateData({ ...updateData, description: e.target.value })
+              setUpdateData({
+                ...updateData,
+                description: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Price (optional)"
             value={updateData.price}
             onChange={(e) =>
-              setUpdateData({ ...updateData, price: e.target.value })
+              setUpdateData({
+                ...updateData,
+                price: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Stock (optional)"
             value={updateData.stock}
             onChange={(e) =>
-              setUpdateData({ ...updateData, stock: e.target.value })
+              setUpdateData({
+                ...updateData,
+                stock: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Category ID (optional)"
             value={updateData.category_id}
             onChange={(e) =>
-              setUpdateData({ ...updateData, category_id: e.target.value })
+              setUpdateData({
+                ...updateData,
+                category_id: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Image URL (optional)"
             value={updateData.image_url}
             onChange={(e) =>
-              setUpdateData({ ...updateData, image_url: e.target.value })
+              setUpdateData({
+                ...updateData,
+                image_url: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="Is Active (true/false)"
             value={updateData.is_active}
             onChange={(e) =>
-              setUpdateData({ ...updateData, is_active: e.target.value })
+              setUpdateData({
+                ...updateData,
+                is_active: e.target.value,
+              })
             }
           />
 
@@ -507,21 +752,34 @@ export default function AdminProductPage() {
       {/* DELETE PRODUCT */}
       <div className="glass">
         <div className="title">Delete Product</div>
+
         <form onSubmit={handleDelete}>
           <input
-            className={`input ${invalidFields.includes("deleteId") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("deleteId")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Product ID"
             value={deleteId}
-            onChange={(e) => setDeleteId(e.target.value)}
+            onChange={(e) =>
+              setDeleteId(e.target.value)
+            }
           />
 
-          <button className="btn delete-btn" type="submit">
+          <button
+            className="btn delete-btn"
+            type="submit"
+          >
             Delete Product
           </button>
         </form>
       </div>
 
-      <button className="back-btn" onClick={() => navigate("/admin")}>
+      <button
+        className="back-btn"
+        onClick={() => navigate("/admin")}
+      >
         ← Back to Admin Dashboard
       </button>
     </div>

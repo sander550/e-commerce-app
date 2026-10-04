@@ -1,42 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AdminDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
+  const {
+    user,
+    loading: authLoading,
+  } = useAuth();
+
   useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const res = await fetch("http://localhost:8000/auth/profile", {
-          credentials: "include",
-        });
+    if (authLoading) return;
 
-        if (!res.ok) {
-          navigate("/index");
-          return;
-        }
-
-        const user = await res.json();
-
-        if (!user.is_admin) {
-          navigate("/index");
-          return;
-        }
-
-        setIsAdmin(true);
-      } catch {
-        navigate("/index");
-      } finally {
-        setLoading(false);
-      }
+    if (!user) {
+      navigate("/login", {
+        replace: true,
+        state: { from: "/admin" },
+      });
+      return;
     }
 
-    checkAdmin();
-  }, [navigate]);
+    if (!user.is_admin) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
-  if (loading) {
+  // -------------------------------
+  // AUTH LOADING
+  // -------------------------------
+  if (authLoading) {
     return (
       <div className="admin-wrapper">
         <style>{`
@@ -54,16 +47,27 @@ export default function AdminDashboard() {
           }
 
           @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
         `}</style>
+
         Checking admin…
       </div>
     );
   }
 
-  if (!isAdmin) return null;
+  // Don't render anything while redirecting.
+  if (!user || !user.is_admin) {
+    return null;
+  }
 
   return (
     <div className="admin-wrapper">
@@ -78,8 +82,15 @@ export default function AdminDashboard() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .glass {
@@ -143,25 +154,42 @@ export default function AdminDashboard() {
       `}</style>
 
       <div className="glass">
-        <div className="title">Admin Dashboard</div>
+        <div className="title">
+          Admin Dashboard
+        </div>
 
-        <Link className="nav-btn" to="/admin/products">
+        <Link
+          className="nav-btn"
+          to="/admin/products"
+        >
           🛒 Manage Products
         </Link>
 
-        <Link className="nav-btn" to="/admin/categories">
+        <Link
+          className="nav-btn"
+          to="/admin/categories"
+        >
           📂 Manage Categories
         </Link>
 
-        <Link className="nav-btn" to="/admin/orders">
+        <Link
+          className="nav-btn"
+          to="/admin/orders"
+        >
           📦 View All Orders
         </Link>
 
-        <Link className="nav-btn" to="/admin/users">
+        <Link
+          className="nav-btn"
+          to="/admin/users"
+        >
           👤 Manage Users
         </Link>
 
-        <Link className="back-btn" to="/index">
+        <Link
+          className="back-btn"
+          to="/"
+        >
           ← Back to Store
         </Link>
       </div>

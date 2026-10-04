@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-type AdminUser = {
-  id: number;
-  email: string;
-  is_admin: boolean;
-};
+import { useAuth } from "../../context/AuthContext";
 
 export default function AdminCategoryPage() {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    user,
+    loading: authLoading,
+  } = useAuth();
+
   const [errorMsg, setErrorMsg] = useState("");
 
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
@@ -33,29 +31,20 @@ export default function AdminCategoryPage() {
   // CHECK ADMIN
   // -------------------------------
   useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const res = await fetch("http://localhost:8000/auth/profile", {
-          credentials: "include",
-        });
+    if (authLoading) return;
 
-        const json = await res.json();
-
-        if (!res.ok || !json.is_admin) {
-          navigate("/index");
-          return;
-        }
-
-        setUser(json);
-      } catch {
-        navigate("/index");
-      } finally {
-        setLoading(false);
-      }
+    if (!user) {
+      navigate("/login", {
+        replace: true,
+        state: { from: "/admin/category" },
+      });
+      return;
     }
 
-    checkAdmin();
-  }, [navigate]);
+    if (!user.is_admin) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   // -------------------------------
   // VALIDATION HELPERS
@@ -65,15 +54,27 @@ export default function AdminCategoryPage() {
   }
 
   function validateCreate() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!createData.name.trim()) missing.push("name");
-    if (createData.parent_id.trim() && isNaN(parseInt(createData.parent_id)))
+    if (!createData.name.trim()) {
+      missing.push("name");
+    }
+
+    if (
+      createData.parent_id.trim() &&
+      isNaN(parseInt(createData.parent_id))
+    ) {
       missing.push("parent_id");
+    }
 
     if (missing.includes("name")) {
       markInvalid(missing);
       return "Name is required.";
+    }
+
+    if (missing.includes("parent_id")) {
+      markInvalid(missing);
+      return "Parent ID must be a valid number.";
     }
 
     markInvalid([]);
@@ -81,17 +82,30 @@ export default function AdminCategoryPage() {
   }
 
   function validateUpdate() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!updateData.category_id.trim() || isNaN(parseInt(updateData.category_id)))
+    if (
+      !updateData.category_id.trim() ||
+      isNaN(parseInt(updateData.category_id))
+    ) {
       missing.push("category_id");
+    }
 
-    if (updateData.parent_id.trim() && isNaN(parseInt(updateData.parent_id)))
+    if (
+      updateData.parent_id.trim() &&
+      isNaN(parseInt(updateData.parent_id))
+    ) {
       missing.push("parent_id");
+    }
 
     if (missing.includes("category_id")) {
       markInvalid(missing);
       return "Category ID is required.";
+    }
+
+    if (missing.includes("parent_id")) {
+      markInvalid(missing);
+      return "Parent ID must be a valid number.";
     }
 
     markInvalid([]);
@@ -99,9 +113,11 @@ export default function AdminCategoryPage() {
   }
 
   function validateDelete() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!deleteId.trim() || isNaN(parseInt(deleteId))) missing.push("deleteId");
+    if (!deleteId.trim() || isNaN(parseInt(deleteId))) {
+      missing.push("deleteId");
+    }
 
     if (missing.length > 0) {
       markInvalid(missing);
@@ -120,31 +136,67 @@ export default function AdminCategoryPage() {
     setErrorMsg("");
 
     const validation = validateCreate();
+
     if (validation) {
       setErrorMsg(validation);
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:8000/admin/category", {
+      const res = await fetch("/api/admin/category", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: createData.name,
-          parent_id: createData.parent_id ? parseInt(createData.parent_id) : null,
+          parent_id: createData.parent_id
+            ? parseInt(createData.parent_id)
+            : null,
         }),
       });
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        navigate("/login", {
+          replace: true,
+          state: { from: "/admin/category" },
+        });
+        return;
+      }
+
+      if (res.status === 403) {
+        setErrorMsg(
+          json?.detail || "You do not have permission to perform this action."
+        );
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Category created!");
+        setErrorMsg(json?.detail || "Unknown error");
+        return;
       }
+
+      setErrorMsg("Category created!");
+
+      setCreateData({
+        name: "",
+        parent_id: "",
+      });
+
+      setInvalidFields([]);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      setErrorMsg(
+        err?.message || "Failed to create category."
+      );
     }
   }
 
@@ -156,6 +208,7 @@ export default function AdminCategoryPage() {
     setErrorMsg("");
 
     const validation = validateUpdate();
+
     if (validation) {
       setErrorMsg(validation);
       return;
@@ -163,27 +216,63 @@ export default function AdminCategoryPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/admin/category/${updateData.category_id}`,
+        `/api/admin/category/${updateData.category_id}`,
         {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             name: updateData.name || null,
-            parent_id: updateData.parent_id ? parseInt(updateData.parent_id) : null,
+            parent_id: updateData.parent_id
+              ? parseInt(updateData.parent_id)
+              : null,
           }),
         }
       );
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        navigate("/login", {
+          replace: true,
+          state: { from: "/admin/category" },
+        });
+        return;
+      }
+
+      if (res.status === 403) {
+        setErrorMsg(
+          json?.detail || "You do not have permission to perform this action."
+        );
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Category updated!");
+        setErrorMsg(json?.detail || "Unknown error");
+        return;
       }
+
+      setErrorMsg("Category updated!");
+
+      setUpdateData({
+        category_id: "",
+        name: "",
+        parent_id: "",
+      });
+
+      setInvalidFields([]);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      setErrorMsg(
+        err?.message || "Failed to update category."
+      );
     }
   }
 
@@ -195,6 +284,7 @@ export default function AdminCategoryPage() {
     setErrorMsg("");
 
     const validation = validateDelete();
+
     if (validation) {
       setErrorMsg(validation);
       return;
@@ -202,34 +292,85 @@ export default function AdminCategoryPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/admin/category/${deleteId}`,
+        `/api/admin/category/${deleteId}`,
         {
           method: "DELETE",
           credentials: "include",
         }
       );
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        navigate("/login", {
+          replace: true,
+          state: { from: "/admin/category" },
+        });
+        return;
+      }
+
+      if (res.status === 403) {
+        setErrorMsg(
+          json?.detail || "You do not have permission to perform this action."
+        );
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Category deleted!");
+        setErrorMsg(json?.detail || "Unknown error");
+        return;
       }
+
+      setErrorMsg("Category deleted!");
+
+      setDeleteId("");
+      setInvalidFields([]);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      setErrorMsg(
+        err?.message || "Failed to delete category."
+      );
     }
   }
 
   // -------------------------------
-  // LOADING SCREEN
+  // AUTH LOADING SCREEN
   // -------------------------------
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="admin-wrapper">
-        <div className="loading">Checking admin...</div>
+        <style>{`
+          .admin-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .loading {
+            font-size: 20px;
+            color: #7feaff;
+          }
+        `}</style>
+
+        <div className="loading">
+          Checking admin...
+        </div>
       </div>
     );
+  }
+
+  // Don't render admin content while redirecting.
+  if (!user || !user.is_admin) {
+    return null;
   }
 
   // -------------------------------
@@ -248,8 +389,15 @@ export default function AdminCategoryPage() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .glass {
@@ -280,12 +428,14 @@ export default function AdminCategoryPage() {
           color: white;
           font-size: 15px;
           transition: 0.25s;
+          box-sizing: border-box;
         }
 
         .input:focus {
           background: rgba(0,200,255,0.15);
           border-color: rgba(0,200,255,0.35);
           transform: scale(1.02);
+          outline: none;
         }
 
         .input.invalid {
@@ -347,26 +497,44 @@ export default function AdminCategoryPage() {
         }
       `}</style>
 
-      {errorMsg && <div className="error-box">{errorMsg}</div>}
+      {errorMsg && (
+        <div className="error-box">
+          {errorMsg}
+        </div>
+      )}
 
       {/* CREATE CATEGORY */}
       <div className="glass">
-        <div className="title">Create Category</div>
+        <div className="title">
+          Create Category
+        </div>
+
         <form onSubmit={handleCreate}>
           <input
-            className={`input ${invalidFields.includes("name") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("name") ? "invalid" : ""
+            }`}
             placeholder="Name"
             value={createData.name}
             onChange={(e) =>
-              setCreateData({ ...createData, name: e.target.value })
+              setCreateData({
+                ...createData,
+                name: e.target.value,
+              })
             }
           />
+
           <input
-            className={`input ${invalidFields.includes("parent_id") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("parent_id") ? "invalid" : ""
+            }`}
             placeholder="Parent ID (optional)"
             value={createData.parent_id}
             onChange={(e) =>
-              setCreateData({ ...createData, parent_id: e.target.value })
+              setCreateData({
+                ...createData,
+                parent_id: e.target.value,
+              })
             }
           />
 
@@ -378,30 +546,52 @@ export default function AdminCategoryPage() {
 
       {/* UPDATE CATEGORY */}
       <div className="glass">
-        <div className="title">Update Category</div>
+        <div className="title">
+          Update Category
+        </div>
+
         <form onSubmit={handleUpdate}>
           <input
-            className={`input ${invalidFields.includes("category_id") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("category_id")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Category ID"
             value={updateData.category_id}
             onChange={(e) =>
-              setUpdateData({ ...updateData, category_id: e.target.value })
+              setUpdateData({
+                ...updateData,
+                category_id: e.target.value,
+              })
             }
           />
+
           <input
             className="input"
             placeholder="New Name (optional)"
             value={updateData.name}
             onChange={(e) =>
-              setUpdateData({ ...updateData, name: e.target.value })
+              setUpdateData({
+                ...updateData,
+                name: e.target.value,
+              })
             }
           />
+
           <input
-            className={`input ${invalidFields.includes("parent_id") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("parent_id")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="New Parent ID (optional)"
             value={updateData.parent_id}
             onChange={(e) =>
-              setUpdateData({ ...updateData, parent_id: e.target.value })
+              setUpdateData({
+                ...updateData,
+                parent_id: e.target.value,
+              })
             }
           />
 
@@ -413,22 +603,37 @@ export default function AdminCategoryPage() {
 
       {/* DELETE CATEGORY */}
       <div className="glass">
-        <div className="title">Delete Category</div>
+        <div className="title">
+          Delete Category
+        </div>
+
         <form onSubmit={handleDelete}>
           <input
-            className={`input ${invalidFields.includes("deleteId") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("deleteId")
+                ? "invalid"
+                : ""
+            }`}
             placeholder="Category ID"
             value={deleteId}
-            onChange={(e) => setDeleteId(e.target.value)}
+            onChange={(e) =>
+              setDeleteId(e.target.value)
+            }
           />
 
-          <button className="btn delete-btn" type="submit">
+          <button
+            className="btn delete-btn"
+            type="submit"
+          >
             Delete Category
           </button>
         </form>
       </div>
 
-      <button className="back-btn" onClick={() => navigate("/admin")}>
+      <button
+        className="back-btn"
+        onClick={() => navigate("/admin")}
+      >
         ← Back to Admin Dashboard
       </button>
     </div>

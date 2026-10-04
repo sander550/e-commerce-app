@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-type AdminUser = {
-  id: number;
-  email: string;
-  is_admin: boolean;
-};
+function getErrorMessage(json: any, fallback: string) {
+  if (typeof json?.detail === "string") return json.detail;
+  if (typeof json?.message === "string") return json.message;
+  if (typeof json?.error === "string") return json.error;
+  return fallback;
+}
 
 export default function AdminOrderPage() {
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const { user, loading: authLoading } = useAuth();
 
+  const [errorMsg, setErrorMsg] = useState("");
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
 
   const [updateData, setUpdateData] = useState({
@@ -29,43 +30,33 @@ export default function AdminOrderPage() {
   // CHECK ADMIN
   // -------------------------------
   useEffect(() => {
-    async function checkAdmin() {
-      try {
-        const res = await fetch("http://localhost:8000/auth/profile", {
-          credentials: "include",
-        });
+    if (authLoading) return;
 
-        if (!res.ok) {
-          navigate("/index");
-          return;
-        }
-
-        const user = await res.json();
-
-        if (!user.is_admin) {
-          navigate("/index");
-          return;
-        }
-
-        setIsAdmin(true);
-      } catch {
-        navigate("/index");
-      } finally {
-        setLoading(false);
-      }
+    if (!user) {
+      navigate("/login", {
+        replace: true,
+        state: { from: "/admin/orders" },
+      });
+      return;
     }
 
-    checkAdmin();
-  }, [navigate]);
+    if (!user.is_admin) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   // -------------------------------
   // VALIDATION
   // -------------------------------
   function validateUpdate() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!updateData.order_id.trim() || isNaN(parseInt(updateData.order_id)))
+    if (
+      !updateData.order_id.trim() ||
+      isNaN(parseInt(updateData.order_id))
+    ) {
       missing.push("order_id");
+    }
 
     if (missing.length > 0) {
       setInvalidFields(missing);
@@ -77,9 +68,11 @@ export default function AdminOrderPage() {
   }
 
   function validateDelete() {
-    const missing = [];
+    const missing: string[] = [];
 
-    if (!deleteId.trim() || isNaN(parseInt(deleteId))) missing.push("deleteId");
+    if (!deleteId.trim() || isNaN(parseInt(deleteId))) {
+      missing.push("deleteId");
+    }
 
     if (missing.length > 0) {
       setInvalidFields(missing);
@@ -98,6 +91,7 @@ export default function AdminOrderPage() {
     setErrorMsg("");
 
     const validation = validateUpdate();
+
     if (validation) {
       setErrorMsg(validation);
       return;
@@ -105,11 +99,13 @@ export default function AdminOrderPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/admin/order/${updateData.order_id}`,
+        `/api/admin/order/${updateData.order_id}`,
         {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             status: updateData.status || null,
             shipping_address: updateData.shipping_address || null,
@@ -118,15 +114,51 @@ export default function AdminOrderPage() {
         }
       );
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        navigate("/login", {
+          replace: true,
+          state: { from: "/admin/orders" },
+        });
+        return;
+      }
+
+      if (res.status === 403) {
+        setErrorMsg("You do not have permission to update orders.");
+        return;
+      }
+
+      if (res.status === 429) {
+        setErrorMsg(
+          getErrorMessage(
+            json,
+            "Too many requests. Please wait a moment and try again."
+          )
+        );
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Order updated!");
+        setErrorMsg(
+          getErrorMessage(json, "Failed to update order.")
+        );
+        return;
       }
+
+      setErrorMsg("Order updated!");
+      setInvalidFields([]);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      console.error("Update order error:", err);
+      setErrorMsg(
+        err?.message || "Unable to connect to the server."
+      );
     }
   }
 
@@ -138,6 +170,7 @@ export default function AdminOrderPage() {
     setErrorMsg("");
 
     const validation = validateDelete();
+
     if (validation) {
       setErrorMsg(validation);
       return;
@@ -145,37 +178,93 @@ export default function AdminOrderPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/admin/order/${deleteId}`,
+        `/api/admin/order/${deleteId}`,
         {
           method: "DELETE",
           credentials: "include",
         }
       );
 
-      const json = await res.json();
+      let json: any = {};
+
+      try {
+        json = await res.json();
+      } catch {
+        json = {};
+      }
+
+      if (res.status === 401) {
+        navigate("/login", {
+          replace: true,
+          state: { from: "/admin/orders" },
+        });
+        return;
+      }
+
+      if (res.status === 403) {
+        setErrorMsg("You do not have permission to delete orders.");
+        return;
+      }
+
+      if (res.status === 429) {
+        setErrorMsg(
+          getErrorMessage(
+            json,
+            "Too many requests. Please wait a moment and try again."
+          )
+        );
+        return;
+      }
 
       if (!res.ok) {
-        setErrorMsg(json.detail || "Unknown error");
-      } else {
-        setErrorMsg("Order deleted!");
+        setErrorMsg(
+          getErrorMessage(json, "Failed to delete order.")
+        );
+        return;
       }
+
+      setErrorMsg("Order deleted!");
+      setInvalidFields([]);
+      setDeleteId("");
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed");
+      console.error("Delete order error:", err);
+      setErrorMsg(
+        err?.message || "Unable to connect to the server."
+      );
     }
   }
 
   // -------------------------------
-  // LOADING SCREEN
+  // AUTH LOADING
   // -------------------------------
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="admin-wrapper">
         <div className="loading">Checking admin...</div>
+
+        <style>{`
+          .admin-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            color: #e8e8ff;
+            font-family: Inter, sans-serif;
+            padding: 40px;
+          }
+
+          .loading {
+            text-align: center;
+            padding-top: 100px;
+            font-size: 20px;
+            color: #00c8ff;
+          }
+        `}</style>
       </div>
     );
   }
 
-  if (!isAdmin) return null;
+  if (!user || !user.is_admin) {
+    return null;
+  }
 
   // -------------------------------
   // PAGE UI
@@ -193,8 +282,15 @@ export default function AdminOrderPage() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .glass {
@@ -225,12 +321,14 @@ export default function AdminOrderPage() {
           color: white;
           font-size: 15px;
           transition: 0.25s;
+          box-sizing: border-box;
         }
 
         .input:focus {
           background: rgba(0,200,255,0.15);
           border-color: rgba(0,200,255,0.35);
           transform: scale(1.02);
+          outline: none;
         }
 
         .input.invalid {
@@ -248,12 +346,19 @@ export default function AdminOrderPage() {
           color: white;
           font-size: 15px;
           transition: 0.25s;
+          box-sizing: border-box;
         }
 
         .select:focus {
           background: rgba(0,200,255,0.15);
           border-color: rgba(0,200,255,0.35);
           transform: scale(1.02);
+          outline: none;
+        }
+
+        .select option {
+          background: #0a0f1a;
+          color: white;
         }
 
         .btn {
@@ -315,22 +420,30 @@ export default function AdminOrderPage() {
       {/* UPDATE ORDER */}
       <div className="glass">
         <div className="title">Update Order</div>
+
         <form onSubmit={handleUpdate}>
           <input
-            className={`input ${invalidFields.includes("order_id") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("order_id") ? "invalid" : ""
+            }`}
             placeholder="Order ID"
             value={updateData.order_id}
             onChange={(e) =>
-              setUpdateData({ ...updateData, order_id: e.target.value })
+              setUpdateData({
+                ...updateData,
+                order_id: e.target.value,
+              })
             }
           />
 
-          {/* STATUS DROPDOWN */}
           <select
             className="select"
             value={updateData.status}
             onChange={(e) =>
-              setUpdateData({ ...updateData, status: e.target.value })
+              setUpdateData({
+                ...updateData,
+                status: e.target.value,
+              })
             }
           >
             <option value="">Status (optional)</option>
@@ -345,16 +458,21 @@ export default function AdminOrderPage() {
             placeholder="Shipping Address (optional)"
             value={updateData.shipping_address}
             onChange={(e) =>
-              setUpdateData({ ...updateData, shipping_address: e.target.value })
+              setUpdateData({
+                ...updateData,
+                shipping_address: e.target.value,
+              })
             }
           />
 
-          {/* DELIVERY METHOD DROPDOWN */}
           <select
             className="select"
             value={updateData.delivery_method}
             onChange={(e) =>
-              setUpdateData({ ...updateData, delivery_method: e.target.value })
+              setUpdateData({
+                ...updateData,
+                delivery_method: e.target.value,
+              })
             }
           >
             <option value="">Delivery Method (optional)</option>
@@ -372,9 +490,12 @@ export default function AdminOrderPage() {
       {/* DELETE ORDER */}
       <div className="glass">
         <div className="title">Delete Order</div>
+
         <form onSubmit={handleDelete}>
           <input
-            className={`input ${invalidFields.includes("deleteId") ? "invalid" : ""}`}
+            className={`input ${
+              invalidFields.includes("deleteId") ? "invalid" : ""
+            }`}
             placeholder="Order ID"
             value={deleteId}
             onChange={(e) => setDeleteId(e.target.value)}
@@ -386,7 +507,10 @@ export default function AdminOrderPage() {
         </form>
       </div>
 
-      <button className="back-btn" onClick={() => navigate("/admin")}>
+      <button
+        className="back-btn"
+        onClick={() => navigate("/admin")}
+      >
         ← Back to Admin Dashboard
       </button>
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function getErrorMessage(json: any, fallback: string) {
   if (typeof json?.detail === "string") return json.detail;
@@ -10,10 +11,7 @@ function getErrorMessage(json: any, fallback: string) {
 
 export default function Index() {
   const navigate = useNavigate();
-
-  const [loggedIn, setLoggedIn] = useState(
-    localStorage.getItem("logged_in") === "true"
-  );
+  const { user, loading: authLoading } = useAuth();
 
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -54,28 +52,17 @@ export default function Index() {
   };
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLoggedIn(localStorage.getItem("logged_in") === "true");
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     async function load() {
       try {
-        const prodRes = await fetch("/api/products/");
+        const prodRes = await fetch("/api/products/", {
+          credentials: "include",
+        });
 
         let prodJson: any = {};
         try {
           prodJson = await prodRes.json();
         } catch {
           prodJson = {};
-        }
-
-        if (prodRes.status === 401) {
-          redirectToLogin();
-          return;
         }
 
         if (prodRes.status === 429) {
@@ -100,18 +87,15 @@ export default function Index() {
 
         setProducts(Array.isArray(prodJson) ? prodJson : []);
 
-        const catRes = await fetch("/api/categories/");
+        const catRes = await fetch("/api/categories/", {
+          credentials: "include",
+        });
 
         let catJson: any = {};
         try {
           catJson = await catRes.json();
         } catch {
           catJson = {};
-        }
-
-        if (catRes.status === 401) {
-          redirectToLogin();
-          return;
         }
 
         if (catRes.status === 429) {
@@ -157,7 +141,10 @@ export default function Index() {
 
     try {
       const res = await fetch(
-        `/api/search/?q=${encodeURIComponent(q)}`
+        `/api/search/?q=${encodeURIComponent(q)}`,
+        {
+          credentials: "include",
+        }
       );
 
       let json: any = {};
@@ -165,11 +152,6 @@ export default function Index() {
         json = await res.json();
       } catch {
         json = {};
-      }
-
-      if (res.status === 401) {
-        redirectToLogin();
-        return;
       }
 
       if (res.status === 429) {
@@ -216,14 +198,15 @@ export default function Index() {
   }
 
   async function addToCart(productId: number) {
-    if (!loggedIn) {
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
       setCartMessage("Please log in to add items to cart.");
 
       setTimeout(() => {
-        navigate("/login", {
-          replace: true,
-          state: { from: "/" },
-        });
+        redirectToLogin();
       }, 1000);
 
       return;
@@ -233,7 +216,9 @@ export default function Index() {
       const res = await fetch("/api/cart/add", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           product_id: productId,
           quantity: 1,
@@ -288,6 +273,24 @@ export default function Index() {
         "Unable to connect to the server. Please check your connection and try again."
       );
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #050505, #0a0f1a)",
+          color: "#e8e8ff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        Loading...
+      </div>
+    );
   }
 
   if (rateLimited) {
@@ -732,7 +735,7 @@ export default function Index() {
           onKeyDown={handleSearch}
         />
 
-        {loggedIn ? (
+        {user ? (
           <>
             <Link to="/cart" className="icon-btn">
               🛒

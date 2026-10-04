@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function getErrorMessage(json: any, fallback: string) {
   if (typeof json?.detail === "string") return json.detail;
@@ -10,14 +11,11 @@ function getErrorMessage(json: any, fallback: string) {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-
-  const loggedIn = localStorage.getItem("logged_in") === "true";
-
-  useEffect(() => {
-    if (loggedIn) {
-      navigate("/", { replace: true });
-    }
-  }, [loggedIn, navigate]);
+  const {
+    user,
+    loading: authLoading,
+    refreshUser,
+  } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,6 +26,12 @@ export default function RegisterPage() {
 
   const [rateLimited, setRateLimited] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   function handleRateLimit() {
     setRateLimited(true);
@@ -88,32 +92,16 @@ export default function RegisterPage() {
         json = {};
       }
 
-      /*
-       * 429 = rate limited.
-       * Show the full-page rate-limit screen.
-       */
       if (res.status === 429) {
         handleRateLimit();
         return;
       }
 
-      /*
-       * 500+ = server/unexpected error.
-       * Show the full-page error screen.
-       */
       if (res.status >= 500) {
         handleServerError(res.status);
         return;
       }
 
-      /*
-       * Other registration errors such as:
-       * 400 - invalid request
-       * 409 - email already exists
-       * 422 - validation error
-       *
-       * Stay in the normal error box.
-       */
       if (!res.ok) {
         setErrorMsg(
           getErrorMessage(
@@ -126,8 +114,14 @@ export default function RegisterPage() {
 
       setSuccessMsg(json?.message || "Registered!");
 
-      localStorage.setItem("logged_in", "true");
-      localStorage.setItem("user_email", email);
+      /*
+       * Registration may also log the user in by setting
+       * the authentication cookies.
+       *
+       * Refresh AuthContext so the rest of the application
+       * immediately knows that the user is authenticated.
+       */
+      await refreshUser();
 
       setTimeout(() => {
         navigate("/", { replace: true });
@@ -139,6 +133,33 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="auth-wrapper">
+        <style>{`
+          .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #050505, #0a0f1a);
+            font-family: Inter, sans-serif;
+            padding: 20px;
+          }
+
+          .loading {
+            color: #7feaff;
+            font-size: 20px;
+          }
+        `}</style>
+
+        <div className="loading">
+          Loading...
+        </div>
+      </div>
+    );
   }
 
   if (rateLimited) {
@@ -325,6 +346,7 @@ export default function RegisterPage() {
             opacity: 0;
             transform: translateY(10px);
           }
+
           to {
             opacity: 1;
             transform: translateY(0);
@@ -335,9 +357,11 @@ export default function RegisterPage() {
           0% {
             box-shadow: 0 0 20px rgba(0,200,255,0.15);
           }
+
           50% {
             box-shadow: 0 0 35px rgba(0,200,255,0.35);
           }
+
           100% {
             box-shadow: 0 0 20px rgba(0,200,255,0.15);
           }
@@ -446,12 +470,13 @@ export default function RegisterPage() {
 
         .switcher a:hover {
           color: #b8f3ff;
-          transform: scale(1.05);
         }
       `}</style>
 
       <div className="glass-card">
-        <div className="title">Create Account</div>
+        <div className="title">
+          Create Account
+        </div>
 
         <form onSubmit={handleSubmit}>
           <label className="input-label">
@@ -464,6 +489,7 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={loading}
           />
 
           <label className="input-label">
@@ -476,6 +502,7 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
           />
 
           <button

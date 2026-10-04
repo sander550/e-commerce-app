@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 type Product = {
   id: number;
@@ -32,6 +33,8 @@ export default function ProductPage() {
   const { product_id } = useParams();
   const navigate = useNavigate();
 
+  const { user, loading: authLoading } = useAuth();
+
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
 
@@ -44,14 +47,12 @@ export default function ProductPage() {
   const [animateAdd, setAnimateAdd] = useState(false);
   const [floatBubble, setFloatBubble] = useState(false);
 
-  const [loggedIn, setLoggedIn] = useState(
-    localStorage.getItem("logged_in") === "true"
-  );
-
   const redirectToLogin = () => {
     navigate("/login", {
       replace: true,
-      state: { from: `/product/${product_id}` },
+      state: {
+        from: `/product/${product_id}`,
+      },
     });
   };
 
@@ -79,13 +80,102 @@ export default function ProductPage() {
     setSuccessMsg("");
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLoggedIn(localStorage.getItem("logged_in") === "true");
-    }, 200);
+  // ---------------------------------------------------------
+  // LOAD PRODUCT
+  // ---------------------------------------------------------
 
-    return () => clearInterval(interval);
-  }, []);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setErrorMsg("");
+      setPageError(null);
+      setRateLimited(false);
+
+      try {
+        const res = await fetch(`/api/products/${product_id}`, {
+          credentials: "include",
+        });
+
+        let json: any = {};
+
+        try {
+          json = await res.json();
+        } catch {
+          json = {};
+        }
+
+        if (cancelled) return;
+
+        /*
+         * Product pages are public.
+         *
+         * Therefore a 401 here should NOT send the user
+         * to /login.
+         */
+        if (res.status === 401) {
+          setErrorMsg(
+            getErrorMessage(
+              json,
+              "You are not authorized to view this product."
+            )
+          );
+          return;
+        }
+
+        if (res.status === 429) {
+          handleRateLimit();
+          return;
+        }
+
+        if (res.status >= 500) {
+          handleServerError(res.status);
+          return;
+        }
+
+        if (!res.ok) {
+          setErrorMsg(
+            getErrorMessage(
+              json,
+              `Product not found (${res.status})`
+            )
+          );
+          return;
+        }
+
+        setProduct(json);
+
+        /*
+         * Make sure quantity is valid when the product loads.
+         */
+        if (Number(json?.stock) > 0) {
+          setQuantity(1);
+        } else {
+          setQuantity(1);
+        }
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error("Product fetch error:", err);
+
+        handleUnexpectedError(
+          "Unable to connect to the server. Please try again."
+        );
+      }
+    }
+
+    if (product_id) {
+      load();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product_id]);
+
+  // ---------------------------------------------------------
+  // ADD TO CART
+  // ---------------------------------------------------------
 
   async function addToCart() {
     if (!product) return;
@@ -93,6 +183,10 @@ export default function ProductPage() {
     setErrorMsg("");
     setSuccessMsg("");
     setPageError(null);
+
+    if (authLoading) {
+      return;
+    }
 
     if (product.stock <= 0) {
       setErrorMsg("Out of stock");
@@ -104,7 +198,11 @@ export default function ProductPage() {
       return;
     }
 
-    if (!loggedIn) {
+    /*
+     * AuthContext is now the source of truth.
+     * Do NOT check localStorage.logged_in.
+     */
+    if (!user) {
       setErrorMsg("Please log in to add items to cart.");
 
       setTimeout(() => {
@@ -181,62 +279,9 @@ export default function ProductPage() {
     }
   }
 
-  useEffect(() => {
-    async function load() {
-      setErrorMsg("");
-      setPageError(null);
-      setRateLimited(false);
-
-      try {
-        const res = await fetch(`/api/products/${product_id}`, {
-          credentials: "include",
-        });
-
-        let json: any = {};
-
-        try {
-          json = await res.json();
-        } catch {
-          json = {};
-        }
-
-        if (res.status === 401) {
-          redirectToLogin();
-          return;
-        }
-
-        if (res.status === 429) {
-          handleRateLimit();
-          return;
-        }
-
-        if (res.status >= 500) {
-          handleServerError(res.status);
-          return;
-        }
-
-        if (!res.ok) {
-          setErrorMsg(
-            getErrorMessage(
-              json,
-              `Product not found (${res.status})`
-            )
-          );
-          return;
-        }
-
-        setProduct(json);
-      } catch (err) {
-        console.error("Product fetch error:", err);
-
-        handleUnexpectedError(
-          "Unable to connect to the server. Please try again."
-        );
-      }
-    }
-
-    load();
-  }, [product_id]);
+  // ---------------------------------------------------------
+  // RATE LIMIT SCREEN
+  // ---------------------------------------------------------
 
   if (rateLimited) {
     return (
@@ -314,6 +359,10 @@ export default function ProductPage() {
     );
   }
 
+  // ---------------------------------------------------------
+  // FULL PAGE ERROR
+  // ---------------------------------------------------------
+
   if (pageError) {
     return (
       <div
@@ -389,6 +438,10 @@ export default function ProductPage() {
     );
   }
 
+  // ---------------------------------------------------------
+  // PRODUCT ERROR
+  // ---------------------------------------------------------
+
   if (errorMsg && !product) {
     return (
       <div className="product-wrapper">
@@ -448,6 +501,10 @@ export default function ProductPage() {
     );
   }
 
+  // ---------------------------------------------------------
+  // PRODUCT LOADING
+  // ---------------------------------------------------------
+
   if (!product) {
     return (
       <div className="product-wrapper">
@@ -478,6 +535,10 @@ export default function ProductPage() {
       </div>
     );
   }
+
+  // ---------------------------------------------------------
+  // NORMAL PAGE
+  // ---------------------------------------------------------
 
   return (
     <div className="product-wrapper">
@@ -721,9 +782,14 @@ export default function ProductPage() {
           transition: 0.25s;
         }
 
-        .add-btn:hover {
+        .add-btn:hover:not(:disabled) {
           background: rgba(0,200,255,0.35);
           transform: scale(1.05);
+        }
+
+        .add-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         .add-btn.animate {
@@ -803,7 +869,16 @@ export default function ProductPage() {
         </div>
 
         <div className="topbar-right">
-          {loggedIn ? (
+          {authLoading ? (
+            <div
+              style={{
+                opacity: 0.6,
+                fontSize: "14px",
+              }}
+            >
+              Checking...
+            </div>
+          ) : user ? (
             <>
               <Link to="/cart" className="icon-btn">
                 🛒
@@ -922,7 +997,7 @@ export default function ProductPage() {
               animateAdd ? "animate" : ""
             }`}
             onClick={addToCart}
-            disabled={product.stock <= 0}
+            disabled={product.stock <= 0 || authLoading}
           >
             🛒 Add {quantity}
           </button>

@@ -63,14 +63,3 @@ async def startup_event():
     print("[EventBus] Subscribed to payment_completed")
 
 
-# ---------------------------------------------------------
-# Root endpoint
-# ---------------------------------------------------------
-# Serve static files
-#app.mount("/static", StaticFiles(directory="../frontend/dist/assets"), name="static")
-
-#@app.get("/")
-#async def serve_frontend():
-#    return FileResponse("../frontend/dist/index.html")
-
-
