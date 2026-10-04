@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -13,6 +13,9 @@ export default function CartPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
+  const redirectingRef = useRef(false);
+  const mountedRef = useRef(true);
+
   const [cart, setCart] = useState<any>({
     items: [],
   });
@@ -20,7 +23,6 @@ export default function CartPage() {
   const [totals, setTotals] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Address fields
   const [street, setStreet] = useState("");
   const [houseNumber, setHouseNumber] = useState("");
   const [city, setCity] = useState("");
@@ -39,33 +41,60 @@ export default function CartPage() {
   const [highlightErrors, setHighlightErrors] =
     useState(false);
 
-  // -----------------------------
+  // --------------------------------
+  // CLEANUP
+  // --------------------------------
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // --------------------------------
   // AUTH REDIRECT
-  // -----------------------------
+  // --------------------------------
 
   const redirectToLogin = () => {
+    if (redirectingRef.current) {
+      return;
+    }
+
+    redirectingRef.current = true;
+
+    setLoading(false);
+
     navigate("/login", {
       replace: true,
-      state: { from: "/cart" },
+      state: {
+        from: "/cart",
+      },
     });
   };
 
-  // -----------------------------
+  // --------------------------------
   // RATE LIMIT
-  // -----------------------------
+  // --------------------------------
 
   const handleRateLimit = () => {
+    if (!mountedRef.current) return;
+
     setRateLimited(true);
     setPageError(null);
     setError(null);
     setSuccess(null);
+    setLoading(false);
   };
 
-  // -----------------------------
-  // SERVER / NETWORK ERROR
-  // -----------------------------
+  // --------------------------------
+  // SERVER ERROR
+  // --------------------------------
 
   const handleServerError = (message?: string) => {
+    if (!mountedRef.current) return;
+
     setPageError(
       message ||
         "Something went wrong on the server. Please try again later."
@@ -74,9 +103,16 @@ export default function CartPage() {
     setRateLimited(false);
     setError(null);
     setSuccess(null);
+    setLoading(false);
   };
 
+  // --------------------------------
+  // NETWORK ERROR
+  // --------------------------------
+
   const handleUnexpectedError = () => {
+    if (!mountedRef.current) return;
+
     setPageError(
       "Something went wrong. Please check your connection and try again."
     );
@@ -84,15 +120,21 @@ export default function CartPage() {
     setRateLimited(false);
     setError(null);
     setSuccess(null);
+    setLoading(false);
   };
 
-  // -----------------------------
+  // --------------------------------
   // LOAD CART
-  // -----------------------------
+  // --------------------------------
 
-  const fetchCart = async () => {
+  const fetchCart = async (): Promise<boolean> => {
+    if (redirectingRef.current) {
+      return false;
+    }
+
     try {
       const res = await fetch("/api/cart/", {
+        method: "GET",
         credentials: "include",
       });
 
@@ -122,13 +164,19 @@ export default function CartPage() {
           return false;
         }
 
-        setError(
-          getErrorMessage(
-            json,
-            `Failed to load cart (${res.status}).`
-          )
-        );
+        if (mountedRef.current) {
+          setError(
+            getErrorMessage(
+              json,
+              `Failed to load cart (${res.status}).`
+            )
+          );
+        }
 
+        return false;
+      }
+
+      if (!mountedRef.current) {
         return false;
       }
 
@@ -140,19 +188,28 @@ export default function CartPage() {
 
       return true;
     } catch (err) {
+      if (redirectingRef.current) {
+        return false;
+      }
+
       console.error("Load cart failed:", err);
       handleUnexpectedError();
       return false;
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // LOAD TOTALS
-  // -----------------------------
+  // --------------------------------
 
-  const fetchTotals = async () => {
+  const fetchTotals = async (): Promise<boolean> => {
+    if (redirectingRef.current) {
+      return false;
+    }
+
     try {
       const res = await fetch("/api/cart/totals", {
+        method: "GET",
         credentials: "include",
       });
 
@@ -182,13 +239,19 @@ export default function CartPage() {
           return false;
         }
 
-        setError(
-          getErrorMessage(
-            json,
-            `Failed to load totals (${res.status}).`
-          )
-        );
+        if (mountedRef.current) {
+          setError(
+            getErrorMessage(
+              json,
+              `Failed to load totals (${res.status}).`
+            )
+          );
+        }
 
+        return false;
+      }
+
+      if (!mountedRef.current) {
         return false;
       }
 
@@ -196,19 +259,28 @@ export default function CartPage() {
 
       return true;
     } catch (err) {
+      if (redirectingRef.current) {
+        return false;
+      }
+
       console.error("Load totals failed:", err);
       handleUnexpectedError();
       return false;
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // LOAD PROFILE
-  // -----------------------------
+  // --------------------------------
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (): Promise<boolean> => {
+    if (redirectingRef.current) {
+      return false;
+    }
+
     try {
       const res = await fetch("/api/auth/profile", {
+        method: "GET",
         credentials: "include",
       });
 
@@ -221,7 +293,16 @@ export default function CartPage() {
       }
 
       if (!res.ok) {
-        return;
+        if (res.status === 401) {
+          redirectToLogin();
+          return false;
+        }
+
+        return false;
+      }
+
+      if (!mountedRef.current) {
+        return false;
       }
 
       if (json.shipping_address) {
@@ -235,28 +316,42 @@ export default function CartPage() {
         setPostalCode(parts[3] || "");
         setCountry(parts[4] || "");
       }
+
+      return true;
     } catch (err) {
+      if (redirectingRef.current) {
+        return false;
+      }
+
       console.error("Load profile failed:", err);
+      return false;
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // INITIAL LOAD
-  // -----------------------------
+  // --------------------------------
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading) {
+      return;
+    }
 
-    // AuthContext already checked authentication.
     if (!user) {
       redirectToLogin();
       return;
     }
 
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
 
       const cartLoaded = await fetchCart();
+
+      if (cancelled || redirectingRef.current) {
+        return;
+      }
 
       if (!cartLoaded) {
         setLoading(false);
@@ -265,6 +360,10 @@ export default function CartPage() {
 
       const totalsLoaded = await fetchTotals();
 
+      if (cancelled || redirectingRef.current) {
+        return;
+      }
+
       if (!totalsLoaded) {
         setLoading(false);
         return;
@@ -272,20 +371,32 @@ export default function CartPage() {
 
       await fetchProfile();
 
+      if (cancelled || redirectingRef.current) {
+        return;
+      }
+
       setLoading(false);
     };
 
     load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, user]);
 
-  // -----------------------------
+  // --------------------------------
   // UPDATE QUANTITY
-  // -----------------------------
+  // --------------------------------
 
   const updateQuantity = async (
     productId: number,
     quantity: number
   ) => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -338,6 +449,10 @@ export default function CartPage() {
         return;
       }
 
+      if (!mountedRef.current) {
+        return;
+      }
+
       setCart(
         json && Array.isArray(json.items)
           ? json
@@ -346,20 +461,28 @@ export default function CartPage() {
 
       const totalsLoaded = await fetchTotals();
 
-      if (totalsLoaded) {
+      if (totalsLoaded && mountedRef.current) {
         setSuccess("Quantity updated!");
       }
     } catch (err) {
+      if (redirectingRef.current) {
+        return;
+      }
+
       console.error("Update quantity failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // REMOVE ITEM
-  // -----------------------------
+  // --------------------------------
 
   const removeItem = async (productId: number) => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -408,6 +531,10 @@ export default function CartPage() {
         return;
       }
 
+      if (!mountedRef.current) {
+        return;
+      }
+
       setCart(
         json && Array.isArray(json.items)
           ? json
@@ -416,20 +543,28 @@ export default function CartPage() {
 
       const totalsLoaded = await fetchTotals();
 
-      if (totalsLoaded) {
+      if (totalsLoaded && mountedRef.current) {
         setSuccess("Item removed!");
       }
     } catch (err) {
+      if (redirectingRef.current) {
+        return;
+      }
+
       console.error("Remove item failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // CLEAR CART
-  // -----------------------------
+  // --------------------------------
 
   const clearCart = async () => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -475,6 +610,10 @@ export default function CartPage() {
         return;
       }
 
+      if (!mountedRef.current) {
+        return;
+      }
+
       setCart({ items: [] });
 
       setTotals({
@@ -485,16 +624,24 @@ export default function CartPage() {
 
       setSuccess("Cart cleared!");
     } catch (err) {
+      if (redirectingRef.current) {
+        return;
+      }
+
       console.error("Clear cart failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // PAY WITH PAYPAL
-  // -----------------------------
+  // --------------------------------
 
   const payWithPayPal = async () => {
+    if (redirectingRef.current) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -516,8 +663,6 @@ export default function CartPage() {
       `${street}, ${houseNumber}, ${city}, ${postalCode}, ${country}`;
 
     try {
-      // CREATE ORDER
-
       const orderRes = await fetch("/api/orders/", {
         method: "POST",
         credentials: "include",
@@ -574,8 +719,6 @@ export default function CartPage() {
         );
         return;
       }
-
-      // CREATE PAYPAL PAYMENT
 
       const payRes = await fetch(
         "/api/payment/create",
@@ -636,14 +779,18 @@ export default function CartPage() {
 
       window.location.href = payJson.approval_url;
     } catch (err) {
+      if (redirectingRef.current) {
+        return;
+      }
+
       console.error("PayPal payment failed:", err);
       handleUnexpectedError();
     }
   };
 
-  // -----------------------------
+  // --------------------------------
   // AUTH LOADING
-  // -----------------------------
+  // --------------------------------
 
   if (authLoading) {
     return (
@@ -679,15 +826,17 @@ export default function CartPage() {
     );
   }
 
-  // If AuthContext says logged out,
-  // the effect above redirects to login.
+  // --------------------------------
+  // NOT AUTHENTICATED
+  // --------------------------------
+
   if (!user) {
     return null;
   }
 
-  // -----------------------------
+  // --------------------------------
   // CART LOADING
-  // -----------------------------
+  // --------------------------------
 
   if (loading) {
     return (
@@ -723,9 +872,9 @@ export default function CartPage() {
     );
   }
 
-  // -----------------------------
-  // RATE LIMIT ERROR SCREEN
-  // -----------------------------
+  // --------------------------------
+  // RATE LIMIT
+  // --------------------------------
 
   if (rateLimited) {
     return (
@@ -796,8 +945,8 @@ export default function CartPage() {
           <h2>Too Many Requests</h2>
 
           <p>
-            You are sending requests too quickly. Please wait a moment and
-            try again.
+            You are sending requests too quickly. Please wait a moment
+            and try again.
           </p>
 
           <button
@@ -811,9 +960,9 @@ export default function CartPage() {
     );
   }
 
-  // -----------------------------
-  // PAGE ERROR SCREEN
-  // -----------------------------
+  // --------------------------------
+  // PAGE ERROR
+  // --------------------------------
 
   if (pageError) {
     return (
@@ -896,9 +1045,9 @@ export default function CartPage() {
     );
   }
 
-  // -----------------------------
+  // --------------------------------
   // NORMAL UI
-  // -----------------------------
+  // --------------------------------
 
   return (
     <div className="page-wrapper fade-in">
@@ -1065,14 +1214,21 @@ export default function CartPage() {
         ← Back
       </Link>
 
-      {error && <div className="error-box">{error}</div>}
+      {error && (
+        <div className="error-box">
+          {error}
+        </div>
+      )}
 
       {success && (
-        <div className="success-box">{success}</div>
+        <div className="success-box">
+          {success}
+        </div>
       )}
 
       <div className="layout">
-        {/* LEFT SIDE — CART */}
+
+        {/* CART */}
 
         <div className="glass">
           <div className="section-title">
@@ -1146,7 +1302,7 @@ export default function CartPage() {
           )}
         </div>
 
-        {/* RIGHT SIDE — CHECKOUT */}
+        {/* CHECKOUT */}
 
         <div className="glass">
           <div className="section-title">

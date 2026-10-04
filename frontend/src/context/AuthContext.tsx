@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -11,6 +12,8 @@ type User = {
   username?: string;
   email?: string;
   is_admin?: boolean;
+  is_active?: boolean;
+  created_at?: string;
   [key: string]: any;
 };
 
@@ -21,50 +24,126 @@ type AuthContextType = {
   logout: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUser = async () => {
+  const clearAuthState = useCallback(() => {
+    console.log("[Auth] Clearing authentication state");
+
+    setUser(null);
+
+    localStorage.removeItem("logged_in");
+    localStorage.removeItem("email");
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    console.log("[Auth] Checking /api/auth/profile...");
+
     try {
-      const response = await fetch("/api/auth/profile", {
-        credentials: "include",
-      });
+      const response = await fetch(
+        "/api/auth/profile",
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        }
+      );
+
+      console.log(
+        "[Auth] Profile status:",
+        response.status
+      );
 
       if (!response.ok) {
-        setUser(null);
+        console.log(
+          "[Auth] Not authenticated:",
+          response.status
+        );
+
+        clearAuthState();
+
         return;
       }
 
       const data = await response.json();
+
+      console.log(
+        "[Auth] Authenticated user:",
+        data
+      );
+
       setUser(data);
-    } catch {
-      setUser(null);
+
+      localStorage.setItem(
+        "logged_in",
+        "true"
+      );
+
+      if (typeof data.email === "string") {
+        localStorage.setItem(
+          "email",
+          data.email
+        );
+      }
+    } catch (error) {
+      console.error(
+        "[Auth] Profile request error:",
+        error
+      );
+
+      clearAuthState();
     }
-  };
+  }, [clearAuthState]);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    let mounted = true;
+
+    async function checkAuth() {
+      if (!mounted) return;
+
+      setLoading(true);
+
       await refreshUser();
-      setLoading(false);
-    };
+
+      if (mounted) {
+        setLoading(false);
+      }
+    }
 
     checkAuth();
-  }, []);
 
-  const logout = async () => {
+    return () => {
+      mounted = false;
+    };
+  }, [refreshUser]);
+
+  const logout = useCallback(async () => {
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await fetch(
+        "/api/auth/logout",
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+    } catch (error) {
+      console.error(
+        "[Auth] Logout request failed:",
+        error
+      );
     } finally {
-      setUser(null);
-      localStorage.removeItem("logged_in");
+      clearAuthState();
     }
-  };
+  }, [clearAuthState]);
 
   return (
     <AuthContext.Provider
@@ -84,7 +163,9 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
+    throw new Error(
+      "useAuth must be used inside AuthProvider"
+    );
   }
 
   return context;
