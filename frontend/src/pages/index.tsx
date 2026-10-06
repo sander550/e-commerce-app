@@ -54,7 +54,7 @@ export default function Index() {
   useEffect(() => {
     async function load() {
       try {
-        const prodRes = await fetch("/api/products/", {
+        const prodRes = await fetch("/products/", {
           credentials: "include",
         });
 
@@ -87,7 +87,7 @@ export default function Index() {
 
         setProducts(Array.isArray(prodJson) ? prodJson : []);
 
-        const catRes = await fetch("/api/categories/", {
+        const catRes = await fetch("/categories/", {
           credentials: "include",
         });
 
@@ -141,7 +141,7 @@ export default function Index() {
 
     try {
       const res = await fetch(
-        `/api/search/?q=${encodeURIComponent(q)}`,
+        `/search/?q=${encodeURIComponent(q)}`,
         {
           credentials: "include",
         }
@@ -202,6 +202,10 @@ export default function Index() {
       return;
     }
 
+    /*
+     * Authentication comes ONLY from AuthContext.
+     * localStorage is NOT used to decide whether the user is logged in.
+     */
     if (!user) {
       setCartMessage("Please log in to add items to cart.");
 
@@ -213,7 +217,7 @@ export default function Index() {
     }
 
     try {
-      const res = await fetch("/api/cart/add", {
+      const res = await fetch("/cart/add", {
         method: "POST",
         credentials: "include",
         headers: {

@@ -24,7 +24,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/register")
 async def register(
     dto: UserRequestDTO,
-    user = Depends(auth_optional),
+    user=Depends(auth_optional),
     use_case: RegisterUserUseCase = Depends(get_register_use_case)
 ):
     if user:
@@ -33,7 +33,6 @@ async def register(
     try:
         result = await use_case.execute(dto.email, dto.password)
     except Exception as e:
-        # Return proper error status
         raise HTTPException(status_code=400, detail=str(e))
 
     response = JSONResponse({
@@ -48,7 +47,7 @@ async def register(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="lax",
         max_age=60 * 15
     )
@@ -57,7 +56,7 @@ async def register(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
@@ -68,11 +67,12 @@ async def register(
 # ---------------------------------------------------------
 # LOGIN
 # ---------------------------------------------------------
+
 @router.post("/login")
 async def login(
     request: Request,
     dto: UserRequestDTO,
-    user = Depends(auth_optional),
+    user=Depends(auth_optional),
     use_case: LoginUserUseCase = Depends(get_login_use_case)
 ):
     if user:
@@ -83,7 +83,7 @@ async def login(
     try:
         result = await use_case.execute(dto.email, dto.password, ip)
     except Exception as e:
-        raise HTTPException(400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
     response = JSONResponse({
         "message": "Login successful",
@@ -98,7 +98,7 @@ async def login(
         value=result["access_token"],
         httponly=True,
         secure=True,
-        samesite="none",
+        samesite="lax",
         max_age=60 * 15
     )
 
@@ -107,11 +107,12 @@ async def login(
         value=result["refresh_token"],
         httponly=True,
         secure=True,
-        samesite="none",
+        samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
 
     return response
+
 
 
 # ---------------------------------------------------------
