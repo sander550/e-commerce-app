@@ -7,6 +7,16 @@
     <title>Temu 2.0</title>
   </head>
   <body>
+    <script>
+      // Remove legacy auth markers created by older frontend builds.
+      // Authentication now comes only from the backend's HttpOnly cookies.
+      try {
+        localStorage.removeItem("logged_in");
+        localStorage.removeItem("user_email");
+      } catch {
+        // Storage may be unavailable in restricted browser contexts.
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

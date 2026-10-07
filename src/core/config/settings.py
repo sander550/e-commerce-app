@@ -39,6 +39,9 @@ class Settings:
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", 30))
     JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", 7))
     REFRESH_TOKEN_KEY = str(os.getenv("REFRESH_TOKEN_KEY"))
+    # The bundled Compose deployment serves HTTP on port 80 by default.
+    # Set AUTH_COOKIE_SECURE=true when TLS is enabled in front of the app.
+    AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "false").lower() == "true"
 
     # ---------------------------------------------------------
     # PASSWORD HASHING

@@ -42,30 +42,19 @@ export function AuthProvider({
   }, []);
 
   const refreshUser = useCallback(async () => {
-    console.log("[Auth] Checking /auth/profile...");
-
     try {
-      const response = await fetch("/auth/profile", {
+      const response = await fetch("/api/auth/profile", {
         method: "GET",
         credentials: "include",
         cache: "no-store",
       });
 
-      console.log("[Auth] Profile status:", response.status);
-
       if (!response.ok) {
-        console.log(
-          "[Auth] Not authenticated:",
-          response.status
-        );
-
         clearAuthState();
         return;
       }
 
       const data = await response.json();
-
-      console.log("[Auth] Authenticated user:", data);
 
       setUser(data);
     } catch (error) {
@@ -102,7 +91,7 @@ export function AuthProvider({
 
   const logout = useCallback(async () => {
     try {
-      await fetch("/auth/logout", {
+      await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });

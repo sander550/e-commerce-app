@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
+from core.config.settings import settings
 
 from auth.application.use_cases.register_user import RegisterUserUseCase
 from auth.application.use_cases.login_user import LoginUserUseCase
@@ -47,7 +48,7 @@ async def register(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=True,
+        secure=settings.AUTH_COOKIE_SECURE,
         samesite="lax",
         max_age=60 * 15
     )
@@ -56,7 +57,7 @@ async def register(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=True,
+        secure=settings.AUTH_COOKIE_SECURE,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
@@ -97,7 +98,7 @@ async def login(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=True,
+        secure=settings.AUTH_COOKIE_SECURE,
         samesite="lax",
         max_age=60 * 15
     )
@@ -106,7 +107,7 @@ async def login(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=True,
+        secure=settings.AUTH_COOKIE_SECURE,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
@@ -143,7 +144,7 @@ async def get_current_user(
 ):
     if user is None:
         raise HTTPException(
-            status_code=400,
+            status_code=401,
             detail="Not authenticated"
         )
 
