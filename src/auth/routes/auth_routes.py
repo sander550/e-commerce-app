@@ -76,7 +76,6 @@ async def login(
     dto: UserRequestDTO,
     use_case: LoginUserUseCase = Depends(get_login_use_case)
 ):
-    print("user logged in ")
     ip = get_client_ip(request)
 
     try:

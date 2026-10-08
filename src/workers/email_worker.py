@@ -9,7 +9,6 @@ async def main():
     while True:
 
         payload = await redis_client.rpop("email_queue")
-        print("email worker print here")
 
         if payload:
             data = json.loads(payload)
