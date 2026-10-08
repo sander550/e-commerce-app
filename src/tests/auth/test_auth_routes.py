@@ -109,17 +109,17 @@ def test_login_success(mock_login_uc):
     app.dependency_overrides = {}
 
 
-def test_login_already_logged_in():
+def test_login_replaces_a_previous_session(mock_login_uc):
     app.dependency_overrides[auth_optional] = lambda: mock_user()
-    app.dependency_overrides[get_login_use_case] = lambda: AsyncMock()
+    app.dependency_overrides[get_login_use_case] = lambda: mock_login_uc
 
     response = client.post(
         "/auth/login",
         json={"email": "test@example.com", "password": "pw123"},
     )
 
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Already logged in"
+    assert response.status_code == 200
+    mock_login_uc.execute.assert_awaited_once()
 
     app.dependency_overrides = {}
 

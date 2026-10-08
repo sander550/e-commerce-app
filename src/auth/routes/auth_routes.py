@@ -6,6 +6,7 @@ from auth.application.use_cases.register_user import RegisterUserUseCase
 from auth.application.use_cases.login_user import LoginUserUseCase
 from auth.application.use_cases.logout_user import LogoutUseCase
 from core.security.dependencies import auth_required, auth_optional
+from core.security.request_ip import get_client_ip
 
 from auth.application.dto.auth_dto import (
     UserReadDTO,
@@ -73,18 +74,17 @@ async def register(
 async def login(
     request: Request,
     dto: UserRequestDTO,
-    user=Depends(auth_optional),
     use_case: LoginUserUseCase = Depends(get_login_use_case)
 ):
-    if user:
-        raise HTTPException(400, "Already logged in")
-
-    ip = request.client.host if request.client else "testclient"
+    print("user logged in ")
+    ip = get_client_ip(request)
 
     try:
         result = await use_case.execute(dto.email, dto.password, ip)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as error:
+        message = str(error)
+        status_code = 429 if message.startswith("Too many login attempts") else 401
+        raise HTTPException(status_code=status_code, detail=message)
 
     response = JSONResponse({
         "message": "Login successful",

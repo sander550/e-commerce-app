@@ -22,6 +22,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "ok",
+        "build_id": os.getenv("APP_BUILD_ID", "local"),
+    }
+
 # ---------------------------------------------------------
 # CORS (Next.js frontend)
 # ---------------------------------------------------------

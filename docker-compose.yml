@@ -41,7 +41,10 @@ services:
     restart: unless-stopped
 
   backend:
-    build: .
+    build:
+      context: .
+      args:
+        APP_BUILD_ID: ${APP_BUILD_ID:-unknown}
     env_file:
       - .env
     environment:
@@ -56,7 +59,10 @@ services:
     restart: unless-stopped
 
   worker:
-    build: .
+    build:
+      context: .
+      args:
+        APP_BUILD_ID: ${APP_BUILD_ID:-unknown}
     env_file:
       - .env
     environment:
@@ -71,7 +77,10 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        APP_BUILD_ID: ${APP_BUILD_ID:-unknown}
     ports:
       - "80:80"
     depends_on:
