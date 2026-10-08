@@ -5,10 +5,6 @@ from unittest.mock import AsyncMock
 from main import app
 
 from auth.domain.entities.user import User
-from auth.application.use_cases.register_user import RegisterUserUseCase
-from auth.application.use_cases.login_user import LoginUserUseCase
-from auth.application.use_cases.logout_user import LogoutUseCase
-
 from core.security.dependencies import auth_required, auth_optional
 from core.application.use_case_factories.auth_factories import (
     get_register_use_case,
@@ -16,7 +12,6 @@ from core.application.use_case_factories.auth_factories import (
     get_logout_use_case,
 )
 client = TestClient(app)
-
 
 
 def mock_user():
@@ -47,34 +42,38 @@ def test_register_success(mock_register_uc):
     app.dependency_overrides[auth_optional] = lambda: None
     app.dependency_overrides[get_register_use_case] = lambda: mock_register_uc
 
-    response = client.post(
-        "/auth/register",
-        json={"email": "test@example.com", "password": "pw123"},
-    )
+    try:
+        response = client.post(
+            "/auth/register",
+            json={"email": "test@example.com", "password": "pw123"},
+        )
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["message"] == "User registered"
-    assert data["user"]["email"] == "test@example.com"
-    assert response.cookies.get("access_token") == "ACCESS123"
-    assert response.cookies.get("refresh_token") == "REFRESH123"
+        assert response.status_code == 200
 
-    app.dependency_overrides = {}
+        data = response.json()
+        assert data["message"] == "User registered"
+        assert data["user"]["email"] == "test@example.com"
+
+        assert response.cookies.get("access_token") == "ACCESS123"
+        assert response.cookies.get("refresh_token") == "REFRESH123"
+    finally:
+        app.dependency_overrides = {}
 
 
 def test_register_already_logged_in():
     app.dependency_overrides[auth_optional] = lambda: mock_user()
     app.dependency_overrides[get_register_use_case] = lambda: AsyncMock()
 
-    response = client.post(
-        "/auth/register",
-        json={"email": "test@example.com", "password": "pw123"},
-    )
+    try:
+        response = client.post(
+            "/auth/register",
+            json={"email": "test@example.com", "password": "pw123"},
+        )
 
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Already logged in"
-
-    app.dependency_overrides = {}
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Already logged in"
+    finally:
+        app.dependency_overrides = {}
 
 
 # ---------------- LOGIN ----------------
@@ -94,34 +93,38 @@ def test_login_success(mock_login_uc):
     app.dependency_overrides[auth_optional] = lambda: None
     app.dependency_overrides[get_login_use_case] = lambda: mock_login_uc
 
-    response = client.post(
-        "/auth/login",
-        json={"email": "test@example.com", "password": "pw123"},
-    )
+    try:
+        response = client.post(
+            "/auth/login",
+            json={"email": "test@example.com", "password": "pw123"},
+        )
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["message"] == "Login successful"
-    assert data["user"]["email"] == "test@example.com"
-    assert response.cookies.get("access_token") == "ACCESS_LOGIN"
-    assert response.cookies.get("refresh_token") == "REFRESH_LOGIN"
+        assert response.status_code == 200
 
-    app.dependency_overrides = {}
+        data = response.json()
+        assert data["message"] == "Login successful"
+        assert data["user"]["email"] == "test@example.com"
+
+        assert response.cookies.get("access_token") == "ACCESS_LOGIN"
+        assert response.cookies.get("refresh_token") == "REFRESH_LOGIN"
+    finally:
+        app.dependency_overrides = {}
 
 
 def test_login_replaces_a_previous_session(mock_login_uc):
     app.dependency_overrides[auth_optional] = lambda: mock_user()
     app.dependency_overrides[get_login_use_case] = lambda: mock_login_uc
 
-    response = client.post(
-        "/auth/login",
-        json={"email": "test@example.com", "password": "pw123"},
-    )
+    try:
+        response = client.post(
+            "/auth/login",
+            json={"email": "test@example.com", "password": "pw123"},
+        )
 
-    assert response.status_code == 200
-    mock_login_uc.execute.assert_awaited_once()
-
-    app.dependency_overrides = {}
+        assert response.status_code == 200
+        mock_login_uc.execute.assert_awaited_once()
+    finally:
+        app.dependency_overrides = {}
 
 
 # ---------------- LOGOUT ----------------
@@ -136,15 +139,17 @@ def mock_logout_uc():
 def test_logout_success(mock_logout_uc):
     app.dependency_overrides[get_logout_use_case] = lambda: mock_logout_uc
 
-    client.cookies.set("refresh_token", "REFRESH123")
-    client.cookies.set("access_token", "ACCESS123")
+    try:
+        client.cookies.set("refresh_token", "REFRESH123")
+        client.cookies.set("access_token", "ACCESS123")
 
-    response = client.post("/auth/logout")
+        response = client.post("/auth/logout")
 
-    assert response.status_code == 200
-    assert response.json()["success"] is True
-
-    app.dependency_overrides = {}
+        assert response.status_code == 200
+        assert response.json()["success"] is True
+    finally:
+        app.dependency_overrides = {}
+        client.cookies.clear()
 
 
 # ---------------- PROFILE ----------------
@@ -152,22 +157,27 @@ def test_logout_success(mock_logout_uc):
 def test_profile_success():
     app.dependency_overrides[auth_required] = lambda: mock_user()
 
-    response = client.get("/auth/profile")
+    try:
+        response = client.get("/auth/profile")
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == "test@example.com"
-    assert data["id"] == 1
+        assert response.status_code == 200
 
-    app.dependency_overrides = {}
+        data = response.json()
+        assert data["email"] == "test@example.com"
+        assert data["id"] == 1
+    finally:
+        app.dependency_overrides = {}
 
 
 def test_profile_not_authenticated():
     app.dependency_overrides[auth_required] = lambda: None
 
-    response = client.get("/auth/profile")
+    try:
+        response = client.get("/auth/profile")
 
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Not authenticated"
+        # Unauthenticated requests are now correctly returned as 401.
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Not authenticated"
+    finally:
+        app.dependency_overrides = {}
 
-    app.dependency_overrides = {}
