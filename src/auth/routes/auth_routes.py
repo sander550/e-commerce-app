@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
+from core.config.settings import settings
 
 from auth.application.use_cases.register_user import RegisterUserUseCase
 from auth.application.use_cases.login_user import LoginUserUseCase
 from auth.application.use_cases.logout_user import LogoutUseCase
 from core.security.dependencies import auth_required, auth_optional
+from core.security.request_ip import get_client_ip
 
 from auth.application.dto.auth_dto import (
     UserReadDTO,
@@ -24,7 +26,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/register")
 async def register(
     dto: UserRequestDTO,
-    user = Depends(auth_optional),
+    user=Depends(auth_optional),
     use_case: RegisterUserUseCase = Depends(get_register_use_case)
 ):
     if user:
@@ -33,7 +35,6 @@ async def register(
     try:
         result = await use_case.execute(dto.email, dto.password)
     except Exception as e:
-        # Return proper error status
         raise HTTPException(status_code=400, detail=str(e))
 
     response = JSONResponse({
@@ -48,7 +49,7 @@ async def register(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=False,
+        secure=settings.AUTH_COOKIE_SECURE,
         samesite="lax",
         max_age=60 * 15
     )
@@ -57,7 +58,7 @@ async def register(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=False,
+        secure=settings.AUTH_COOKIE_SECURE,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
@@ -68,22 +69,22 @@ async def register(
 # ---------------------------------------------------------
 # LOGIN
 # ---------------------------------------------------------
+
 @router.post("/login")
 async def login(
     request: Request,
     dto: UserRequestDTO,
-    user = Depends(auth_optional),
     use_case: LoginUserUseCase = Depends(get_login_use_case)
 ):
-    if user:
-        raise HTTPException(400, "Already logged in")
-
-    ip = request.client.host if request.client else "testclient"
+    print("user logged in ")
+    ip = get_client_ip(request)
 
     try:
         result = await use_case.execute(dto.email, dto.password, ip)
-    except Exception as e:
-        raise HTTPException(400, detail=str(e))
+    except ValueError as error:
+        message = str(error)
+        status_code = 429 if message.startswith("Too many login attempts") else 401
+        raise HTTPException(status_code=status_code, detail=message)
 
     response = JSONResponse({
         "message": "Login successful",
@@ -97,8 +98,8 @@ async def login(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=True,
-        samesite="none",
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite="lax",
         max_age=60 * 15
     )
 
@@ -106,12 +107,13 @@ async def login(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=True,
-        samesite="none",
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
 
     return response
+
 
 
 # ---------------------------------------------------------
@@ -142,7 +144,7 @@ async def get_current_user(
 ):
     if user is None:
         raise HTTPException(
-            status_code=400,
+            status_code=401,
             detail="Not authenticated"
         )
 

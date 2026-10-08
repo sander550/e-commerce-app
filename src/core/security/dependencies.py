@@ -4,6 +4,7 @@ from auth.infrastructure.repositories.token_repo_impl import TokenRepository
 from auth.infrastructure.repositories.user_repo_impl import UserRepository
 from auth.infrastructure.helpers.jwt import create_access_token
 from core.infrastructure.database import get_session
+from core.config.settings import settings
 
 
 async def auth_required(
@@ -50,8 +51,8 @@ async def auth_required(
         "refresh_token",
         new_raw,
         httponly=True,
-        secure=True,  # REQUIRED for SameSite=None
-        samesite="none",  # REQUIRED for cross-site cookies
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
 
@@ -59,8 +60,8 @@ async def auth_required(
         "access_token",
         new_access,
         httponly=True,
-        secure=True,
-        samesite="none",
+        secure=settings.AUTH_COOKIE_SECURE,
+        samesite="lax",
         max_age=60 * 15
     )
 

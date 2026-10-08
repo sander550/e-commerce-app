@@ -38,62 +38,25 @@ export function AuthProvider({
 
   const clearAuthState = useCallback(() => {
     console.log("[Auth] Clearing authentication state");
-
     setUser(null);
-
-    localStorage.removeItem("logged_in");
-    localStorage.removeItem("email");
   }, []);
 
   const refreshUser = useCallback(async () => {
-    console.log("[Auth] Checking /api/auth/profile...");
-
     try {
-      const response = await fetch(
-        "/api/auth/profile",
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        }
-      );
-
-      console.log(
-        "[Auth] Profile status:",
-        response.status
-      );
+      const response = await fetch("/api/auth/profile", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
 
       if (!response.ok) {
-        console.log(
-          "[Auth] Not authenticated:",
-          response.status
-        );
-
         clearAuthState();
-
         return;
       }
 
       const data = await response.json();
 
-      console.log(
-        "[Auth] Authenticated user:",
-        data
-      );
-
       setUser(data);
-
-      localStorage.setItem(
-        "logged_in",
-        "true"
-      );
-
-      if (typeof data.email === "string") {
-        localStorage.setItem(
-          "email",
-          data.email
-        );
-      }
     } catch (error) {
       console.error(
         "[Auth] Profile request error:",
@@ -128,13 +91,10 @@ export function AuthProvider({
 
   const logout = useCallback(async () => {
     try {
-      await fetch(
-        "/api/auth/logout",
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
     } catch (error) {
       console.error(
         "[Auth] Logout request failed:",

@@ -4,10 +4,8 @@ import {
   Route,
   Navigate,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "./context/AuthContext";
 
 import Login from "./pages/login";
@@ -42,41 +40,16 @@ function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading } = useAuth();
 
   const location = useLocation();
 
-  const [checking, setChecking] = useState(true);
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function verifyAuthentication() {
-      setChecking(true);
-
-      try {
-        await refreshUser();
-      } finally {
-        if (mounted) {
-          setChecking(false);
-        }
-      }
-    }
-
-    verifyAuthentication();
-
-    return () => {
-      mounted = false;
-    };
-  }, [location.pathname, refreshUser]);
 
   /*
    * AuthProvider is still performing its initial
    * authentication check.
    */
-  if (loading || checking) {
+  if (loading) {
     return (
       <div
         style={{
