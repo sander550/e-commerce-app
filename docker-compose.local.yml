@@ -1,4 +1,4 @@
-services:
+services: # To run locally do docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
   backend:
     ports:
       - "8000:8000"
