@@ -41,6 +41,7 @@ export default function CartPage() {
   const [highlightErrors, setHighlightErrors] =
     useState(false);
 
+  
   // --------------------------------
   // CLEANUP
   // --------------------------------
