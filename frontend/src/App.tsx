@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -40,16 +41,45 @@ function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
 
   const location = useLocation();
 
+  /*
+   * Revalidate the session with /api/auth/profile before
+   * rendering a protected page.
+   *
+   * The tokens are in HttpOnly cookies, so React state can go
+   * stale (for example when the cookies are deleted while the
+   * SPA is running). Until this check settles we show the
+   * loading screen instead of trusting the cached user.
+   *
+   * refreshUser() is deduplicated in AuthContext, so this
+   * shares AuthProvider's initial request instead of firing a
+   * duplicate.
+   */
+  const [verifying, setVerifying] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    refreshUser().finally(() => {
+      if (active) {
+        setVerifying(false);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshUser]);
 
   /*
    * AuthProvider is still performing its initial
-   * authentication check.
+   * authentication check, or this route is still
+   * revalidating the session with the backend.
    */
-  if (loading) {
+  if (loading || verifying) {
     return (
       <div
         style={{

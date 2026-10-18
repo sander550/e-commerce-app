@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Header from "../components/Header";
 
 function getErrorMessage(json: any, fallback: string) {
   if (typeof json?.detail === "string") return json.detail;
@@ -728,43 +729,7 @@ export default function Index() {
       `}</style>
 
       {/* TOP BAR */}
-      <div className="topbar">
-        <div className="app-name" onClick={() => navigate("/")}>
-          AntsShop
-        </div>
-
-        <input
-          className="search-input"
-          placeholder="Search products..."
-          onKeyDown={handleSearch}
-        />
-
-        {user ? (
-          <>
-            <Link to="/cart" className="icon-btn">
-              🛒
-            </Link>
-
-            <Link to="/orders" className="icon-btn">
-              📦
-            </Link>
-
-            <Link to="/profile" className="icon-btn">
-              👤
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link className="nav-btn" to="/login">
-              Login
-            </Link>
-
-            <Link className="nav-btn" to="/register">
-              Register
-            </Link>
-          </>
-        )}
-      </div>
+      <Header />
 
       {/* CART MESSAGE */}
       {cartMessage && (

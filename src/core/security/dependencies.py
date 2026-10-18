@@ -27,19 +27,30 @@ async def auth_required(
     payload = await service.verify_access_token(access_token)
 
     if payload:
-        user_id = payload["user_id"]
-        user = await user_repo.get_by_id(user_id)
+        user = await user_repo.get_by_id(payload["user_id"])
+
+        # Token was valid but the account no longer exists.
+        if user is None:
+            raise HTTPException(401, "Unauthorized")
+
         request.state.user = user
         return user
 
     # -----------------------------
     # 3. Try REFRESH token
     # ----------------------------
+    # A valid refresh token refreshes a missing/expired access
+    # token (and rotates the refresh token). If the refresh
+    # cookie is missing, unknown, revoked or expired, the
+    # request is simply unauthenticated: 401.
+    if not refresh_token:
+        raise HTTPException(401, "Unauthorized")
+
     db_token = await token_repo.get_by_token(refresh_token)
 
     try:
         await service.validate_refresh_token(db_token)
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(401, "Unauthorized")
 
     # If validation passed, rotate token
@@ -66,6 +77,10 @@ async def auth_required(
     )
 
     user = await user_repo.get_by_id(db_token.user_id)
+
+    if user is None:
+        raise HTTPException(401, "Unauthorized")
+
     request.state.user = user
     return user
 

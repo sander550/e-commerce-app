@@ -49,7 +49,7 @@ async def register(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=settings.AUTH_COOKIE_SECURE,
+        secure=True,
         samesite="lax",
         max_age=60 * 15
     )
@@ -58,7 +58,7 @@ async def register(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=settings.AUTH_COOKIE_SECURE,
+        secure=True,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
@@ -97,7 +97,7 @@ async def login(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=settings.AUTH_COOKIE_SECURE,
+        secure=True,
         samesite="lax",
         max_age=60 * 15
     )
@@ -106,7 +106,7 @@ async def login(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=settings.AUTH_COOKIE_SECURE,
+        secure=True,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
