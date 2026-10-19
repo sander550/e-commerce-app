@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import Header from "../components/Header";
 
 function getErrorMessage(json: any, fallback: string) {
   if (typeof json?.detail === "string") return json.detail;
@@ -12,7 +10,10 @@ function getErrorMessage(json: any, fallback: string) {
 
 export default function Index() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+
+  const [loggedIn, setLoggedIn] = useState(
+    localStorage.getItem("logged_in") === "true"
+  );
 
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -53,17 +54,28 @@ export default function Index() {
   };
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      setLoggedIn(localStorage.getItem("logged_in") === "true");
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     async function load() {
       try {
-        const prodRes = await fetch("/products/", {
-          credentials: "include",
-        });
+        const prodRes = await fetch("/api/products/");
 
         let prodJson: any = {};
         try {
           prodJson = await prodRes.json();
         } catch {
           prodJson = {};
+        }
+
+        if (prodRes.status === 401) {
+          redirectToLogin();
+          return;
         }
 
         if (prodRes.status === 429) {
@@ -88,15 +100,18 @@ export default function Index() {
 
         setProducts(Array.isArray(prodJson) ? prodJson : []);
 
-        const catRes = await fetch("/categories/", {
-          credentials: "include",
-        });
+        const catRes = await fetch("/api/categories/");
 
         let catJson: any = {};
         try {
           catJson = await catRes.json();
         } catch {
           catJson = {};
+        }
+
+        if (catRes.status === 401) {
+          redirectToLogin();
+          return;
         }
 
         if (catRes.status === 429) {
@@ -142,10 +157,7 @@ export default function Index() {
 
     try {
       const res = await fetch(
-        `/search/?q=${encodeURIComponent(q)}`,
-        {
-          credentials: "include",
-        }
+        `/api/search/?q=${encodeURIComponent(q)}`
       );
 
       let json: any = {};
@@ -153,6 +165,11 @@ export default function Index() {
         json = await res.json();
       } catch {
         json = {};
+      }
+
+      if (res.status === 401) {
+        redirectToLogin();
+        return;
       }
 
       if (res.status === 429) {
@@ -199,31 +216,24 @@ export default function Index() {
   }
 
   async function addToCart(productId: number) {
-    if (authLoading) {
-      return;
-    }
-
-    /*
-     * Authentication comes ONLY from AuthContext.
-     * localStorage is NOT used to decide whether the user is logged in.
-     */
-    if (!user) {
+    if (!loggedIn) {
       setCartMessage("Please log in to add items to cart.");
 
       setTimeout(() => {
-        redirectToLogin();
+        navigate("/login", {
+          replace: true,
+          state: { from: "/" },
+        });
       }, 1000);
 
       return;
     }
 
     try {
-      const res = await fetch("/cart/add", {
+      const res = await fetch("/api/cart/add", {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           product_id: productId,
           quantity: 1,
@@ -278,24 +288,6 @@ export default function Index() {
         "Unable to connect to the server. Please check your connection and try again."
       );
     }
-  }
-
-  if (authLoading) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(135deg, #050505, #0a0f1a)",
-          color: "#e8e8ff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        Loading...
-      </div>
-    );
   }
 
   if (rateLimited) {
@@ -729,7 +721,43 @@ export default function Index() {
       `}</style>
 
       {/* TOP BAR */}
-      <Header />
+      <div className="topbar">
+        <div className="app-name" onClick={() => navigate("/")}>
+          AntsShop
+        </div>
+
+        <input
+          className="search-input"
+          placeholder="Search products..."
+          onKeyDown={handleSearch}
+        />
+
+        {loggedIn ? (
+          <>
+            <Link to="/cart" className="icon-btn">
+              🛒
+            </Link>
+
+            <Link to="/orders" className="icon-btn">
+              📦
+            </Link>
+
+            <Link to="/profile" className="icon-btn">
+              👤
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link className="nav-btn" to="/login">
+              Login
+            </Link>
+
+            <Link className="nav-btn" to="/register">
+              Register
+            </Link>
+          </>
+        )}
+      </div>
 
       {/* CART MESSAGE */}
       {cartMessage && (

@@ -350,7 +350,7 @@ export default function CategoryPage() {
           .glass {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(0,200,255,0.25);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 35px;
             text-align: center;
@@ -388,7 +388,7 @@ export default function CategoryPage() {
           .error-screen {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(255,180,0,0.35);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 45px;
             max-width: 550px;
@@ -476,7 +476,7 @@ export default function CategoryPage() {
           .error-screen {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(255,80,80,0.35);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 45px;
             max-width: 550px;
@@ -561,7 +561,7 @@ export default function CategoryPage() {
           .glass {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(0,200,255,0.25);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 35px;
             text-align: center;
@@ -614,7 +614,7 @@ export default function CategoryPage() {
           .glass {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(0,200,255,0.25);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 35px;
             text-align: center;
@@ -658,42 +658,14 @@ export default function CategoryPage() {
           min-height: 100vh;
           position: relative;
           overflow: hidden;
-          background:
-            radial-gradient(circle at 10% 20%, rgba(0,200,255,0.10), transparent 30%),
-            radial-gradient(circle at 90% 80%, rgba(0,100,255,0.10), transparent 30%),
-            linear-gradient(135deg, #030405, #080d16 50%, #04070c);
+          background: linear-gradient(135deg, #050505, #0a0f1a);
           color: #e8e8ff;
           font-family: Inter, Arial, sans-serif;
           padding: 35px 40px 60px;
           animation: pageFade 0.6s ease;
         }
 
-        .category-wrapper::before {
-          content: "";
-          position: absolute;
-          width: 500px;
-          height: 500px;
-          border-radius: 50%;
-          background: rgba(0,200,255,0.07);
-          filter: blur(100px);
-          top: -250px;
-          left: -200px;
-          pointer-events: none;
-        }
-
-        .category-wrapper::after {
-          content: "";
-          position: absolute;
-          width: 450px;
-          height: 450px;
-          border-radius: 50%;
-          background: rgba(0,110,255,0.06);
-          filter: blur(100px);
-          bottom: -250px;
-          right: -200px;
-          pointer-events: none;
-        }
-
+        
         @keyframes pageFade {
           from {
             opacity: 0;
@@ -745,7 +717,7 @@ export default function CategoryPage() {
           font-weight: 600;
           text-decoration: none;
           transition: 0.25s;
-          backdrop-filter: blur(10px);
+          backdrop-filter: none;
         }
 
         .nav-btn:hover {
@@ -768,7 +740,7 @@ export default function CategoryPage() {
           transition: 0.25s;
           text-decoration: none;
           color: white;
-          backdrop-filter: blur(10px);
+          backdrop-filter: none;
         }
 
         .icon-btn:hover {
@@ -782,8 +754,8 @@ export default function CategoryPage() {
           z-index: 2;
           background: rgba(9,13,23,0.70);
           border: 1px solid rgba(0,200,255,0.20);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
           border-radius: 24px;
           padding: 32px;
           max-width: 1250px;
@@ -870,7 +842,7 @@ export default function CategoryPage() {
           height: 180px;
           border-radius: 50%;
           background: rgba(0,200,255,0.08);
-          filter: blur(45px);
+          filter: none;
           opacity: 0;
           transition: 0.3s;
           pointer-events: none;
@@ -931,7 +903,7 @@ export default function CategoryPage() {
             rgba(0,200,255,0.04) 65%,
             transparent 100%
           );
-          filter: blur(14px);
+          filter: none;
           animation: ripple 4s infinite ease-in-out;
         }
 
@@ -968,7 +940,7 @@ export default function CategoryPage() {
           border-radius: 8px;
           font-size: 11px;
           font-weight: 700;
-          backdrop-filter: blur(10px);
+          backdrop-filter: none;
           border: 1px solid rgba(255,255,255,0.12);
         }
 
@@ -1059,7 +1031,7 @@ export default function CategoryPage() {
           color: #7feaff;
           font-weight: 700;
           box-shadow: 0 10px 35px rgba(0,0,0,0.35);
-          backdrop-filter: blur(15px);
+          backdrop-filter: none;
           animation: messageIn 0.3s ease;
         }
 
