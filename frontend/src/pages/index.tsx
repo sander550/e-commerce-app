@@ -963,15 +963,7 @@ export default function Index() {
                   <div className="product-img-container">
                     <div className="product-img-glow"></div>
 
-                    <div
-                      className={`stock-badge ${
-                        p.stock <= 0
-                          ? "stock-out"
-                          : p.stock <= 5
-                          ? "stock-low"
-                          : "stock-good"
-                      }`}
-                    >
+                    <div className="stock-badge">
                       {p.stock <= 0
                         ? "Out of stock"
                         : p.stock <= 5
@@ -994,6 +986,10 @@ export default function Index() {
                       ${Number(p.price).toFixed(2)}
                     </div>
                   </div>
+
+                  <div className="product-name">
+                    {p.name}
+                  </div>
                 </Link>
 
                 <div className="card-footer">
@@ -1007,7 +1003,11 @@ export default function Index() {
                       p.stock <= 0 ? "disabled" : ""
                     }`}
                     disabled={p.stock <= 0}
-                    onClick={() => addToCart(p.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addToCart(p.id);
+                    }}
                     title={
                       p.stock <= 0
                         ? "Out of stock"
