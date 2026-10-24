@@ -787,14 +787,6 @@ export default function CategoryPage() {
           margin: 0;
         }
 
-        .title-accent {
-          width: 65px;
-          height: 4px;
-          border-radius: 20px;
-          background: #00c8ff;
-          box-shadow: 0 0 15px rgba(0,200,255,0.7);
-        }
-
         .product-count {
           padding: 8px 14px;
           border-radius: 20px;
@@ -832,32 +824,12 @@ export default function CategoryPage() {
           flex-direction: column;
         }
 
-        .product-card::before {
-          content: "";
-          position: absolute;
-          top: -80px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 180px;
-          height: 180px;
-          border-radius: 50%;
-          background: rgba(0,200,255,0.08);
-          filter: none;
-          opacity: 0;
-          transition: 0.3s;
-          pointer-events: none;
-        }
-
         .product-card:hover {
           transform: translateY(-8px);
           border-color: rgba(0,200,255,0.42);
           box-shadow:
             0 18px 40px rgba(0,0,0,0.35),
             0 0 25px rgba(0,200,255,0.10);
-        }
-
-        .product-card:hover::before {
-          opacity: 1;
         }
 
         @keyframes cardIn {
@@ -933,30 +905,17 @@ export default function CategoryPage() {
 
         .stock-badge {
           position: absolute;
-          top: 10px;
-          left: 10px;
+          top: 12px;
+          left: 12px;
           z-index: 4;
-          padding: 5px 8px;
-          border-radius: 8px;
+          padding: 4px 10px;
+          border-radius: 6px;
           font-size: 11px;
           font-weight: 700;
+          text-shadow: 0 0 3px rgba(0,0,0,0.5);
           backdrop-filter: none;
-          border: 1px solid rgba(255,255,255,0.12);
-        }
-
-        .stock-good {
-          background: rgba(50,220,140,0.12);
-          color: #68f0b0;
-        }
-
-        .stock-low {
-          background: rgba(255,190,50,0.13);
-          color: #ffd166;
-        }
-
-        .stock-out {
-          background: rgba(255,70,70,0.13);
-          color: #ff8585;
+          border: 1px solid rgba(255,255,255,0.25);
+          background: rgba(0,0,0,0.65);
         }
 
         .product-name {
@@ -984,6 +943,21 @@ export default function CategoryPage() {
           font-size: 17px;
           font-weight: 800;
           text-shadow: 0 0 10px rgba(0,200,255,0.25);
+        }
+
+        .product-stock {
+          color: #ffdd7f;
+          font-size: 13px;
+          font-weight: 600;
+          opacity: 0.9;
+        }
+
+        .card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+          padding: 2px 2px 0;
         }
 
         .add-btn {
@@ -1169,7 +1143,6 @@ export default function CategoryPage() {
         <div className="category-header">
           <div className="title-wrapper">
             <h1 className="title">{categoryName}</h1>
-            <div className="title-accent"></div>
           </div>
 
           <div className="product-count">
@@ -1182,13 +1155,6 @@ export default function CategoryPage() {
 
         <div className="product-grid">
           {products.map((p, index) => {
-            const stockClass =
-              p.stock <= 0
-                ? "stock-out"
-                : p.stock <= 5
-                ? "stock-low"
-                : "stock-good";
-
             const stockText =
               p.stock <= 0
                 ? "Out of stock"
@@ -1211,42 +1177,40 @@ export default function CategoryPage() {
                   <div className="product-img-container">
                     <div className="product-img-glow"></div>
 
-                    <div
-                      className={`stock-badge ${stockClass}`}
-                    >
+                    <div className="stock-badge">
                       {stockText}
                     </div>
 
                     <img
                       src={
                         p.image_url ||
-                        "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2NjY2NjYyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjUwIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%232f2c2f'/%3E%3Ctext x='50%25' y='50%25' font-size='42' fill='%23fff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E"
                       }
                       alt={p.name}
                       className="product-img"
                     />
                   </div>
-
-                  <div className="product-name">
-                    {p.name}
-                  </div>
-
-                  <div className="product-bottom">
-                    <div className="product-price">
-                      $
-                      {Number(p.price).toFixed(2)}
-                    </div>
-                  </div>
                 </Link>
 
+                <div className="product-name">
+                  {p.name}
+                </div>
+
                 <div className="product-bottom">
-                  <div></div>
+                  <div className="product-price">
+                    $
+                    {Number(p.price).toFixed(2)}
+                  </div>
+                </div>
+
+                <div className="card-footer">
+                  <div className="product-stock">
+                    Stock: {p.stock}
+                  </div>
 
                   <button
                     type="button"
-                    className={`add-btn ${
-                      p.stock <= 0 ? "disabled" : ""
-                    }`}
+                    className={`add-btn ${p.stock <= 0 ? "disabled" : ""}`}
                     disabled={p.stock <= 0}
                     onClick={(e) => {
                       e.preventDefault();

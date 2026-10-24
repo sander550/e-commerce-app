@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function getErrorMessage(json: any, fallback: string) {
   if (typeof json?.detail === "string") return json.detail;
@@ -10,10 +11,8 @@ function getErrorMessage(json: any, fallback: string) {
 
 export default function Index() {
   const navigate = useNavigate();
-
-  const [loggedIn, setLoggedIn] = useState(
-    localStorage.getItem("logged_in") === "true"
-  );
+  const { user } = useAuth();
+  const loggedIn = !!user;
 
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -52,14 +51,6 @@ export default function Index() {
     setError(message);
     setCartMessage(null);
   };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLoggedIn(localStorage.getItem("logged_in") === "true");
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     async function load() {
@@ -448,7 +439,7 @@ export default function Index() {
           min-height: 100vh;
           background: linear-gradient(135deg, #050505, #0a0f1a);
           color: #e8e8ff;
-          font-family: Inter, sans-serif;
+          font-family: Inter, Arial, sans-serif;
           padding: 24px;
         }
 
@@ -565,6 +556,39 @@ export default function Index() {
           gap: 12px;
         }
 
+        .category-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 24px;
+          gap: 20px;
+        }
+
+        .title-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+
+        .title-accent {
+          width: 65px;
+          height: 4px;
+          border-radius: 20px;
+          background: #00c8ff;
+          box-shadow: 0 0 15px rgba(0,200,255,0.7);
+        }
+
+        .product-count {
+          padding: 8px 14px;
+          border-radius: 20px;
+          background: rgba(0,200,255,0.08);
+          border: 1px solid rgba(0,200,255,0.18);
+          color: #7feaff;
+          font-size: 14px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
         .category-bubble {
           padding: 10px 18px;
           background: rgba(0,200,255,0.15);
@@ -584,81 +608,212 @@ export default function Index() {
 
         .product-grid {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 20px;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 18px;
         }
 
         .product-card {
-          background: rgba(15,15,30,0.75);
-          border: 1px solid rgba(0,200,255,0.25);
-          border-radius: 14px;
-          padding: 14px;
-          text-decoration: none;
+          min-width: 0;
+          min-height: 315px;
+          background: linear-gradient(
+            145deg,
+            rgba(22,28,42,0.90),
+            rgba(8,13,23,0.92)
+          );
+          border: 1px solid rgba(0,200,255,0.16);
+          border-radius: 18px;
+          padding: 13px;
           color: white;
-          transition: 0.25s;
-          animation: fadeIn 0.4s ease;
+          transition: 0.3s ease;
           position: relative;
+          animation: cardIn 0.5s ease both;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         .product-card:hover {
-          background: rgba(0,200,255,0.15);
-          transform: translateY(-6px) scale(1.03);
-          box-shadow: 0 0 25px rgba(0,200,255,0.25);
+          transform: translateY(-8px);
+          border-color: rgba(0,200,255,0.42);
+          box-shadow:
+            0 18px 40px rgba(0,0,0,0.35),
+            0 0 25px rgba(0,200,255,0.10);
+        }
+
+        @keyframes cardIn {
+          from {
+            opacity: 0;
+            transform: translateY(15px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .product-link {
+          color: white;
+          text-decoration: none;
+          display: block;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .product-img-container {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 10px;
+          overflow: hidden;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.025);
+        }
+
+        .product-img-glow {
+          position: absolute;
+          width: 75%;
+          height: 75%;
+          border-radius: 50%;
+          background: radial-gradient(
+            circle,
+            rgba(0,200,255,0.25),
+            rgba(0,200,255,0.04) 65%,
+            transparent 100%
+          );
+          filter: none;
+          animation: ripple 4s infinite ease-in-out;
+        }
+
+        @keyframes ripple {
+          0%, 100% {
+            transform: scale(0.92);
+            opacity: 0.45;
+          }
+
+          50% {
+            transform: scale(1.08);
+            opacity: 0.8;
+          }
         }
 
         .product-img {
-          width: 100%;
-          aspect-ratio: 1 / 1;
+          width: 86%;
+          height: 86%;
           object-fit: contain;
-          background: rgba(255,255,255,0.05);
-          border-radius: 10px;
-          padding: 6px;
-          margin-bottom: 10px;
-          transition: 0.25s;
+          z-index: 2;
+          transition: 0.35s ease;
         }
 
         .product-card:hover .product-img {
-          transform: scale(1.05);
+          transform: scale(1.08) translateY(-3px);
+        }
+
+        .stock-badge {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          z-index: 4;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 700;
+          text-shadow: 0 0 3px rgba(0,0,0,0.5);
+          backdrop-filter: none;
+          border: 1px solid rgba(255,255,255,0.25);
+          background: rgba(0,0,0,0.65);
+        }
+
+        .stock-good {
+          background: rgba(50,220,140,0.18);
+          color: #68f0b0;
+        }
+
+        .stock-low {
+          background: rgba(255,190,50,0.18);
+          color: #ffd166;
+        }
+
+        .stock-out {
+          background: rgba(255,70,70,0.18);
+          color: #ff8585;
         }
 
         .product-name {
-          font-weight: 600;
-          margin-bottom: 4px;
-          color: white;
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 1.3;
+          margin: 4px 2px 7px;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .product-bottom {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          margin-top: auto;
+          padding: 0 2px 2px;
         }
 
         .product-price {
           color: #7feaff;
-          font-weight: 600;
+          font-size: 17px;
+          font-weight: 800;
+          text-shadow: 0 0 10px rgba(0,200,255,0.25);
         }
 
         .product-stock {
           color: #ffdd7f;
-          font-size: 14px;
+          font-size: 13px;
+          font-weight: 600;
           opacity: 0.9;
         }
 
-        .add-btn {
-          position: absolute;
-          bottom: 12px;
-          right: 12px;
-          padding: 6px 10px;
-          background: rgba(0,200,255,0.25);
-          border: 1px solid rgba(0,200,255,0.4);
-          border-radius: 10px;
-          cursor: pointer;
-          color: white;
-          font-size: 14px;
-          font-weight: 600;
+        .card-footer {
           display: flex;
           align-items: center;
-          gap: 4px;
+          justify-content: flex-end;
+          gap: 8px;
+          padding: 2px 2px 0;
+        }
+
+        .add-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 11px;
+          background: rgba(0,200,255,0.13);
+          border: 1px solid rgba(0,200,255,0.28);
+          color: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
           transition: 0.25s;
         }
 
         .add-btn:hover {
-          background: rgba(0,200,255,0.35);
+          background: rgba(0,200,255,0.28);
+          border-color: rgba(0,200,255,0.55);
           transform: scale(1.08);
+          box-shadow: 0 0 15px rgba(0,200,255,0.18);
+        }
+
+        .add-btn.disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .add-btn.disabled:hover {
+          transform: none;
+          box-shadow: none;
         }
 
         .cart-message {
@@ -769,8 +924,21 @@ export default function Index() {
       {/* SEARCH RESULTS */}
       {searchActive && (
         <div className="glass">
-          <div className="section-title">
-            Search Results
+          <div className="category-header">
+            <div className="title-wrapper">
+              <div className="section-title">
+                Search Results
+              </div>
+
+              <div className="title-accent"></div>
+            </div>
+
+            <div className="product-count">
+              {searchResults.length}{" "}
+              {searchResults.length === 1
+                ? "product"
+                : "products"}
+            </div>
           </div>
 
           {searchResults.length === 0 && (
@@ -780,32 +948,74 @@ export default function Index() {
           )}
 
           <div className="product-grid">
-            {searchResults.map((p: any) => (
-              <div key={p.id} className="product-card">
-                <Link to={`/product/${p.id}`}>
-                  <img
-                    src={p.image_url}
-                    className="product-img"
-                  />
+            {searchResults.map((p: any, index: number) => (
+              <div
+                key={p.id}
+                className="product-card"
+                style={{
+                  animationDelay: `${index * 60}ms`,
+                }}
+              >
+                <Link
+                  to={`/product/${p.id}`}
+                  className="product-link"
+                >
+                  <div className="product-img-container">
+                    <div className="product-img-glow"></div>
 
-                  <div className="product-name">
-                    {p.name}
+                    <div
+                      className={`stock-badge ${
+                        p.stock <= 0
+                          ? "stock-out"
+                          : p.stock <= 5
+                          ? "stock-low"
+                          : "stock-good"
+                      }`}
+                    >
+                      {p.stock <= 0
+                        ? "Out of stock"
+                        : p.stock <= 5
+                        ? `Only ${p.stock} left`
+                        : "In stock"}
+                    </div>
+
+                    <img
+                      src={
+                        p.image_url ||
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%232f2c2f'/%3E%3Ctext x='50%25' y='50%25' font-size='42' fill='%23fff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E"
+                      }
+                      alt={p.name}
+                      className="product-img"
+                    />
                   </div>
 
-                  <div className="product-price">
-                    ${p.price}
-                  </div>
-
-                  <div className="product-stock">
-                    Stock: {p.stock}
+                  <div className="product-bottom">
+                    <div className="product-price">
+                      ${Number(p.price).toFixed(2)}
+                    </div>
                   </div>
                 </Link>
 
-                <div
-                  className="add-btn"
-                  onClick={() => addToCart(p.id)}
-                >
-                  🛒 +
+                <div className="card-footer">
+                  <div className="product-stock">
+                    Stock: {p.stock}
+                  </div>
+
+                  <button
+                    type="button"
+                    className={`add-btn ${
+                      p.stock <= 0 ? "disabled" : ""
+                    }`}
+                    disabled={p.stock <= 0}
+                    onClick={() => addToCart(p.id)}
+                    title={
+                      p.stock <= 0
+                        ? "Out of stock"
+                        : "Add to cart"
+                    }
+                  >
+                    🛒
+                  </button>
                 </div>
               </div>
             ))}
@@ -844,40 +1054,90 @@ export default function Index() {
 
           {/* PRODUCTS */}
           <div className="glass">
-            <div className="section-title">
-              Products
+            <div className="category-header">
+              <div className="title-wrapper">
+                <div className="section-title">
+                  Products
+                </div>
+              </div>
+
+              <div className="product-count">
+                {products.length}{" "}
+                {products.length === 1
+                  ? "product"
+                  : "products"}
+              </div>
             </div>
 
             <div className="product-grid">
-              {products.map((p: any) => (
+              {products.map((p: any, index: number) => (
                 <div
                   key={p.id}
                   className="product-card"
+                  style={{
+                    animationDelay: `${index * 60}ms`,
+                  }}
                 >
-                  <Link to={`/product/${p.id}`}>
-                    <img
-                      src={p.image_url}
-                      className="product-img"
-                    />
+                  <Link
+                    to={`/product/${p.id}`}
+                    className="product-link"
+                  >
+                    <div className="product-img-container">
+                      <div className="product-img-glow"></div>
+
+                      <div className="stock-badge">
+                        {p.stock <= 0
+                          ? "Out of stock"
+                          : p.stock <= 5
+                          ? `Only ${p.stock} left`
+                          : "In stock"}
+                      </div>
+
+                      <img
+                        src={
+                          p.image_url ||
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%232f2c2f'/%3E%3Ctext x='50%25' y='50%25' font-size='42' fill='%23fff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E"
+                        }
+                        alt={p.name}
+                        className="product-img"
+                      />
+                    </div>
+
+                    <div className="product-bottom">
+                      <div className="product-price">
+                        ${Number(p.price).toFixed(2)}
+                      </div>
+                    </div>
 
                     <div className="product-name">
                       {p.name}
                     </div>
+                  </Link>
 
-                    <div className="product-price">
-                      ${p.price}
-                    </div>
-
+                  <div className="card-footer">
                     <div className="product-stock">
                       Stock: {p.stock}
                     </div>
-                  </Link>
 
-                  <div
-                    className="add-btn"
-                    onClick={() => addToCart(p.id)}
-                  >
-                    🛒 +
+                    <button
+                      type="button"
+                      className={`add-btn ${
+                        p.stock <= 0 ? "disabled" : ""
+                      }`}
+                      disabled={p.stock <= 0}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addToCart(p.id);
+                      }}
+                      title={
+                        p.stock <= 0
+                          ? "Out of stock"
+                          : "Add to cart"
+                      }
+                    >
+                      🛒
+                    </button>
                   </div>
                 </div>
               ))}

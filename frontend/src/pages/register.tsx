@@ -471,6 +471,28 @@ export default function RegisterPage() {
         .switcher a:hover {
           color: #b8f3ff;
         }
+
+        .back-shop {
+          display: block;
+          width: 100%;
+          margin-top: 18px;
+          padding: 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.12);
+          color: white;
+          font-size: 15px;
+          font-weight: 600;
+          text-align: center;
+          text-decoration: none;
+          transition: 0.25s;
+          box-sizing: border-box;
+        }
+
+        .back-shop:hover {
+          background: rgba(255,255,255,0.22);
+          transform: scale(1.03);
+        }
       `}</style>
 
       <div className="glass-card">
@@ -531,6 +553,10 @@ export default function RegisterPage() {
             Switch to Login
           </Link>
         </div>
+
+        <Link to="/" className="back-shop">
+          Back to Shop
+        </Link>
       </div>
     </div>
   );
