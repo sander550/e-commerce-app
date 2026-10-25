@@ -97,7 +97,7 @@ async def login(
         key="access_token",
         value=result["access_token"],
         httponly=True,
-        secure=True,
+        secure=False, # In real production this should be True for all the auth cookies
         samesite="lax",
         max_age=60 * 15
     )
@@ -106,7 +106,7 @@ async def login(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
