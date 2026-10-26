@@ -18,6 +18,6 @@ async def main():
                 data["body"]
             )
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(2)
 
 asyncio.run(main())
