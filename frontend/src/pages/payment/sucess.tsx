@@ -6,7 +6,7 @@ export default function PaymentSuccessPage() {
     const token = params.get("token");
 
     if (token) {
-      fetch(`http://localhost:8000/payment/success?token=${token}`, {
+      fetch(`/api/payment/success?token=${token}`, {
         credentials: "include",
       }).then(() => {
         window.location.href = "/orders";

@@ -12,7 +12,7 @@ export default function CancelPage() {
       return;
     }
 
-    fetch(`http://localhost:8000/payment/cancel`, {
+    fetch(`/api/payment/cancel`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ payment_id: Number(paymentId) }),
