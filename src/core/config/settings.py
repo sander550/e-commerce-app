@@ -53,6 +53,10 @@ class Settings:
     # ---------------------------------------------------------
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
+    # Must stay comfortably above any Redis blocking timeout (the email worker
+    # blocks on BRPOP for 5s). If the socket timeout is equal or lower, the
+    # client can give up reading before Redis replies, raising TimeoutError.
+    REDIS_SOCKET_TIMEOUT: int = int(os.getenv("REDIS_SOCKET_TIMEOUT", "15"))
 
     # ---------------------------------------------------------
     # EMAIL (optional)
