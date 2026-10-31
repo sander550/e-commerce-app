@@ -21,8 +21,6 @@ async def create_paypal_payment(
     user=Depends(auth_required),
     use_case: CreatePayPalPaymentUseCase = Depends(get_create_paypal_payment_use_case)
 ):
-    if user.id != user.id:
-        raise HTTPException(403, "Unauthorized")
     try:
         result = await use_case.execute(dto.order_id, user.id)
     except Exception as e:
@@ -43,7 +41,7 @@ async def capture_paypal_payment(
     return JSONResponse(result.to_dict())
 
 
-@router.post("/payment/cancel")
+@router.post("/cancel")
 async def cancel_payment(
     payment_id: int,
     user=Depends(auth_required),

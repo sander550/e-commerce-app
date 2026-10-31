@@ -22,6 +22,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Comma-separated list, e.g.
+# CORS_ORIGINS=http://51.20.81.71,http://localhost:5173
+# Same-origin /api calls (the normal frontend path through nginx) need no
+# CORS entry at all; this only matters for direct calls to the API port.
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+    if origin.strip()
+]
+
 
 @app.get("/health")
 async def health_check():
@@ -35,7 +45,7 @@ async def health_check():
 # ---------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

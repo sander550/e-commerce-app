@@ -212,6 +212,41 @@ async def test_update_order():
 
 
 @pytest.mark.asyncio
+async def test_update_order_partial_keeps_unsupplied_fields():
+    """Changing only the status must not wipe the stored address / delivery method."""
+    order_repo = AsyncMock()
+
+    existing = MagicMock()
+    existing.id = 1
+    existing.user_id = 5
+    existing.items = []
+    existing.subtotal = 100
+    existing.tax = 20
+    existing.total = 120
+    existing.created_at = None
+    existing.status = "payed"
+    existing.shipping_address = "1 Test Street"
+    existing.delivery_method = "express"
+
+    saved = {}
+
+    async def fake_save(order):
+        saved["order"] = order
+        return order
+
+    order_repo.get_by_id.return_value = existing
+    order_repo.save.side_effect = fake_save
+
+    use_case = UpdateOrderUseCase(order_repo)
+
+    result = await use_case.execute(order_id=1, status="failed")
+
+    assert result.status == "failed"
+    assert saved["order"].shipping_address == "1 Test Street"
+    assert saved["order"].delivery_method == "express"
+
+
+@pytest.mark.asyncio
 async def test_update_product():
     product_repo = AsyncMock()
     category_repo = AsyncMock()

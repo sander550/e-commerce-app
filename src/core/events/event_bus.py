@@ -1,5 +1,9 @@
 from typing import Callable, Dict, List
+import logging
+
 from core.events.event import Event
+
+logger = logging.getLogger(__name__)
 
 
 class EventBus:
@@ -15,7 +19,17 @@ class EventBus:
         handlers = self._subscribers.get(event.name, [])
 
         for handler in handlers:
-            await handler(event)
+            # One failing subscriber (e.g. SMTP/Redis trouble in the email
+            # handler) must not fail the request after the PayPal payment
+            # was already captured. Log it and continue with the others.
+            try:
+                await handler(event)
+            except Exception:
+                logger.exception(
+                    "Event handler %s failed for event '%s'",
+                    getattr(handler, "__qualname__", repr(handler)),
+                    event.name,
+                )
 
 
 event_bus = EventBus()

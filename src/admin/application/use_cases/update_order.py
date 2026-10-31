@@ -34,11 +34,17 @@ class UpdateOrderUseCase:
             if delivery_method not in valid_methods:
                 raise ValueError("Invalid delivery method")
 
+        # Partial update: any field the admin did not supply (None) keeps its
+        # current value instead of being overwritten with null.
         new_order = Order(
             id=order_id,
-            status=status,
-            shipping_address=shipping_address,
-            delivery_method=delivery_method,
+            status=status if status is not None else order.status,
+            shipping_address=(
+                shipping_address if shipping_address is not None else order.shipping_address
+            ),
+            delivery_method=(
+                delivery_method if delivery_method is not None else order.delivery_method
+            ),
 
             user_id=order.user_id,
             items=order.items,

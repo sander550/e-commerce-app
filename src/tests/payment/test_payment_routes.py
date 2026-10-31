@@ -109,7 +109,7 @@ def test_cancel_payment():
     ] = lambda: use_case
 
     response = client.post(
-        "/payment/payment/cancel",
+        "/payment/cancel",
         params={"payment_id": 10},
     )
 

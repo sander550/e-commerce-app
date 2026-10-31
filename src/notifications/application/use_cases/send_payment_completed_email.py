@@ -1,5 +1,3 @@
-from http.client import HTTPException
-
 from auth.domain.interfaces.user_repo import IUserRepository
 from order.domain.interfaces.order_repo import IOrderRepository
 from payment.domain.interfaces.payment_repo import IPaymentRepository
@@ -26,7 +24,7 @@ class SendPaymentCompletedEmailUseCase:
         payment = await self.payment_repo.get_by_id(payment_id)
 
         if not user or not order or not payment:
-            raise HTTPException(status_code=404, detail="Information not available")
+            raise ValueError("Information not available")
 
         # 2. Build email content
         subject = f"Order Confirmation #{order_id}"

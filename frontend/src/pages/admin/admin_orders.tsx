@@ -63,6 +63,16 @@ export default function AdminOrderPage() {
       return "Order ID is required.";
     }
 
+    // Nothing to update -> don't send an empty request
+    if (
+      !updateData.status.trim() &&
+      !updateData.shipping_address.trim() &&
+      !updateData.delivery_method.trim()
+    ) {
+      setInvalidFields([]);
+      return "Choose at least one field to update.";
+    }
+
     setInvalidFields([]);
     return null;
   }
@@ -98,6 +108,23 @@ export default function AdminOrderPage() {
     }
 
     try {
+      // Only send the fields the admin actually filled in.
+      // Fields left blank are omitted, so the backend keeps their current values
+      // instead of overwriting them with null.
+      const payload: Record<string, string> = {};
+
+      if (updateData.status.trim()) {
+        payload.status = updateData.status.trim();
+      }
+
+      if (updateData.shipping_address.trim()) {
+        payload.shipping_address = updateData.shipping_address.trim();
+      }
+
+      if (updateData.delivery_method.trim()) {
+        payload.delivery_method = updateData.delivery_method.trim();
+      }
+
       const res = await fetch(
         `/api/admin/order/${updateData.order_id}`,
         {
@@ -106,11 +133,7 @@ export default function AdminOrderPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            status: updateData.status || null,
-            shipping_address: updateData.shipping_address || null,
-            delivery_method: updateData.delivery_method || null,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 

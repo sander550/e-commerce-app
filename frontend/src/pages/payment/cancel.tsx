@@ -7,17 +7,20 @@ export default function CancelPage() {
     const params = new URLSearchParams(window.location.search);
     const paymentId = params.get("paymentId");
 
+    // PayPal's cancel_url does not carry our payment id, so there is
+    // nothing to update in that case – the payment simply stays PENDING.
     if (!paymentId) {
-      setStatus("error");
+      setStatus("cancelled");
       return;
     }
 
-    fetch(`/api/payment/cancel`, {
+    // Relative URL on purpose: nginx proxies /api/ to the backend,
+    // so this works on localhost AND on the deployed server.
+    fetch(`/api/payment/cancel?payment_id=${encodeURIComponent(paymentId)}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ payment_id: Number(paymentId) }),
+      credentials: "include",
     })
-      .then(() => setStatus("cancelled"))
+      .then((res) => setStatus(res.ok ? "cancelled" : "error"))
       .catch(() => setStatus("error"));
   }, []);
 
