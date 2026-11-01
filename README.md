@@ -1,395 +1,196 @@
 # 🛒 E-Commerce App — DDD, Hybrid Search & PayPal Sandbox
 
-A modern, full-stack e-commerce application built with **Domain-Driven Design (DDD)**, a **hybrid search engine**, **PayPal Sandbox** payments, centralized configuration, rate limiting, automated testing, and a neon-glass cyber UI.
+A full-stack e-commerce application built with **Domain-Driven Design (DDD)**, hybrid product search, PayPal Sandbox payments, centralized configuration, rate limiting, automated testing, and a neon-glass cyber UI.
 
-The application provides a complete shopping experience including products, categories, shopping carts, orders, payments, email notifications, search, authentication, and an admin panel.
+## ✨ Features
 
----
-
-# ✨ Features
-
-* 🛍️ Full e-commerce shopping flow
-* 🔍 Hybrid product search
-* 🧠 Semantic search using vector embeddings
-* 🗄️ PostgreSQL keyword search
-* 🧮 ChromaDB vector database
-* 💳 PayPal Sandbox payments
-* 🛒 Shopping cart
-* 📦 Order management
-* 📧 Email notifications and background worker
-* 👨‍💼 Admin panel
-* 🏷️ Product and category management
-* 🔐 Authentication and session management
-* 🛡️ Global API rate limiting
-* 🚦 Login-specific rate limiting
-* ⚠️ User-friendly error pages
-* ⚙️ Centralized application configuration
-* 🏗️ Domain-Driven Design backend architecture
-* 🎨 Neon-glass cyber UI
-* 🐳 Fully containerized with Docker Compose
-* ✅ Automated CI testing with GitHub Actions
+- 🛍️ Complete shopping experience with products, categories, carts and orders
+- 🔍 Hybrid search combining PostgreSQL keyword search and ChromaDB semantic search
+- 💳 PayPal Sandbox payment integration
+- 🔐 Authentication and session management
+- 👨‍💼 Admin panel with product, category and order management
+- 📧 Email notifications and background processing
+- 🛡️ Global API and login-specific rate limiting
+- ⚠️ User-friendly error handling
+- ⚙️ Centralized application configuration
+- 🐳 Docker Compose infrastructure
+- ✅ Automated testing with Pytest and GitHub Actions
 
 ---
 
 # 🏗️ Architecture
 
-The backend follows **Domain-Driven Design (DDD)** principles to separate business logic from infrastructure and presentation concerns.
+The backend follows **Domain-Driven Design (DDD)** principles, separating business logic from infrastructure and presentation.
 
 ```text
 src/
-│
 ├── application/
 │   ├── dto/
-│   ├── use_cases/
-│   └── ...
-│
+│   └── use_cases/
 ├── domain/
 │   ├── entities/
 │   ├── interfaces/
 │   ├── rules/
-│   ├── services/
-│   └── ...
-│
+│   └── services/
 ├── infrastructure/
 │   ├── db/
 │   ├── helpers/
-│   ├── repositories/
-│   └── ...
-│
+│   └── repositories/
 ├── routes/
-│   └── ...
-│
 └── core/
     └── config.py
 ```
 
-### Domain
+### Main Layers
 
-Contains the core business logic of the application, including:
-
-* Domain entities
-* Business rules
-* Domain services
-* Repository interfaces
-
-The domain layer is kept independent from external infrastructure wherever possible.
-
-### Application
-
-Contains the application's use cases and coordinates operations between the domain and infrastructure layers.
-
-Examples include:
-
-* User registration
-* Login and authentication
-* Cart operations
-* Order creation
-* Payment processing
-* Product management
-
-### Infrastructure
-
-Handles external technologies and services such as:
-
-* PostgreSQL
-* SQLAlchemy
-* Redis
-* ChromaDB
-* Email services
-* Background workers
-* Repository implementations
-
-### Presentation
-
-The FastAPI routes provide the HTTP API and connect incoming requests with the application's use cases.
+- **Domain:** Core business logic, entities, rules, services and repository interfaces.
+- **Application:** Use cases coordinating operations such as registration, authentication, cart operations, orders and payments.
+- **Infrastructure:** External technologies including PostgreSQL, SQLAlchemy, Redis, ChromaDB and email services.
+- **Presentation:** FastAPI routes connecting HTTP requests to application use cases.
 
 ---
 
 # ⚙️ Centralized Configuration
 
-Application settings are centralized in:
+Application settings are centralized through:
 
-```text
+```python
 core.config.settings
 ```
 
-This provides a single place where many application settings can be configured and adjusted.
+Environment-dependent values are loaded from environment variables and the project's `.env` file.
 
-For example, settings related to:
+This keeps credentials, database configuration, API keys and other environment-specific settings outside the source code.
 
-* Rate limits
-* Authentication
-* Application behavior
-* Database configuration
-* External services
-* Other environment-dependent options
+**Environment configuration:**
 
-can be managed through the application's central settings.
+- `.env` contains your actual local configuration and must never be committed to Git.
+- `.env.example` documents the required environment variables and serves as a template.
+- Production uses its own environment variables, separate from local development.
 
-The configuration also reads environment-specific information from the project's:
-
-```text
-.env
-```
-
-file.
-
-This allows sensitive or environment-dependent values such as credentials, database settings, API keys, and service configuration to remain outside the source code.
-
-A typical setup is:
-
-```text
-.env
-   │
-   ▼
-core.config.settings
-   │
-   ▼
-Application
-```
-
-This makes it easier to change application behavior without having to modify code throughout the project.
-
-> **Note:** Never commit your real `.env` file or sensitive credentials to Git. Use `.env.example` as a template for required environment variables.
-
----
-
-# 🛡️ Rate Limiting
-
-The application includes **global rate limiting for API requests** to help protect the backend from excessive traffic and accidental request floods.
-
-## 🌐 Global Rate Limits
-
-The global limits are:
-
-| Limit          |          Maximum |   Window |
-| -------------- | ---------------: | -------: |
-| Per user       |  **60 requests** | 1 minute |
-| Per IP address | **300 requests** | 1 minute |
-
-These limits apply globally across the application's requests.
-
-The limits can be adjusted through the application's centralized configuration in:
-
-```text
-core.config.settings
-```
-
-When a client exceeds a rate limit, the API returns:
-
-```text
-HTTP 429 Too Many Requests
-```
-
-The frontend handles these responses and displays a dedicated **Too Many Requests** error page instead of leaving the user with a generic browser or network error.
-
----
-
-# 🔐 Login Rate Limiting
-
-Login attempts have additional protection against repeated authentication attempts.
-
-The login endpoint uses separate limits:
-
-| Limit          |         Maximum |     Window |
-| -------------- | --------------: | ---------: |
-| Per email      |  **5 attempts** | 15 minutes |
-| Per IP address | **50 attempts** | 15 minutes |
-
-This provides an additional layer of protection specifically around authentication while still allowing legitimate users to log in normally.
-
-These settings can also be adjusted through:
-
-```text
-core.config.settings
-```
-
----
-
-# ⚠️ Error Handling
-
-The application has frontend handling for common API failures.
-
-Instead of exposing raw backend errors to users, the frontend displays dedicated error states.
-
-Examples include:
-
-### Too Many Requests
-
-When the API returns:
-
-```text
-429 Too Many Requests
-```
-
-the application displays a dedicated rate-limit page explaining that the user should wait before trying again.
-
-### Server Errors
-
-For errors such as:
-
-```text
-500 Internal Server Error
-502 Bad Gateway
-503 Service Unavailable
-```
-
-the frontend displays a user-friendly error page with an option to try again.
-
-### Authentication Errors
-
-If an API request returns:
-
-```text
-401 Unauthorized
-```
-
-the application can redirect the user to the login page when authentication is required.
-
-### Network Errors
-
-If the frontend cannot communicate with the backend, it displays a connection/error state rather than simply showing an unhandled browser error.
-
----
-
-# 🎨 Frontend
-
-The frontend is built with **React** and uses a neon-glass cyber aesthetic.
-
-It includes:
-
-* 🏠 Product pages
-* 🏷️ Category pages
-* 🛒 Shopping cart
-* 📦 Orders
-* 👨‍💼 Admin dashboard
-* 🔐 Authentication
-* 💳 Checkout
-* ⚠️ User-friendly error handling
-* 🚦 Rate-limit error screens
-
-The interface communicates important backend errors to the user instead of exposing raw API responses.
+The same application code can run locally and in production without manually changing configuration values.
 
 ---
 
 # 🔍 Hybrid Search
 
-The application uses a hybrid search system combining **traditional keyword search** with **semantic vector search**.
-
-### Search Flow
+The application combines traditional keyword search with semantic vector search.
 
 ```text
-                 User Query
-                     │
-             ┌───────┴───────┐
-             │               │
-             ▼               ▼
-      PostgreSQL         ChromaDB
-      Keyword Search   Semantic Search
-             │               │
-             └───────┬───────┘
-                     ▼
-              Results Merged
-                     │
-                     ▼
-              Products Returned
+              User Query
+                  │
+          ┌───────┴───────┐
+          ▼               ▼
+     PostgreSQL        ChromaDB
+   Keyword Search    Semantic Search
+          │               │
+          └───────┬───────┘
+                  ▼
+            Results Merged
+                  │
+                  ▼
+           Products Returned
 ```
 
-The semantic search uses **embeddings** to find products based on meaning rather than relying only on exact keyword matches.
-
-For example, a descriptive query can potentially find relevant products even when the exact words do not appear in the product name.
+Semantic search uses embeddings to find relevant products based on meaning, even when the exact search terms do not appear in product names.
 
 ---
 
 # 💳 PayPal Sandbox
 
-The application integrates **PayPal Sandbox** for testing payments without using real money.
-
-The checkout flow is approximately:
+The application integrates PayPal Sandbox to test payments without using real money.
 
 ```text
 Add products to cart
         │
         ▼
-Checkout
+     Checkout
         │
         ▼
-Create PayPal payment
+ Create PayPal payment
         │
         ▼
-PayPal Sandbox
+   PayPal Sandbox
         │
         ▼
-User approves payment
+ User approves payment
         │
         ▼
-Backend processes payment
+ Backend processes payment
         │
         ▼
-Order created
+    Order created
         │
         ▼
-Payment recorded
+  Payment recorded
 ```
 
 The application also tracks payment information through the backend.
 
 ---
 
-# 🛒 Shopping Flow
+# 🛡️ Rate Limiting
 
-The application supports a complete shopping workflow:
+The application includes global API rate limiting to protect against excessive traffic and accidental request floods.
 
-```text
-Browse products
-      │
-      ▼
-Search / Categories
-      │
-      ▼
-Product Details
-      │
-      ▼
-Add to Cart
-      │
-      ▼
-Checkout
-      │
-      ▼
-PayPal Sandbox
-      │
-      ▼
-Order Created
-      │
-      ▼
-Order Management
-```
+### Global Limits
 
-Users can:
+| Limit | Maximum | Window |
+|---|---:|---|
+| Per user | 60 requests | 1 minute |
+| Per IP address | 300 requests | 1 minute |
 
-* Browse products
-* Search for products
-* View categories
-* Add products to their cart
-* Update cart quantities
-* Checkout
-* Complete payments through PayPal Sandbox
-* View previous orders
-* View their profile
+### Login Limits
+
+| Limit | Maximum | Window |
+|---|---:|---|
+| Per email | 5 attempts | 15 minutes |
+| Per IP address | 50 attempts | 15 minutes |
+
+These settings are managed through centralized application configuration.
+
+When a rate limit is exceeded, the API returns `429 Too Many Requests`, which the frontend handles with a dedicated error page.
+
+---
+
+# ⚠️ Error Handling
+
+The frontend handles common API failures with dedicated user-friendly error states.
+
+- **401 Unauthorized:** Handles authentication failures and redirects when required.
+- **429 Too Many Requests:** Displays a rate-limit page.
+- **500, 502, 503:** Displays a server error page with an option to retry.
+- **Network errors:** Displays a connection error instead of an unhandled browser error.
+
+---
+
+# 🎨 Frontend
+
+The React frontend uses a neon-glass cyber aesthetic.
+
+It includes:
+
+- Product and category pages
+- Shopping cart and checkout
+- Authentication and user profiles
+- Order history
+- Admin dashboard
+- Payment integration
+- Dedicated error pages
 
 ---
 
 # 👨‍💼 Admin Panel
 
-By default, newly registered users are **not administrators**.
+Newly registered users are not administrators by default.
 
-To promote a user to administrator, enter the PostgreSQL container:
+To promote a user, connect to PostgreSQL:
 
 ```bash
 docker compose exec postgres psql -U postgres -d your_db
 ```
 
-Then run:
+Then execute:
 
 ```sql
 UPDATE users
@@ -397,61 +198,99 @@ SET is_admin = TRUE
 WHERE id = 1;
 ```
 
-After that, open:
-
-```text
-http://localhost:3000/admin
-```
-
-The admin panel provides tools for:
-
-* 📦 Product management
-* 🏷️ Category management
-* 📋 Order management
-* 🔧 Admin-only operations
+The admin panel provides product, category and order management.
 
 ---
 
-# 🐳 Running the Application
+# 🐳 Running the Application Locally
 
-Make sure **Docker** and **Docker Compose** are installed.
+Make sure **Git**, **Docker Desktop** and **Docker Compose** are installed.
 
-Clone the repository and run:
+### 1. Clone the repository
 
 ```bash
-docker compose up --build
+git clone YOUR_GITHUB_REPOSITORY_URL
+cd e-commerce_app
 ```
 
-Docker Compose starts the application's required services:
+### 2. Create your environment file
 
-```text
-Backend
-Frontend
-PostgreSQL
-Redis
-Email Worker
-ChromaDB
-Ollama
+The repository includes `.env.example`, which contains the required environment variable names without exposing private credentials.
+
+**Windows PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
 ```
 
-Once the containers are running:
+**Linux / macOS:**
 
-| Service     | URL                   |
-| ----------- | --------------------- |
-| Frontend    | http://localhost:3000 |
+```bash
+cp .env.example .env
+```
+
+### 3. Configure your environment variables
+
+Open `.env` and provide your own configuration and credentials, including any required:
+
+- PostgreSQL settings
+- Application secret key
+- PayPal Sandbox client ID and secret
+- PayPal success and cancel URLs
+- Email credentials
+- External API keys
+
+Never commit your actual `.env` file or private credentials to GitHub.
+
+### 4. Build and start the application
+
+Run:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+```
+
+The two Compose files are merged:
+
+- `docker-compose.yml` contains the shared application and infrastructure configuration.
+- `docker-compose.local.yml` contains local development settings and overrides.
+
+Docker Compose builds and starts the application services:
+
+- FastAPI backend
+- React frontend
+- PostgreSQL
+- Redis
+- Background worker
+- ChromaDB
+- Ollama
+
+### 5. Access the application
+
+Use the ports configured in `docker-compose.local.yml`.
+
+| Service | Default development URL |
+|---|---|
+| Frontend | Check local Compose port mapping |
 | Backend API | http://localhost:8000 |
+
+### 6. Stop the application
+
+Press `Ctrl + C` or run:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml down
+```
+
+This stops and removes the containers but normally preserves persistent database volumes.
+
+**Note:** Avoid `docker compose down -v` unless you intentionally want to delete persistent volumes and their data.
 
 ---
 
 # 🧪 Automated Testing & CI
 
-The project includes an automated backend test suite located in:
-
-```text
-src/tests/
-```
-
-The tests are organized by application area:
+The backend test suite is located in:
 
 ```text
 src/tests/
@@ -465,45 +304,23 @@ src/tests/
 └── ...
 ```
 
-The tests cover different parts of the backend, including authentication, carts, catalog operations, orders, payments, search, and administrative functionality.
+Tests cover authentication, carts, catalog operations, orders, payments, search and administrative functionality.
 
-## GitHub Actions
+### GitHub Actions
 
-The project uses **GitHub Actions for Continuous Integration (CI)**.
+The project uses GitHub Actions for Continuous Integration.
 
-Whenever changes are pushed to the repository or a Pull Request is created, GitHub Actions installs the required dependencies and runs:
+Whenever changes are pushed or a Pull Request is created, GitHub Actions installs dependencies and runs:
 
 ```bash
 cd src && pytest tests -q
 ```
 
-### CI Workflow
-
-```text
-Git Push / Pull Request
-          │
-          ▼
-    GitHub Actions
-          │
-          ▼
- Install Dependencies
-          │
-          ▼
-      Run Tests
-          │
-       ┌──┴──┐
-       ▼     ▼
-      ✅     ❌
-    Passed  Failed
-```
-
-The CI configuration is located at:
+Workflow configuration:
 
 ```text
 .github/workflows/backend.yml
 ```
-
-This helps ensure that backend changes are automatically tested before they are merged.
 
 ---
 
@@ -511,11 +328,9 @@ This helps ensure that backend changes are automatically tested before they are 
 
 ```text
 e-commerce-app/
-│
 ├── .github/
 │   └── workflows/
 │       └── backend.yml
-│
 ├── src/
 │   ├── auth/
 │   ├── admin/
@@ -527,17 +342,16 @@ e-commerce-app/
 │   ├── notifications/
 │   ├── core/
 │   └── tests/
-│
 ├── frontend/
-│
 ├── alembic/
 ├── chroma_data/
-│
 ├── docker-compose.yml
+├── docker-compose.local.yml
 ├── Dockerfile
 ├── requirements.txt
 ├── alembic.ini
 ├── .env.example
+├── .gitignore
 └── README.md
 ```
 
@@ -545,131 +359,73 @@ e-commerce-app/
 
 # 🚀 Deployment
 
-The application is fully containerized and can be deployed to environments capable of running Docker containers.
+The application is containerized and can be deployed to environments supporting Docker.
 
 Potential deployment environments include:
 
-* Docker servers
-* VPS infrastructure
-* Cloud environments supporting Docker
-* Self-hosted servers
+- AWS
+- Docker servers
+- VPS infrastructure
+- Cloud environments
+- Self-hosted servers
 
-The Docker-based architecture makes it possible to run the application consistently across development and deployment environments.
+The same application code can be used locally and in production. Environment-specific settings, such as database credentials, PayPal URLs and secret keys, are supplied separately for each environment.
+
+The production environment should use its own secure environment variables rather than the local development `.env`.
 
 ---
 
 # 🛠️ Tech Stack
 
-## Backend
+### Backend
+- Python
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Redis
+- ChromaDB
+- Pytest
+- GitHub Actions
 
-* **Python**
-* **FastAPI**
-* **SQLAlchemy**
-* **PostgreSQL**
-* **Redis**
-* **ChromaDB**
-* **Pytest**
-* **GitHub Actions**
+### Frontend
+- React
 
-## Frontend
+### Payments
+- PayPal Sandbox
 
-* **React**
-
-## Payments
-
-* **PayPal Sandbox**
-
-## Infrastructure
-
-* **Docker**
-* **Docker Compose**
-* **Alembic**
-
----
-
-# 📌 Project Highlights
-
-This project combines multiple backend and full-stack concepts into one application:
-
-### 🏗️ Domain-Driven Design
-
-The backend separates domain logic, application use cases, infrastructure, and presentation concerns.
-
-### 🔍 Hybrid Search
-
-Keyword-based PostgreSQL search is combined with semantic vector search through ChromaDB.
-
-### 💳 Payment Integration
-
-PayPal Sandbox provides a realistic payment workflow without processing real payments.
-
-### 🛡️ Request Protection
-
-Global rate limiting provides:
-
-* **60 requests/minute per user**
-* **300 requests/minute per IP**
-
-Login-specific protection provides:
-
-* **5 attempts/15 minutes per email**
-* **50 attempts/15 minutes per IP**
-
-### ⚠️ Error Handling
-
-The frontend handles authentication errors, rate limits, server failures, and network problems with dedicated user-friendly error states.
-
-### ⚙️ Centralized Configuration
-
-Application settings are centralized through:
-
-```text
-core.config.settings
-```
-
-while environment-specific values can be supplied through:
-
-```text
-.env
-```
-
-This makes it straightforward to adjust application behavior without searching through the entire codebase.
-
-### 🐳 Containerized Infrastructure
-
-Docker Compose manages the application's backend, frontend, database, Redis, ChromaDB, Ollama, and background services.
-
-### 🧪 Automated CI
-
-GitHub Actions automatically runs the backend test suite when changes are pushed or Pull Requests are created.
+### Infrastructure
+- Docker
+- Docker Compose
+- Alembic
+- Ollama
 
 ---
 
 # 🎯 Project Overview
 
-This application is designed as a complete full-stack e-commerce system rather than a simple CRUD application.
-
-It combines:
+This project combines several backend and full-stack engineering concepts into one complete e-commerce application.
 
 ```text
-React
-  │
-  ▼
-FastAPI
-  │
-  ├── DDD Architecture
-  ├── Authentication
-  ├── Rate Limiting
-  ├── Orders
-  ├── Payments
-  ├── Search
-  └── Admin
-  │
-  ├── PostgreSQL
-  ├── Redis
-  ├── ChromaDB
-  ├── Ollama
-  └── Background Workers
+React Frontend
+      │
+      ▼
+  FastAPI Backend
+      │
+      ├── DDD Architecture
+      ├── Authentication
+      ├── Rate Limiting
+      ├── Orders
+      ├── Payments
+      ├── Hybrid Search
+      └── Admin
+      │
+      ▼
+ Infrastructure
+      ├── PostgreSQL
+      ├── Redis
+      ├── ChromaDB
+      ├── Ollama
+      └── Background Worker
 ```
 
-The result is a containerized e-commerce application with **DDD architecture, hybrid search, PayPal Sandbox payments, centralized configuration, request protection, background processing, automated testing, and a full React frontend**.
+The result is a containerized e-commerce application featuring **DDD architecture, hybrid search, PayPal Sandbox payments, centralized configuration, request protection, background processing, automated testing and a full React frontend**.
