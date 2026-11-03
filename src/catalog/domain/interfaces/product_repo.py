@@ -11,6 +11,11 @@ class IProductRepository(ABC):
         pass
 
     @abstractmethod
+    async def get_by_name(self, name: str):
+        """Return a product with the given name, if any."""
+        pass
+
+    @abstractmethod
     async def list(self):
         """Return all products."""
         pass

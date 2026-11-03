@@ -1,6 +1,6 @@
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from catalog.domain.entities.product import Product
 from catalog.domain.interfaces.product_repo import IProductRepository
@@ -51,6 +51,16 @@ class ProductRepository(IProductRepository):
 
     async def get_by_id(self, product_id: int) -> Optional[Product]:
         stmt = select(ProductModel).where(ProductModel.id == product_id)
+        result = await self.session.execute(stmt)
+        row = result.scalar_one_or_none()
+
+        return self._to_domain(row) if row else None
+
+
+    async def get_by_name(self, name: str) -> Optional[Product]:
+        stmt = select(ProductModel).where(
+            func.lower(ProductModel.name) == name.strip().lower()
+        )
         result = await self.session.execute(stmt)
         row = result.scalar_one_or_none()
 

@@ -33,6 +33,11 @@ class CreateProductUseCase:
         if stock < 0:
             raise ValueError("Stock cannot be negative")
 
+        # Reject duplicate names (case-insensitive)
+        existing = await self.product_repo.get_by_name(name.strip())
+        if existing is not None:
+            raise ValueError("This product name is already in use")
+
         # Validate category exists
         category = await self.category_repo.get_by_id(category_id)
         if category is None:

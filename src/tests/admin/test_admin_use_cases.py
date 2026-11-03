@@ -20,6 +20,7 @@ async def test_create_category():
     category.name = "Electronics"
     category.parent_id = None
 
+    category_repo.get_by_name.return_value = None
     category_repo.create.return_value = category
 
     use_case = CreateCategoryUseCase(category_repo)
@@ -34,6 +35,20 @@ async def test_create_category():
         name="Electronics",
         parent_id=None,
     )
+
+
+@pytest.mark.asyncio
+async def test_create_category_rejects_duplicate_name():
+    category_repo = AsyncMock()
+    category_repo.get_by_name.return_value = MagicMock()
+
+    use_case = CreateCategoryUseCase(category_repo)
+
+    with pytest.raises(ValueError, match="already in use"):
+        await use_case.execute(name="Electronics", parent_id=None)
+
+    category_repo.get_by_name.assert_awaited_once_with("Electronics")
+    category_repo.create.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -55,6 +70,7 @@ async def test_create_product():
     created_product.stock = 5
 
     category_repo.get_by_id.return_value = category
+    product_repo.get_by_name.return_value = None
     product_repo.create.return_value = created_product
     embedding_service.embed.return_value = [0.1, 0.2, 0.3]
 
@@ -85,6 +101,38 @@ async def test_create_product():
 
 
 @pytest.mark.asyncio
+async def test_create_product_rejects_duplicate_name():
+    product_repo = AsyncMock()
+    category_repo = AsyncMock()
+    embedding_service = AsyncMock()
+    vector_store = AsyncMock()
+
+    product_repo.get_by_name.return_value = MagicMock()
+
+    use_case = CreateProductUseCase(
+        product_repo=product_repo,
+        category_repo=category_repo,
+        embedding_service=embedding_service,
+        vector_store=vector_store,
+    )
+
+    with pytest.raises(ValueError, match="already in use"):
+        await use_case.execute(
+            name="Laptop",
+            description="Gaming laptop",
+            price=999.99,
+            stock=5,
+            category_id=1,
+            image_url=None,
+        )
+
+    product_repo.get_by_name.assert_awaited_once_with("Laptop")
+    product_repo.create.assert_not_awaited()
+    category_repo.get_by_id.assert_not_awaited()
+    embedding_service.embed.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_create_product_does_not_persist_when_embedding_fails():
     """A failed embedding must not leave a product row (with no vector) behind."""
     product_repo = AsyncMock()
@@ -96,6 +144,7 @@ async def test_create_product_does_not_persist_when_embedding_fails():
     category.id = 1
     category.name = "Electronics"
     category_repo.get_by_id.return_value = category
+    product_repo.get_by_name.return_value = None
     embedding_service.embed.side_effect = RuntimeError("ollama down")
 
     use_case = CreateProductUseCase(
@@ -131,6 +180,7 @@ async def test_create_product_rolls_back_when_vector_store_fails():
     category.id = 1
     category.name = "Electronics"
     category_repo.get_by_id.return_value = category
+    product_repo.get_by_name.return_value = None
 
     created_product = MagicMock()
     created_product.id = 10

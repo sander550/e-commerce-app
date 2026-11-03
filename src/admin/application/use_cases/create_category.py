@@ -8,6 +8,11 @@ class CreateCategoryUseCase:
         if not name or name.strip() == "":
             raise ValueError("Category name cannot be empty")
 
+        # Reject duplicate names (case-insensitive)
+        existing = await self.category_repo.get_by_name(name.strip())
+        if existing is not None:
+            raise ValueError("This category name is already in use")
+
         # Optional: validate parent exists
         if parent_id is not None:
             parent = await self.category_repo.get_by_id(parent_id)
