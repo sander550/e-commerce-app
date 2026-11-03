@@ -1,6 +1,6 @@
 # src/catalog/infrastructure/models/product_model.py
 
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, Float, Boolean, ForeignKey
 from catalog.infrastructure.db.category_model import CategoryModel
 from core.infrastructure.database import Base

@@ -153,7 +153,7 @@ async def test_logout_integration(db_session):
         revoked=False,
     )
 
-    saved = await token_repo.create(token)
+    await token_repo.create(token)
 
     # run logout use case
     uc = LogoutUseCase(token_repo)

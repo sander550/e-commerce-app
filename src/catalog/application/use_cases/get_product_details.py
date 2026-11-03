@@ -1,7 +1,6 @@
 # src/catalog/domain/use_cases/get_product_details_use_case.py
 
 from catalog.domain.entities.product import Product
-from catalog.domain.entities.category import Category
 from catalog.domain.interfaces.product_repo import IProductRepository
 from catalog.domain.interfaces.category_repo import ICategoryRepository
 

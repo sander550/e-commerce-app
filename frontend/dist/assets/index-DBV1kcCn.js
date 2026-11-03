@@ -280,7 +280,29 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           color: #b8f3ff;
           transform: scale(1.05);
         }
-      `}),(0,N.jsxs)(`div`,{className:`glass-card`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Welcome Back`}),(0,N.jsxs)(`form`,{onSubmit:w,children:[(0,N.jsx)(`label`,{className:`input-label`,children:`Email`}),(0,N.jsx)(`input`,{className:`input-field`,type:`email`,value:o,onChange:e=>s(e.target.value),required:!0}),(0,N.jsx)(`label`,{className:`input-label`,children:`Password`}),(0,N.jsx)(`input`,{className:`input-field`,type:`password`,value:c,onChange:e=>l(e.target.value),required:!0}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,disabled:u,children:u?`Loading...`:`Login`}),f&&(0,N.jsx)(`div`,{className:`msg error`,children:f}),m&&(0,N.jsx)(`div`,{className:`msg success`,children:m})]}),(0,N.jsx)(`div`,{className:`switcher`,children:(0,N.jsx)(M,{to:`/register`,children:`Switch to Register`})})]})]})}function $n(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function er(){let e=yt(),{user:t,loading:n,refreshUser:r}=Xn(),[i,a]=(0,x.useState)(``),[o,s]=(0,x.useState)(``),[c,l]=(0,x.useState)(!1),[u,d]=(0,x.useState)(``),[f,p]=(0,x.useState)(``),[m,h]=(0,x.useState)(!1),[g,_]=(0,x.useState)(null);(0,x.useEffect)(()=>{!n&&t&&e(`/`,{replace:!0})},[n,t,e]);function v(){h(!0),_(null),d(``),p(``)}function y(e){_(e>=500?`Something went wrong on the server. Please try again later.`:`Something went wrong (${e}). Please try again.`),h(!1),d(``),p(``)}function b(){_(`Something went wrong. Please check your connection and try again.`),h(!1),d(``),p(``)}async function S(t){t.preventDefault(),l(!0),d(``),p(``),_(null),h(!1);try{let t=await fetch(`/api/auth/register`,{method:`POST`,headers:{"Content-Type":`application/json`},credentials:`include`,body:JSON.stringify({email:i,password:o})}),n={};try{n=await t.json()}catch{n={}}if(t.status===429){v();return}if(t.status>=500){y(t.status);return}if(!t.ok){d($n(n,`Registration failed (${t.status})`));return}p(n?.message||`Registered!`),await r(),setTimeout(()=>{e(`/`,{replace:!0})},800)}catch(e){console.error(`Registration fetch error:`,e),b()}finally{l(!1)}}return n?(0,N.jsxs)(`div`,{className:`auth-wrapper`,children:[(0,N.jsx)(`style`,{children:`
+
+        .back-shop {
+          display: block;
+          width: 100%;
+          margin-top: 18px;
+          padding: 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.12);
+          color: white;
+          font-size: 15px;
+          font-weight: 600;
+          text-align: center;
+          text-decoration: none;
+          transition: 0.25s;
+          box-sizing: border-box;
+        }
+
+        .back-shop:hover {
+          background: rgba(255,255,255,0.22);
+          transform: scale(1.03);
+        }
+      `}),(0,N.jsxs)(`div`,{className:`glass-card`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Welcome Back`}),(0,N.jsxs)(`form`,{onSubmit:w,children:[(0,N.jsx)(`label`,{className:`input-label`,children:`Email`}),(0,N.jsx)(`input`,{className:`input-field`,type:`email`,value:o,onChange:e=>s(e.target.value),required:!0}),(0,N.jsx)(`label`,{className:`input-label`,children:`Password`}),(0,N.jsx)(`input`,{className:`input-field`,type:`password`,value:c,onChange:e=>l(e.target.value),required:!0}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,disabled:u,children:u?`Loading...`:`Login`}),f&&(0,N.jsx)(`div`,{className:`msg error`,children:f}),m&&(0,N.jsx)(`div`,{className:`msg success`,children:m})]}),(0,N.jsx)(`div`,{className:`switcher`,children:(0,N.jsx)(M,{to:`/register`,children:`Switch to Register`})}),(0,N.jsx)(M,{to:`/`,className:`back-shop`,children:`Back to Shop`})]})]})}function $n(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function er(){let e=yt(),{user:t,loading:n,refreshUser:r}=Xn(),[i,a]=(0,x.useState)(``),[o,s]=(0,x.useState)(``),[c,l]=(0,x.useState)(!1),[u,d]=(0,x.useState)(``),[f,p]=(0,x.useState)(``),[m,h]=(0,x.useState)(!1),[g,_]=(0,x.useState)(null);(0,x.useEffect)(()=>{!n&&t&&e(`/`,{replace:!0})},[n,t,e]);function v(){h(!0),_(null),d(``),p(``)}function y(e){_(e>=500?`Something went wrong on the server. Please try again later.`:`Something went wrong (${e}). Please try again.`),h(!1),d(``),p(``)}function b(){_(`Something went wrong. Please check your connection and try again.`),h(!1),d(``),p(``)}async function S(t){t.preventDefault(),l(!0),d(``),p(``),_(null),h(!1);try{let t=await fetch(`/api/auth/register`,{method:`POST`,headers:{"Content-Type":`application/json`},credentials:`include`,body:JSON.stringify({email:i,password:o})}),n={};try{n=await t.json()}catch{n={}}if(t.status===429){v();return}if(t.status>=500){y(t.status);return}if(!t.ok){d($n(n,`Registration failed (${t.status})`));return}p(n?.message||`Registered!`),await r(),setTimeout(()=>{e(`/`,{replace:!0})},800)}catch(e){console.error(`Registration fetch error:`,e),b()}finally{l(!1)}}return n?(0,N.jsxs)(`div`,{className:`auth-wrapper`,children:[(0,N.jsx)(`style`,{children:`
           .auth-wrapper {
             min-height: 100vh;
             display: flex;
@@ -553,7 +575,29 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
         .switcher a:hover {
           color: #b8f3ff;
         }
-      `}),(0,N.jsxs)(`div`,{className:`glass-card`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Create Account`}),(0,N.jsxs)(`form`,{onSubmit:S,children:[(0,N.jsx)(`label`,{className:`input-label`,children:`Email`}),(0,N.jsx)(`input`,{className:`input-field`,type:`email`,value:i,onChange:e=>a(e.target.value),required:!0,disabled:c}),(0,N.jsx)(`label`,{className:`input-label`,children:`Password`}),(0,N.jsx)(`input`,{className:`input-field`,type:`password`,value:o,onChange:e=>s(e.target.value),required:!0,disabled:c}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,disabled:c,children:c?`Loading...`:`Register`}),u&&(0,N.jsx)(`div`,{className:`msg error`,children:u}),f&&(0,N.jsx)(`div`,{className:`msg success`,children:f})]}),(0,N.jsx)(`div`,{className:`switcher`,children:(0,N.jsx)(M,{to:`/login`,children:`Switch to Login`})})]})]})}function tr(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function nr(){let e=yt(),{user:t,loading:n}=Xn(),r=(0,x.useRef)(!1),i=(0,x.useRef)(!0),[a,o]=(0,x.useState)({items:[]}),[s,c]=(0,x.useState)(null),[l,u]=(0,x.useState)(!0),[d,f]=(0,x.useState)(``),[p,m]=(0,x.useState)(``),[h,g]=(0,x.useState)(``),[_,v]=(0,x.useState)(``),[y,b]=(0,x.useState)(``),[S,C]=(0,x.useState)(`standard`),[w,T]=(0,x.useState)(null),[ee,te]=(0,x.useState)(null),[E,D]=(0,x.useState)(!1),[ne,re]=(0,x.useState)(null),[ie,ae]=(0,x.useState)(!1);(0,x.useEffect)(()=>(i.current=!0,()=>{i.current=!1}),[]);let O=()=>{r.current||(r.current=!0,u(!1),e(`/login`,{replace:!0,state:{from:`/cart`}}))},oe=()=>{i.current&&(D(!0),re(null),T(null),te(null),u(!1))},k=e=>{i.current&&(re(e||`Something went wrong on the server. Please try again later.`),D(!1),T(null),te(null),u(!1))},A=()=>{i.current&&(re(`Something went wrong. Please check your connection and try again.`),D(!1),T(null),te(null),u(!1))},se=async()=>{if(r.current)return!1;try{let e=await fetch(`/api/cart/`,{method:`GET`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}return e.ok?i.current?(o(t&&Array.isArray(t.items)?t:{items:[]}),!0):!1:e.status===401?(O(),!1):e.status===429?(oe(),!1):e.status>=500?(k(`Something went wrong on the server while loading your cart.`),!1):(i.current&&T(tr(t,`Failed to load cart (${e.status}).`)),!1)}catch(e){return!r.current&&(console.error(`Load cart failed:`,e),A(),!1)}},ce=async()=>{if(r.current)return!1;try{let e=await fetch(`/api/cart/totals`,{method:`GET`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}return e.ok?i.current?(c(t),!0):!1:e.status===401?(O(),!1):e.status===429?(oe(),!1):e.status>=500?(k(`Something went wrong while calculating your cart total.`),!1):(i.current&&T(tr(t,`Failed to load totals (${e.status}).`)),!1)}catch(e){return!r.current&&(console.error(`Load totals failed:`,e),A(),!1)}},le=async()=>{if(r.current)return!1;try{let e=await fetch(`/api/auth/profile`,{method:`GET`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}if(!e.ok)return e.status===401&&O(),!1;if(!i.current)return!1;if(t.shipping_address){let e=t.shipping_address.split(`,`).map(e=>e.trim());f(e[0]||``),m(e[1]||``),g(e[2]||``),v(e[3]||``),b(e[4]||``)}return!0}catch(e){return r.current||console.error(`Load profile failed:`,e),!1}};(0,x.useEffect)(()=>{if(n)return;if(!t){O();return}let e=!1;return(async()=>{u(!0);let t=await se();if(e||r.current)return;if(!t){u(!1);return}let n=await ce();if(!(e||r.current)){if(!n){u(!1);return}await le(),!(e||r.current)&&u(!1)}})(),()=>{e=!0}},[n,t]);let ue=async(e,t)=>{if(!r.current){T(null),te(null);try{let n=await fetch(`/api/cart/item/${e}`,{method:`PUT`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({quantity:t})}),r={};try{r=await n.json()}catch{r={}}if(!n.ok){if(n.status===401){O();return}if(n.status===429){oe();return}if(n.status>=500){k(`Something went wrong while updating your cart.`);return}T(tr(r,`Failed to update quantity (${n.status}).`));return}if(!i.current)return;o(r&&Array.isArray(r.items)?r:{items:[]}),await ce()&&i.current&&te(`Quantity updated!`)}catch(e){if(r.current)return;console.error(`Update quantity failed:`,e),A()}}},de=async e=>{if(!r.current){T(null),te(null);try{let t=await fetch(`/api/cart/item/${e}`,{method:`DELETE`,credentials:`include`}),n={};try{n=await t.json()}catch{n={}}if(!t.ok){if(t.status===401){O();return}if(t.status===429){oe();return}if(t.status>=500){k(`Something went wrong while removing this item.`);return}T(tr(n,`Failed to remove item (${t.status}).`));return}if(!i.current)return;o(n&&Array.isArray(n.items)?n:{items:[]}),await ce()&&i.current&&te(`Item removed!`)}catch(e){if(r.current)return;console.error(`Remove item failed:`,e),A()}}};return n?(0,N.jsxs)(`div`,{className:`page-wrapper fade-in`,children:[(0,N.jsx)(`style`,{children:`
+
+        .back-shop {
+          display: block;
+          width: 100%;
+          margin-top: 18px;
+          padding: 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.12);
+          color: white;
+          font-size: 15px;
+          font-weight: 600;
+          text-align: center;
+          text-decoration: none;
+          transition: 0.25s;
+          box-sizing: border-box;
+        }
+
+        .back-shop:hover {
+          background: rgba(255,255,255,0.22);
+          transform: scale(1.03);
+        }
+      `}),(0,N.jsxs)(`div`,{className:`glass-card`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Create Account`}),(0,N.jsxs)(`form`,{onSubmit:S,children:[(0,N.jsx)(`label`,{className:`input-label`,children:`Email`}),(0,N.jsx)(`input`,{className:`input-field`,type:`email`,value:i,onChange:e=>a(e.target.value),required:!0,disabled:c}),(0,N.jsx)(`label`,{className:`input-label`,children:`Password`}),(0,N.jsx)(`input`,{className:`input-field`,type:`password`,value:o,onChange:e=>s(e.target.value),required:!0,disabled:c}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,disabled:c,children:c?`Loading...`:`Register`}),u&&(0,N.jsx)(`div`,{className:`msg error`,children:u}),f&&(0,N.jsx)(`div`,{className:`msg success`,children:f})]}),(0,N.jsx)(`div`,{className:`switcher`,children:(0,N.jsx)(M,{to:`/login`,children:`Switch to Login`})}),(0,N.jsx)(M,{to:`/`,className:`back-shop`,children:`Back to Shop`})]})]})}function tr(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function nr(){let e=yt(),{user:t,loading:n}=Xn(),r=(0,x.useRef)(!1),i=(0,x.useRef)(!0),[a,o]=(0,x.useState)({items:[]}),[s,c]=(0,x.useState)(null),[l,u]=(0,x.useState)(!0),[d,f]=(0,x.useState)(``),[p,m]=(0,x.useState)(``),[h,g]=(0,x.useState)(``),[_,v]=(0,x.useState)(``),[y,b]=(0,x.useState)(``),[S,C]=(0,x.useState)(`standard`),[w,T]=(0,x.useState)(null),[ee,te]=(0,x.useState)(null),[E,D]=(0,x.useState)(!1),[ne,re]=(0,x.useState)(null),[ie,ae]=(0,x.useState)(!1);(0,x.useEffect)(()=>(i.current=!0,()=>{i.current=!1}),[]);let O=()=>{r.current||(r.current=!0,u(!1),e(`/login`,{replace:!0,state:{from:`/cart`}}))},oe=()=>{i.current&&(D(!0),re(null),T(null),te(null),u(!1))},k=e=>{i.current&&(re(e||`Something went wrong on the server. Please try again later.`),D(!1),T(null),te(null),u(!1))},A=()=>{i.current&&(re(`Something went wrong. Please check your connection and try again.`),D(!1),T(null),te(null),u(!1))},se=async()=>{if(r.current)return!1;try{let e=await fetch(`/api/cart/`,{method:`GET`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}return e.ok?i.current?(o(t&&Array.isArray(t.items)?t:{items:[]}),!0):!1:e.status===401?(O(),!1):e.status===429?(oe(),!1):e.status>=500?(k(`Something went wrong on the server while loading your cart.`),!1):(i.current&&T(tr(t,`Failed to load cart (${e.status}).`)),!1)}catch(e){return!r.current&&(console.error(`Load cart failed:`,e),A(),!1)}},ce=async()=>{if(r.current)return!1;try{let e=await fetch(`/api/cart/totals`,{method:`GET`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}return e.ok?i.current?(c(t),!0):!1:e.status===401?(O(),!1):e.status===429?(oe(),!1):e.status>=500?(k(`Something went wrong while calculating your cart total.`),!1):(i.current&&T(tr(t,`Failed to load totals (${e.status}).`)),!1)}catch(e){return!r.current&&(console.error(`Load totals failed:`,e),A(),!1)}},le=async()=>{if(r.current)return!1;try{let e=await fetch(`/api/auth/profile`,{method:`GET`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}if(!e.ok)return e.status===401&&O(),!1;if(!i.current)return!1;if(t.shipping_address){let e=t.shipping_address.split(`,`).map(e=>e.trim());f(e[0]||``),m(e[1]||``),g(e[2]||``),v(e[3]||``),b(e[4]||``)}return!0}catch(e){return r.current||console.error(`Load profile failed:`,e),!1}};(0,x.useEffect)(()=>{if(n)return;if(!t){O();return}let e=!1;return(async()=>{u(!0);let t=await se();if(e||r.current)return;if(!t){u(!1);return}let n=await ce();if(!(e||r.current)){if(!n){u(!1);return}await le(),!(e||r.current)&&u(!1)}})(),()=>{e=!0}},[n,t]);let ue=async(e,t)=>{if(!r.current){T(null),te(null);try{let n=await fetch(`/api/cart/item/${e}`,{method:`PUT`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({quantity:t})}),r={};try{r=await n.json()}catch{r={}}if(!n.ok){if(n.status===401){O();return}if(n.status===429){oe();return}if(n.status>=500){k(`Something went wrong while updating your cart.`);return}T(tr(r,`Failed to update quantity (${n.status}).`));return}if(!i.current)return;o(r&&Array.isArray(r.items)?r:{items:[]}),await ce()&&i.current&&te(`Quantity updated!`)}catch(e){if(r.current)return;console.error(`Update quantity failed:`,e),A()}}},de=async e=>{if(!r.current){T(null),te(null);try{let t=await fetch(`/api/cart/item/${e}`,{method:`DELETE`,credentials:`include`}),n={};try{n=await t.json()}catch{n={}}if(!t.ok){if(t.status===401){O();return}if(t.status===429){oe();return}if(t.status>=500){k(`Something went wrong while removing this item.`);return}T(tr(n,`Failed to remove item (${t.status}).`));return}if(!i.current)return;o(n&&Array.isArray(n.items)?n:{items:[]}),await ce()&&i.current&&te(`Item removed!`)}catch(e){if(r.current)return;console.error(`Remove item failed:`,e),A()}}};return n?(0,N.jsxs)(`div`,{className:`page-wrapper fade-in`,children:[(0,N.jsx)(`style`,{children:`
           .page-wrapper {
             min-height: 100vh;
             background: linear-gradient(135deg, #050505, #0a0f1a);
@@ -870,12 +914,12 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
             grid-template-columns: 1fr;
           }
         }
-      `}),(0,N.jsx)(M,{className:`nav-btn`,to:`/`,children:`← Back`}),w&&(0,N.jsx)(`div`,{className:`error-box`,children:w}),ee&&(0,N.jsx)(`div`,{className:`success-box`,children:ee}),(0,N.jsxs)(`div`,{className:`layout`,children:[(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Your Cart`}),a.items.length===0&&(0,N.jsx)(`div`,{style:{opacity:.7},children:`Your cart is empty.`}),a.items.map(e=>(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsxs)(`div`,{children:[(0,N.jsx)(`strong`,{children:e.name}),(0,N.jsxs)(`div`,{style:{opacity:.7},children:[`$`,e.price,` × `,e.quantity]})]}),(0,N.jsxs)(`div`,{children:[(0,N.jsx)(`button`,{className:`qty-btn`,onClick:()=>ue(e.product_id,e.quantity-1),disabled:e.quantity<=1,children:`-`}),(0,N.jsx)(`button`,{className:`qty-btn`,onClick:()=>ue(e.product_id,e.quantity+1),children:`+`}),(0,N.jsx)(`button`,{className:`remove-btn`,onClick:()=>de(e.product_id),children:`Remove`})]})]},e.product_id)),a.items.length>0&&(0,N.jsx)(`button`,{className:`clear-btn`,onClick:async()=>{if(!r.current){T(null),te(null);try{let e=await fetch(`/api/cart/clear`,{method:`POST`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}if(!e.ok){if(e.status===401){O();return}if(e.status===429){oe();return}if(e.status>=500){k(`Something went wrong while clearing your cart.`);return}T(tr(t,`Failed to clear cart (${e.status}).`));return}if(!i.current)return;o({items:[]}),c({subtotal:0,tax:0,total:0}),te(`Cart cleared!`)}catch(e){if(r.current)return;console.error(`Clear cart failed:`,e),A()}}},children:`Clear Cart`})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Shipping Address`}),(0,N.jsx)(`input`,{className:ie&&!d?`error`:``,placeholder:`Street`,value:d,onChange:e=>f(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!p?`error`:``,placeholder:`House Number`,value:p,onChange:e=>m(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!h?`error`:``,placeholder:`City`,value:h,onChange:e=>g(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!_?`error`:``,placeholder:`Postal Code`,value:_,onChange:e=>v(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!y?`error`:``,placeholder:`Country`,value:y,onChange:e=>b(e.target.value)}),(0,N.jsx)(`div`,{className:`section-title`,style:{marginTop:`20px`},children:`Delivery Method`}),(0,N.jsxs)(`select`,{value:S,onChange:e=>C(e.target.value),children:[(0,N.jsx)(`option`,{value:`standard`,children:`Standard Delivery (3–5 days)`}),(0,N.jsx)(`option`,{value:`express`,children:`Express Delivery (1–2 days)`}),(0,N.jsx)(`option`,{value:`pickup`,children:`Pickup Point`})]}),(0,N.jsx)(`div`,{className:`section-title`,style:{marginTop:`20px`},children:`Totals`}),s?(0,N.jsxs)(N.Fragment,{children:[(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsx)(`span`,{children:`Subtotal`}),(0,N.jsxs)(`span`,{children:[`$`,Number(s.subtotal).toFixed(2)]})]}),(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsx)(`span`,{children:`Tax`}),(0,N.jsxs)(`span`,{children:[`$`,Number(s.tax).toFixed(2)]})]}),(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsx)(`strong`,{children:`Total`}),(0,N.jsxs)(`strong`,{children:[`$`,Number(s.total).toFixed(2)]})]})]}):(0,N.jsx)(`div`,{style:{opacity:.7},children:`No totals available.`}),a.items.length>0&&(0,N.jsx)(`button`,{className:`paypal-btn`,onClick:async()=>{if(r.current)return;if(T(null),te(null),ae(!0),!d||!p||!h||!_||!y){T(`Please fill in all shipping fields.`);return}let e=`${d}, ${p}, ${h}, ${_}, ${y}`;try{let t=await fetch(`/api/orders/`,{method:`POST`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({shipping_address:e,delivery_method:S})}),n={};try{n=await t.json()}catch{n={}}if(!t.ok){if(t.status===401){O();return}if(t.status===429){oe();return}if(t.status>=500){k(`Something went wrong while creating your order. Please try again later.`);return}T(tr(n,`Failed to create order (${t.status}).`));return}let r=n.id;if(!r){T(`The order was created, but no order ID was returned.`);return}let i=await fetch(`/api/payment/create`,{method:`POST`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({order_id:r})}),a={};try{a=await i.json()}catch{a={}}if(!i.ok){if(i.status===401){O();return}if(i.status===429){oe();return}if(i.status>=500){k(`Something went wrong while starting the payment. Please try again later.`);return}T(tr(a,`Failed to start PayPal payment (${i.status}).`));return}if(!a.approval_url){T(`PayPal did not return a payment link. Please try again.`);return}window.location.href=a.approval_url}catch(e){if(r.current)return;console.error(`PayPal payment failed:`,e),A()}},children:`Pay with PayPal`})]})]})]}):null}function rr(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function ir(){let e=yt(),{user:t,loading:n}=Xn(),[r,i]=(0,x.useState)([]),[a,o]=(0,x.useState)([]),[s,c]=(0,x.useState)([]),[l,u]=(0,x.useState)(!1),[d,f]=(0,x.useState)(null),[p,m]=(0,x.useState)(null),[h,g]=(0,x.useState)(!1),_=()=>{e(`/login`,{replace:!0,state:{from:`/`}})},v=()=>{g(!0),m(null),f(null)},y=e=>{m(e>=500?`Something went wrong on the server. Please try again later.`:`Something went wrong (${e}). Please try again.`),f(null)},b=e=>{m(e),f(null)};(0,x.useEffect)(()=>{async function e(){try{let e=await fetch(`/products/`,{credentials:`include`}),t={};try{t=await e.json()}catch{t={}}if(e.status===429){v();return}if(e.status>=500){y(e.status);return}if(!e.ok){b(rr(t,`Failed to load products (${e.status})`));return}i(Array.isArray(t)?t:[]);let n=await fetch(`/categories/`,{credentials:`include`}),r={};try{r=await n.json()}catch{r={}}if(n.status===429){v();return}if(n.status>=500){y(n.status);return}if(!n.ok){b(rr(r,`Failed to load categories (${n.status})`));return}o(Array.isArray(r.categories)?r.categories:[])}catch(e){console.error(`Load failed:`,e),b(`Unable to connect to the server. Please check your connection and try again.`)}}e()},[]);async function S(e){if(e.key!==`Enter`)return;let t=e.currentTarget.value.trim();if(t)try{let e=await fetch(`/search/?q=${encodeURIComponent(t)}`,{credentials:`include`}),n={};try{n=await e.json()}catch{n={}}if(e.status===429){v();return}if(e.status>=500){y(e.status);return}if(!e.ok){b(rr(n,`Search failed (${e.status})`)),c([]),u(!1);return}c(Array.isArray(n)?n:[]),u(!0),m(null)}catch(e){console.error(`Search failed:`,e),c([]),u(!1),b(`Unable to connect to the server. Please check your connection and try again.`)}}function C(){u(!1),c([]),m(null)}async function w(e){if(!n){if(!t){f(`Please log in to add items to cart.`),setTimeout(()=>{_()},1e3);return}try{let t=await fetch(`/cart/add`,{method:`POST`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({product_id:e,quantity:1})}),n={};try{n=await t.json()}catch{n={}}if(t.status===401){_();return}if(t.status===429){v();return}if(t.status>=500){y(t.status);return}if(!t.ok){f(rr(n,`Failed to add to cart (${t.status})`)),setTimeout(()=>f(null),2e3);return}f(rr(n,`Added to cart!`)),m(null),setTimeout(()=>f(null),1500)}catch(e){console.error(`Add to cart failed:`,e),b(`Unable to connect to the server. Please check your connection and try again.`)}}}return n?(0,N.jsx)(`div`,{style:{minHeight:`100vh`,background:`linear-gradient(135deg, #050505, #0a0f1a)`,color:`#e8e8ff`,display:`flex`,alignItems:`center`,justifyContent:`center`,fontFamily:`Inter, sans-serif`},children:`Loading...`}):h?(0,N.jsx)(`div`,{style:{minHeight:`100vh`,background:`linear-gradient(135deg, #050505, #0a0f1a)`,color:`#e8e8ff`,display:`flex`,alignItems:`center`,justifyContent:`center`,padding:`24px`,fontFamily:`Inter, sans-serif`},children:(0,N.jsxs)(`div`,{style:{width:`100%`,maxWidth:`520px`,background:`rgba(15,15,30,0.85)`,border:`1px solid rgba(255,170,0,0.35)`,borderRadius:`18px`,padding:`36px`,textAlign:`center`,boxShadow:`0 0 40px rgba(255,170,0,0.12)`},children:[(0,N.jsx)(`div`,{style:{fontSize:`48px`,marginBottom:`16px`},children:`⏳`}),(0,N.jsx)(`h1`,{style:{margin:`0 0 12px`,color:`#ffdd7f`,fontSize:`28px`},children:`Too Many Requests`}),(0,N.jsx)(`p`,{style:{margin:`0 0 24px`,opacity:.8,lineHeight:1.6},children:`You are sending requests too quickly. Please wait a moment and try again.`}),(0,N.jsx)(`button`,{onClick:()=>window.location.reload(),style:{padding:`11px 20px`,borderRadius:`12px`,border:`1px solid rgba(0,200,255,0.4)`,background:`rgba(0,200,255,0.2)`,color:`white`,cursor:`pointer`,fontWeight:600,fontSize:`15px`},children:`Try Again`})]})}):p?(0,N.jsx)(`div`,{style:{minHeight:`100vh`,background:`linear-gradient(135deg, #050505, #0a0f1a)`,color:`#e8e8ff`,display:`flex`,alignItems:`center`,justifyContent:`center`,padding:`24px`,fontFamily:`Inter, sans-serif`},children:(0,N.jsxs)(`div`,{style:{width:`100%`,maxWidth:`520px`,background:`rgba(15,15,30,0.85)`,border:`1px solid rgba(255,80,80,0.3)`,borderRadius:`18px`,padding:`36px`,textAlign:`center`,boxShadow:`0 0 40px rgba(255,80,80,0.1)`},children:[(0,N.jsx)(`div`,{style:{fontSize:`48px`,marginBottom:`16px`},children:`⚠️`}),(0,N.jsx)(`h1`,{style:{margin:`0 0 12px`,color:`#ff8a8a`,fontSize:`28px`},children:`Something went wrong`}),(0,N.jsx)(`p`,{style:{margin:`0 0 24px`,opacity:.8,lineHeight:1.6},children:p}),(0,N.jsx)(`button`,{onClick:()=>window.location.reload(),style:{padding:`11px 20px`,borderRadius:`12px`,border:`1px solid rgba(0,200,255,0.4)`,background:`rgba(0,200,255,0.2)`,color:`white`,cursor:`pointer`,fontWeight:600,fontSize:`15px`},children:`Try Again`})]})}):(0,N.jsxs)(`div`,{className:`index-wrapper`,children:[(0,N.jsx)(`style`,{children:`
+      `}),(0,N.jsx)(M,{className:`nav-btn`,to:`/`,children:`← Back`}),w&&(0,N.jsx)(`div`,{className:`error-box`,children:w}),ee&&(0,N.jsx)(`div`,{className:`success-box`,children:ee}),(0,N.jsxs)(`div`,{className:`layout`,children:[(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Your Cart`}),a.items.length===0&&(0,N.jsx)(`div`,{style:{opacity:.7},children:`Your cart is empty.`}),a.items.map(e=>(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsxs)(`div`,{children:[(0,N.jsx)(`strong`,{children:e.name}),(0,N.jsxs)(`div`,{style:{opacity:.7},children:[`$`,e.price,` × `,e.quantity]})]}),(0,N.jsxs)(`div`,{children:[(0,N.jsx)(`button`,{className:`qty-btn`,onClick:()=>ue(e.product_id,e.quantity-1),disabled:e.quantity<=1,children:`-`}),(0,N.jsx)(`button`,{className:`qty-btn`,onClick:()=>ue(e.product_id,e.quantity+1),children:`+`}),(0,N.jsx)(`button`,{className:`remove-btn`,onClick:()=>de(e.product_id),children:`Remove`})]})]},e.product_id)),a.items.length>0&&(0,N.jsx)(`button`,{className:`clear-btn`,onClick:async()=>{if(!r.current){T(null),te(null);try{let e=await fetch(`/api/cart/clear`,{method:`POST`,credentials:`include`}),t={};try{t=await e.json()}catch{t={}}if(!e.ok){if(e.status===401){O();return}if(e.status===429){oe();return}if(e.status>=500){k(`Something went wrong while clearing your cart.`);return}T(tr(t,`Failed to clear cart (${e.status}).`));return}if(!i.current)return;o({items:[]}),c({subtotal:0,tax:0,total:0}),te(`Cart cleared!`)}catch(e){if(r.current)return;console.error(`Clear cart failed:`,e),A()}}},children:`Clear Cart`})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Shipping Address`}),(0,N.jsx)(`input`,{className:ie&&!d?`error`:``,placeholder:`Street`,value:d,onChange:e=>f(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!p?`error`:``,placeholder:`House Number`,value:p,onChange:e=>m(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!h?`error`:``,placeholder:`City`,value:h,onChange:e=>g(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!_?`error`:``,placeholder:`Postal Code`,value:_,onChange:e=>v(e.target.value)}),(0,N.jsx)(`input`,{className:ie&&!y?`error`:``,placeholder:`Country`,value:y,onChange:e=>b(e.target.value)}),(0,N.jsx)(`div`,{className:`section-title`,style:{marginTop:`20px`},children:`Delivery Method`}),(0,N.jsxs)(`select`,{value:S,onChange:e=>C(e.target.value),children:[(0,N.jsx)(`option`,{value:`standard`,children:`Standard Delivery (3–5 days)`}),(0,N.jsx)(`option`,{value:`express`,children:`Express Delivery (1–2 days)`}),(0,N.jsx)(`option`,{value:`pickup`,children:`Pickup Point`})]}),(0,N.jsx)(`div`,{className:`section-title`,style:{marginTop:`20px`},children:`Totals`}),s?(0,N.jsxs)(N.Fragment,{children:[(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsx)(`span`,{children:`Subtotal`}),(0,N.jsxs)(`span`,{children:[`$`,Number(s.subtotal).toFixed(2)]})]}),(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsx)(`span`,{children:`Tax`}),(0,N.jsxs)(`span`,{children:[`$`,Number(s.tax).toFixed(2)]})]}),(0,N.jsxs)(`div`,{className:`item`,children:[(0,N.jsx)(`strong`,{children:`Total`}),(0,N.jsxs)(`strong`,{children:[`$`,Number(s.total).toFixed(2)]})]})]}):(0,N.jsx)(`div`,{style:{opacity:.7},children:`No totals available.`}),a.items.length>0&&(0,N.jsx)(`button`,{className:`paypal-btn`,onClick:async()=>{if(r.current)return;if(T(null),te(null),ae(!0),!d||!p||!h||!_||!y){T(`Please fill in all shipping fields.`);return}let e=`${d}, ${p}, ${h}, ${_}, ${y}`;try{let t=await fetch(`/api/orders/`,{method:`POST`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({shipping_address:e,delivery_method:S})}),n={};try{n=await t.json()}catch{n={}}if(!t.ok){if(t.status===401){O();return}if(t.status===429){oe();return}if(t.status>=500){k(`Something went wrong while creating your order. Please try again later.`);return}T(tr(n,`Failed to create order (${t.status}).`));return}let r=n.id;if(!r){T(`The order was created, but no order ID was returned.`);return}let i=await fetch(`/api/payment/create`,{method:`POST`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({order_id:r})}),a={};try{a=await i.json()}catch{a={}}if(!i.ok){if(i.status===401){O();return}if(i.status===429){oe();return}if(i.status>=500){k(`Something went wrong while starting the payment. Please try again later.`);return}T(tr(a,`Failed to start PayPal payment (${i.status}).`));return}if(!a.approval_url){T(`PayPal did not return a payment link. Please try again.`);return}window.location.href=a.approval_url}catch(e){if(r.current)return;console.error(`PayPal payment failed:`,e),A()}},children:`Pay with PayPal`})]})]})]}):null}function rr(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function ir(){let e=yt(),{user:t}=Xn(),n=!!t,[r,i]=(0,x.useState)([]),[a,o]=(0,x.useState)([]),[s,c]=(0,x.useState)([]),[l,u]=(0,x.useState)(!1),[d,f]=(0,x.useState)(null),[p,m]=(0,x.useState)(null),[h,g]=(0,x.useState)(!1),_=()=>{e(`/login`,{replace:!0,state:{from:`/`}})},v=()=>{g(!0),m(null),f(null)},y=e=>{m(e>=500?`Something went wrong on the server. Please try again later.`:`Something went wrong (${e}). Please try again.`),f(null)},b=e=>{m(e),f(null)};(0,x.useEffect)(()=>{async function e(){try{let e=await fetch(`/api/products/`),t={};try{t=await e.json()}catch{t={}}if(e.status===401){_();return}if(e.status===429){v();return}if(e.status>=500){y(e.status);return}if(!e.ok){b(rr(t,`Failed to load products (${e.status})`));return}i(Array.isArray(t)?t:[]);let n=await fetch(`/api/categories/`),r={};try{r=await n.json()}catch{r={}}if(n.status===401){_();return}if(n.status===429){v();return}if(n.status>=500){y(n.status);return}if(!n.ok){b(rr(r,`Failed to load categories (${n.status})`));return}o(Array.isArray(r.categories)?r.categories:[])}catch(e){console.error(`Load failed:`,e),b(`Unable to connect to the server. Please check your connection and try again.`)}}e()},[]);async function S(e){if(e.key!==`Enter`)return;let t=e.currentTarget.value.trim();if(t)try{let e=await fetch(`/api/search/?q=${encodeURIComponent(t)}`),n={};try{n=await e.json()}catch{n={}}if(e.status===401){_();return}if(e.status===429){v();return}if(e.status>=500){y(e.status);return}if(!e.ok){b(rr(n,`Search failed (${e.status})`)),c([]),u(!1);return}c(Array.isArray(n)?n:[]),u(!0),m(null)}catch(e){console.error(`Search failed:`,e),c([]),u(!1),b(`Unable to connect to the server. Please check your connection and try again.`)}}function C(){u(!1),c([]),m(null)}async function w(t){if(!n){f(`Please log in to add items to cart.`),setTimeout(()=>{e(`/login`,{replace:!0,state:{from:`/`}})},1e3);return}try{let e=await fetch(`/api/cart/add`,{method:`POST`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({product_id:t,quantity:1})}),n={};try{n=await e.json()}catch{n={}}if(e.status===401){_();return}if(e.status===429){v();return}if(e.status>=500){y(e.status);return}if(!e.ok){f(rr(n,`Failed to add to cart (${e.status})`)),setTimeout(()=>f(null),2e3);return}f(rr(n,`Added to cart!`)),m(null),setTimeout(()=>f(null),1500)}catch(e){console.error(`Add to cart failed:`,e),b(`Unable to connect to the server. Please check your connection and try again.`)}}return h?(0,N.jsx)(`div`,{style:{minHeight:`100vh`,background:`linear-gradient(135deg, #050505, #0a0f1a)`,color:`#e8e8ff`,display:`flex`,alignItems:`center`,justifyContent:`center`,padding:`24px`,fontFamily:`Inter, sans-serif`},children:(0,N.jsxs)(`div`,{style:{width:`100%`,maxWidth:`520px`,background:`rgba(15,15,30,0.85)`,border:`1px solid rgba(255,170,0,0.35)`,borderRadius:`18px`,padding:`36px`,textAlign:`center`,boxShadow:`0 0 40px rgba(255,170,0,0.12)`},children:[(0,N.jsx)(`div`,{style:{fontSize:`48px`,marginBottom:`16px`},children:`⏳`}),(0,N.jsx)(`h1`,{style:{margin:`0 0 12px`,color:`#ffdd7f`,fontSize:`28px`},children:`Too Many Requests`}),(0,N.jsx)(`p`,{style:{margin:`0 0 24px`,opacity:.8,lineHeight:1.6},children:`You are sending requests too quickly. Please wait a moment and try again.`}),(0,N.jsx)(`button`,{onClick:()=>window.location.reload(),style:{padding:`11px 20px`,borderRadius:`12px`,border:`1px solid rgba(0,200,255,0.4)`,background:`rgba(0,200,255,0.2)`,color:`white`,cursor:`pointer`,fontWeight:600,fontSize:`15px`},children:`Try Again`})]})}):p?(0,N.jsx)(`div`,{style:{minHeight:`100vh`,background:`linear-gradient(135deg, #050505, #0a0f1a)`,color:`#e8e8ff`,display:`flex`,alignItems:`center`,justifyContent:`center`,padding:`24px`,fontFamily:`Inter, sans-serif`},children:(0,N.jsxs)(`div`,{style:{width:`100%`,maxWidth:`520px`,background:`rgba(15,15,30,0.85)`,border:`1px solid rgba(255,80,80,0.3)`,borderRadius:`18px`,padding:`36px`,textAlign:`center`,boxShadow:`0 0 40px rgba(255,80,80,0.1)`},children:[(0,N.jsx)(`div`,{style:{fontSize:`48px`,marginBottom:`16px`},children:`⚠️`}),(0,N.jsx)(`h1`,{style:{margin:`0 0 12px`,color:`#ff8a8a`,fontSize:`28px`},children:`Something went wrong`}),(0,N.jsx)(`p`,{style:{margin:`0 0 24px`,opacity:.8,lineHeight:1.6},children:p}),(0,N.jsx)(`button`,{onClick:()=>window.location.reload(),style:{padding:`11px 20px`,borderRadius:`12px`,border:`1px solid rgba(0,200,255,0.4)`,background:`rgba(0,200,255,0.2)`,color:`white`,cursor:`pointer`,fontWeight:600,fontSize:`15px`},children:`Try Again`})]})}):(0,N.jsxs)(`div`,{className:`index-wrapper`,children:[(0,N.jsx)(`style`,{children:`
         .index-wrapper {
           min-height: 100vh;
           background: linear-gradient(135deg, #050505, #0a0f1a);
           color: #e8e8ff;
-          font-family: Inter, sans-serif;
+          font-family: Inter, Arial, sans-serif;
           padding: 24px;
         }
 
@@ -992,6 +1036,39 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           gap: 12px;
         }
 
+        .category-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 24px;
+          gap: 20px;
+        }
+
+        .title-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+
+        .title-accent {
+          width: 65px;
+          height: 4px;
+          border-radius: 20px;
+          background: #00c8ff;
+          box-shadow: 0 0 15px rgba(0,200,255,0.7);
+        }
+
+        .product-count {
+          padding: 8px 14px;
+          border-radius: 20px;
+          background: rgba(0,200,255,0.08);
+          border: 1px solid rgba(0,200,255,0.18);
+          color: #7feaff;
+          font-size: 14px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
         .category-bubble {
           padding: 10px 18px;
           background: rgba(0,200,255,0.15);
@@ -1011,81 +1088,212 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
 
         .product-grid {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 20px;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 18px;
         }
 
         .product-card {
-          background: rgba(15,15,30,0.75);
-          border: 1px solid rgba(0,200,255,0.25);
-          border-radius: 14px;
-          padding: 14px;
-          text-decoration: none;
+          min-width: 0;
+          min-height: 315px;
+          background: linear-gradient(
+            145deg,
+            rgba(22,28,42,0.90),
+            rgba(8,13,23,0.92)
+          );
+          border: 1px solid rgba(0,200,255,0.16);
+          border-radius: 18px;
+          padding: 13px;
           color: white;
-          transition: 0.25s;
-          animation: fadeIn 0.4s ease;
+          transition: 0.3s ease;
           position: relative;
+          animation: cardIn 0.5s ease both;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         .product-card:hover {
-          background: rgba(0,200,255,0.15);
-          transform: translateY(-6px) scale(1.03);
-          box-shadow: 0 0 25px rgba(0,200,255,0.25);
+          transform: translateY(-8px);
+          border-color: rgba(0,200,255,0.42);
+          box-shadow:
+            0 18px 40px rgba(0,0,0,0.35),
+            0 0 25px rgba(0,200,255,0.10);
+        }
+
+        @keyframes cardIn {
+          from {
+            opacity: 0;
+            transform: translateY(15px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .product-link {
+          color: white;
+          text-decoration: none;
+          display: block;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .product-img-container {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 10px;
+          overflow: hidden;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.025);
+        }
+
+        .product-img-glow {
+          position: absolute;
+          width: 75%;
+          height: 75%;
+          border-radius: 50%;
+          background: radial-gradient(
+            circle,
+            rgba(0,200,255,0.25),
+            rgba(0,200,255,0.04) 65%,
+            transparent 100%
+          );
+          filter: none;
+          animation: ripple 4s infinite ease-in-out;
+        }
+
+        @keyframes ripple {
+          0%, 100% {
+            transform: scale(0.92);
+            opacity: 0.45;
+          }
+
+          50% {
+            transform: scale(1.08);
+            opacity: 0.8;
+          }
         }
 
         .product-img {
-          width: 100%;
-          aspect-ratio: 1 / 1;
+          width: 86%;
+          height: 86%;
           object-fit: contain;
-          background: rgba(255,255,255,0.05);
-          border-radius: 10px;
-          padding: 6px;
-          margin-bottom: 10px;
-          transition: 0.25s;
+          z-index: 2;
+          transition: 0.35s ease;
         }
 
         .product-card:hover .product-img {
-          transform: scale(1.05);
+          transform: scale(1.08) translateY(-3px);
+        }
+
+        .stock-badge {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          z-index: 4;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 700;
+          text-shadow: 0 0 3px rgba(0,0,0,0.5);
+          backdrop-filter: none;
+          border: 1px solid rgba(255,255,255,0.25);
+          background: rgba(0,0,0,0.65);
+        }
+
+        .stock-good {
+          background: rgba(50,220,140,0.18);
+          color: #68f0b0;
+        }
+
+        .stock-low {
+          background: rgba(255,190,50,0.18);
+          color: #ffd166;
+        }
+
+        .stock-out {
+          background: rgba(255,70,70,0.18);
+          color: #ff8585;
         }
 
         .product-name {
-          font-weight: 600;
-          margin-bottom: 4px;
-          color: white;
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 1.3;
+          margin: 4px 2px 7px;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .product-bottom {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          margin-top: auto;
+          padding: 0 2px 2px;
         }
 
         .product-price {
           color: #7feaff;
-          font-weight: 600;
+          font-size: 17px;
+          font-weight: 800;
+          text-shadow: 0 0 10px rgba(0,200,255,0.25);
         }
 
         .product-stock {
           color: #ffdd7f;
-          font-size: 14px;
+          font-size: 13px;
+          font-weight: 600;
           opacity: 0.9;
         }
 
-        .add-btn {
-          position: absolute;
-          bottom: 12px;
-          right: 12px;
-          padding: 6px 10px;
-          background: rgba(0,200,255,0.25);
-          border: 1px solid rgba(0,200,255,0.4);
-          border-radius: 10px;
-          cursor: pointer;
-          color: white;
-          font-size: 14px;
-          font-weight: 600;
+        .card-footer {
           display: flex;
           align-items: center;
-          gap: 4px;
+          justify-content: flex-end;
+          gap: 8px;
+          padding: 2px 2px 0;
+        }
+
+        .add-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 11px;
+          background: rgba(0,200,255,0.13);
+          border: 1px solid rgba(0,200,255,0.28);
+          color: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
           transition: 0.25s;
         }
 
         .add-btn:hover {
-          background: rgba(0,200,255,0.35);
+          background: rgba(0,200,255,0.28);
+          border-color: rgba(0,200,255,0.55);
           transform: scale(1.08);
+          box-shadow: 0 0 15px rgba(0,200,255,0.18);
+        }
+
+        .add-btn.disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .add-btn.disabled:hover {
+          transform: none;
+          box-shadow: none;
         }
 
         .cart-message {
@@ -1145,7 +1353,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
             padding: 12px;
           }
         }
-      `}),(0,N.jsxs)(`div`,{className:`topbar`,children:[(0,N.jsx)(`div`,{className:`app-name`,onClick:()=>e(`/`),children:`AntsShop`}),(0,N.jsx)(`input`,{className:`search-input`,placeholder:`Search products...`,onKeyDown:S}),t?(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{to:`/cart`,className:`icon-btn`,children:`🛒`}),(0,N.jsx)(M,{to:`/orders`,className:`icon-btn`,children:`📦`}),(0,N.jsx)(M,{to:`/profile`,className:`icon-btn`,children:`👤`})]}):(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{className:`nav-btn`,to:`/login`,children:`Login`}),(0,N.jsx)(M,{className:`nav-btn`,to:`/register`,children:`Register`})]})]}),d&&(0,N.jsx)(`div`,{className:`cart-message`,children:d}),l&&(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Search Results`}),s.length===0&&(0,N.jsx)(`div`,{style:{opacity:.7},children:`No products found.`}),(0,N.jsx)(`div`,{className:`product-grid`,children:s.map(e=>(0,N.jsxs)(`div`,{className:`product-card`,children:[(0,N.jsxs)(M,{to:`/product/${e.id}`,children:[(0,N.jsx)(`img`,{src:e.image_url,className:`product-img`}),(0,N.jsx)(`div`,{className:`product-name`,children:e.name}),(0,N.jsxs)(`div`,{className:`product-price`,children:[`$`,e.price]}),(0,N.jsxs)(`div`,{className:`product-stock`,children:[`Stock: `,e.stock]})]}),(0,N.jsx)(`div`,{className:`add-btn`,onClick:()=>w(e.id),children:`🛒 +`})]},e.id))}),(0,N.jsx)(`div`,{className:`clear-search`,onClick:C,children:`Clear Search`})]}),!l&&(0,N.jsxs)(N.Fragment,{children:[(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Categories`}),(0,N.jsx)(`div`,{className:`category-grid`,children:a.map(e=>(0,N.jsx)(M,{to:`/category/${e.id}`,className:`category-bubble`,children:e.name},e.id))})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Products`}),(0,N.jsx)(`div`,{className:`product-grid`,children:r.map(e=>(0,N.jsxs)(`div`,{className:`product-card`,children:[(0,N.jsxs)(M,{to:`/product/${e.id}`,children:[(0,N.jsx)(`img`,{src:e.image_url,className:`product-img`}),(0,N.jsx)(`div`,{className:`product-name`,children:e.name}),(0,N.jsxs)(`div`,{className:`product-price`,children:[`$`,e.price]}),(0,N.jsxs)(`div`,{className:`product-stock`,children:[`Stock: `,e.stock]})]}),(0,N.jsx)(`div`,{className:`add-btn`,onClick:()=>w(e.id),children:`🛒 +`})]},e.id))})]})]})]})}function ar(){let e=yt(),{user:t,loading:n,logout:r}=Xn(),[i,a]=(0,x.useState)(null),[o,s]=(0,x.useState)(!1),[c,l]=(0,x.useState)(!1);(0,x.useEffect)(()=>{!n&&!t&&e(`/login`,{replace:!0,state:{from:`/profile`}})},[n,t,e]);async function u(){l(!0),a(null),s(!1);try{await r(),e(`/`,{replace:!0})}catch(e){console.error(`Logout error:`,e),a(`Unable to log out properly. Please try again.`),l(!1)}}return n||!t?(0,N.jsxs)(`div`,{className:`profile-wrapper`,children:[(0,N.jsx)(`div`,{className:`loading`,children:`Loading profile...`}),(0,N.jsx)(`style`,{children:`
+      `}),(0,N.jsxs)(`div`,{className:`topbar`,children:[(0,N.jsx)(`div`,{className:`app-name`,onClick:()=>e(`/`),children:`AntsShop`}),(0,N.jsx)(`input`,{className:`search-input`,placeholder:`Search products...`,onKeyDown:S}),n?(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{to:`/cart`,className:`icon-btn`,children:`🛒`}),(0,N.jsx)(M,{to:`/orders`,className:`icon-btn`,children:`📦`}),(0,N.jsx)(M,{to:`/profile`,className:`icon-btn`,children:`👤`})]}):(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{className:`nav-btn`,to:`/login`,children:`Login`}),(0,N.jsx)(M,{className:`nav-btn`,to:`/register`,children:`Register`})]})]}),d&&(0,N.jsx)(`div`,{className:`cart-message`,children:d}),l&&(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsxs)(`div`,{className:`category-header`,children:[(0,N.jsxs)(`div`,{className:`title-wrapper`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Search Results`}),(0,N.jsx)(`div`,{className:`title-accent`})]}),(0,N.jsxs)(`div`,{className:`product-count`,children:[s.length,` `,s.length===1?`product`:`products`]})]}),s.length===0&&(0,N.jsx)(`div`,{style:{opacity:.7},children:`No products found.`}),(0,N.jsx)(`div`,{className:`product-grid`,children:s.map((e,t)=>(0,N.jsxs)(`div`,{className:`product-card`,style:{animationDelay:`${t*60}ms`},children:[(0,N.jsxs)(M,{to:`/product/${e.id}`,className:`product-link`,children:[(0,N.jsxs)(`div`,{className:`product-img-container`,children:[(0,N.jsx)(`div`,{className:`product-img-glow`}),(0,N.jsx)(`div`,{className:`stock-badge`,children:e.stock<=0?`Out of stock`:e.stock<=5?`Only ${e.stock} left`:`In stock`}),(0,N.jsx)(`img`,{src:e.image_url||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%232f2c2f'/%3E%3Ctext x='50%25' y='50%25' font-size='42' fill='%23fff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E`,alt:e.name,className:`product-img`})]}),(0,N.jsx)(`div`,{className:`product-bottom`,children:(0,N.jsxs)(`div`,{className:`product-price`,children:[`$`,Number(e.price).toFixed(2)]})}),(0,N.jsx)(`div`,{className:`product-name`,children:e.name})]}),(0,N.jsxs)(`div`,{className:`card-footer`,children:[(0,N.jsxs)(`div`,{className:`product-stock`,children:[`Stock: `,e.stock]}),(0,N.jsx)(`button`,{type:`button`,className:`add-btn ${e.stock<=0?`disabled`:``}`,disabled:e.stock<=0,onClick:t=>{t.preventDefault(),t.stopPropagation(),w(e.id)},title:e.stock<=0?`Out of stock`:`Add to cart`,children:`🛒`})]})]},e.id))}),(0,N.jsx)(`div`,{className:`clear-search`,onClick:C,children:`Clear Search`})]}),!l&&(0,N.jsxs)(N.Fragment,{children:[(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`section-title`,children:`Categories`}),(0,N.jsx)(`div`,{className:`category-grid`,children:a.map(e=>(0,N.jsx)(M,{to:`/category/${e.id}`,className:`category-bubble`,children:e.name},e.id))})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsxs)(`div`,{className:`category-header`,children:[(0,N.jsx)(`div`,{className:`title-wrapper`,children:(0,N.jsx)(`div`,{className:`section-title`,children:`Products`})}),(0,N.jsxs)(`div`,{className:`product-count`,children:[r.length,` `,r.length===1?`product`:`products`]})]}),(0,N.jsx)(`div`,{className:`product-grid`,children:r.map((e,t)=>(0,N.jsxs)(`div`,{className:`product-card`,style:{animationDelay:`${t*60}ms`},children:[(0,N.jsxs)(M,{to:`/product/${e.id}`,className:`product-link`,children:[(0,N.jsxs)(`div`,{className:`product-img-container`,children:[(0,N.jsx)(`div`,{className:`product-img-glow`}),(0,N.jsx)(`div`,{className:`stock-badge`,children:e.stock<=0?`Out of stock`:e.stock<=5?`Only ${e.stock} left`:`In stock`}),(0,N.jsx)(`img`,{src:e.image_url||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%232f2c2f'/%3E%3Ctext x='50%25' y='50%25' font-size='42' fill='%23fff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E`,alt:e.name,className:`product-img`})]}),(0,N.jsx)(`div`,{className:`product-bottom`,children:(0,N.jsxs)(`div`,{className:`product-price`,children:[`$`,Number(e.price).toFixed(2)]})}),(0,N.jsx)(`div`,{className:`product-name`,children:e.name})]}),(0,N.jsxs)(`div`,{className:`card-footer`,children:[(0,N.jsxs)(`div`,{className:`product-stock`,children:[`Stock: `,e.stock]}),(0,N.jsx)(`button`,{type:`button`,className:`add-btn ${e.stock<=0?`disabled`:``}`,disabled:e.stock<=0,onClick:t=>{t.preventDefault(),t.stopPropagation(),w(e.id)},title:e.stock<=0?`Out of stock`:`Add to cart`,children:`🛒`})]})]},e.id))})]})]})]})}function ar(){let e=yt(),{user:t,loading:n,logout:r}=Xn(),[i,a]=(0,x.useState)(null),[o,s]=(0,x.useState)(!1),[c,l]=(0,x.useState)(!1);(0,x.useEffect)(()=>{!n&&!t&&e(`/login`,{replace:!0,state:{from:`/profile`}})},[n,t,e]);async function u(){l(!0),a(null),s(!1);try{await r(),e(`/`,{replace:!0})}catch(e){console.error(`Logout error:`,e),a(`Unable to log out properly. Please try again.`),l(!1)}}return n||!t?(0,N.jsxs)(`div`,{className:`profile-wrapper`,children:[(0,N.jsx)(`div`,{className:`loading`,children:`Loading profile...`}),(0,N.jsx)(`style`,{children:`
           .profile-wrapper {
             min-height: 100vh;
             background: linear-gradient(135deg, #050505, #0a0f1a);
@@ -2141,7 +2349,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           .glass {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(0,200,255,0.25);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 35px;
             text-align: center;
@@ -2163,7 +2371,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           .error-screen {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(255,180,0,0.35);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 45px;
             max-width: 550px;
@@ -2221,7 +2429,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           .error-screen {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(255,80,80,0.35);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 45px;
             max-width: 550px;
@@ -2279,7 +2487,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           .glass {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(0,200,255,0.25);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 35px;
             text-align: center;
@@ -2306,42 +2514,14 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           min-height: 100vh;
           position: relative;
           overflow: hidden;
-          background:
-            radial-gradient(circle at 10% 20%, rgba(0,200,255,0.10), transparent 30%),
-            radial-gradient(circle at 90% 80%, rgba(0,100,255,0.10), transparent 30%),
-            linear-gradient(135deg, #030405, #080d16 50%, #04070c);
+          background: linear-gradient(135deg, #050505, #0a0f1a);
           color: #e8e8ff;
           font-family: Inter, Arial, sans-serif;
           padding: 35px 40px 60px;
           animation: pageFade 0.6s ease;
         }
 
-        .category-wrapper::before {
-          content: "";
-          position: absolute;
-          width: 500px;
-          height: 500px;
-          border-radius: 50%;
-          background: rgba(0,200,255,0.07);
-          filter: blur(100px);
-          top: -250px;
-          left: -200px;
-          pointer-events: none;
-        }
-
-        .category-wrapper::after {
-          content: "";
-          position: absolute;
-          width: 450px;
-          height: 450px;
-          border-radius: 50%;
-          background: rgba(0,110,255,0.06);
-          filter: blur(100px);
-          bottom: -250px;
-          right: -200px;
-          pointer-events: none;
-        }
-
+        
         @keyframes pageFade {
           from {
             opacity: 0;
@@ -2393,7 +2573,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           font-weight: 600;
           text-decoration: none;
           transition: 0.25s;
-          backdrop-filter: blur(10px);
+          backdrop-filter: none;
         }
 
         .nav-btn:hover {
@@ -2416,7 +2596,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           transition: 0.25s;
           text-decoration: none;
           color: white;
-          backdrop-filter: blur(10px);
+          backdrop-filter: none;
         }
 
         .icon-btn:hover {
@@ -2430,8 +2610,8 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           z-index: 2;
           background: rgba(9,13,23,0.70);
           border: 1px solid rgba(0,200,255,0.20);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
           border-radius: 24px;
           padding: 32px;
           max-width: 1250px;
@@ -2461,14 +2641,6 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           letter-spacing: -1px;
           color: #ffffff;
           margin: 0;
-        }
-
-        .title-accent {
-          width: 65px;
-          height: 4px;
-          border-radius: 20px;
-          background: #00c8ff;
-          box-shadow: 0 0 15px rgba(0,200,255,0.7);
         }
 
         .product-count {
@@ -2508,32 +2680,12 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           flex-direction: column;
         }
 
-        .product-card::before {
-          content: "";
-          position: absolute;
-          top: -80px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 180px;
-          height: 180px;
-          border-radius: 50%;
-          background: rgba(0,200,255,0.08);
-          filter: blur(45px);
-          opacity: 0;
-          transition: 0.3s;
-          pointer-events: none;
-        }
-
         .product-card:hover {
           transform: translateY(-8px);
           border-color: rgba(0,200,255,0.42);
           box-shadow:
             0 18px 40px rgba(0,0,0,0.35),
             0 0 25px rgba(0,200,255,0.10);
-        }
-
-        .product-card:hover::before {
-          opacity: 1;
         }
 
         @keyframes cardIn {
@@ -2579,7 +2731,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
             rgba(0,200,255,0.04) 65%,
             transparent 100%
           );
-          filter: blur(14px);
+          filter: none;
           animation: ripple 4s infinite ease-in-out;
         }
 
@@ -2609,30 +2761,17 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
 
         .stock-badge {
           position: absolute;
-          top: 10px;
-          left: 10px;
+          top: 12px;
+          left: 12px;
           z-index: 4;
-          padding: 5px 8px;
-          border-radius: 8px;
+          padding: 4px 10px;
+          border-radius: 6px;
           font-size: 11px;
           font-weight: 700;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255,255,255,0.12);
-        }
-
-        .stock-good {
-          background: rgba(50,220,140,0.12);
-          color: #68f0b0;
-        }
-
-        .stock-low {
-          background: rgba(255,190,50,0.13);
-          color: #ffd166;
-        }
-
-        .stock-out {
-          background: rgba(255,70,70,0.13);
-          color: #ff8585;
+          text-shadow: 0 0 3px rgba(0,0,0,0.5);
+          backdrop-filter: none;
+          border: 1px solid rgba(255,255,255,0.25);
+          background: rgba(0,0,0,0.65);
         }
 
         .product-name {
@@ -2660,6 +2799,21 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           font-size: 17px;
           font-weight: 800;
           text-shadow: 0 0 10px rgba(0,200,255,0.25);
+        }
+
+        .product-stock {
+          color: #ffdd7f;
+          font-size: 13px;
+          font-weight: 600;
+          opacity: 0.9;
+        }
+
+        .card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+          padding: 2px 2px 0;
         }
 
         .add-btn {
@@ -2707,7 +2861,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           color: #7feaff;
           font-weight: 700;
           box-shadow: 0 10px 35px rgba(0,0,0,0.35);
-          backdrop-filter: blur(15px);
+          backdrop-filter: none;
           animation: messageIn 0.3s ease;
         }
 
@@ -2796,7 +2950,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
             padding: 16px;
           }
         }
-      `}),(0,N.jsxs)(`div`,{className:`topbar`,children:[(0,N.jsx)(`div`,{className:`app-name`,onClick:()=>t(`/`),children:`AntsShop`}),(0,N.jsx)(`div`,{className:`topbar-right`,children:n?(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{to:`/cart`,className:`icon-btn`,children:`🛒`}),(0,N.jsx)(M,{to:`/orders`,className:`icon-btn`,children:`📦`}),(0,N.jsx)(M,{to:`/profile`,className:`icon-btn`,children:`👤`})]}):(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{className:`nav-btn`,to:`/login`,children:`Login`}),(0,N.jsx)(M,{className:`nav-btn`,to:`/register`,children:`Register`})]})})]}),u&&(0,N.jsx)(`div`,{className:`cart-message`,children:u}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsxs)(`div`,{className:`category-header`,children:[(0,N.jsxs)(`div`,{className:`title-wrapper`,children:[(0,N.jsx)(`h1`,{className:`title`,children:o}),(0,N.jsx)(`div`,{className:`title-accent`})]}),(0,N.jsxs)(`div`,{className:`product-count`,children:[i.length,` `,i.length===1?`product`:`products`]})]}),(0,N.jsx)(`div`,{className:`product-grid`,children:i.map((e,t)=>{let n=e.stock<=0?`stock-out`:e.stock<=5?`stock-low`:`stock-good`,r=e.stock<=0?`Out of stock`:e.stock<=5?`Only ${e.stock} left`:`In stock`;return(0,N.jsxs)(`div`,{className:`product-card`,style:{animationDelay:`${t*60}ms`},children:[(0,N.jsxs)(M,{to:`/product/${e.id}`,className:`product-link`,children:[(0,N.jsxs)(`div`,{className:`product-img-container`,children:[(0,N.jsx)(`div`,{className:`product-img-glow`}),(0,N.jsx)(`div`,{className:`stock-badge ${n}`,children:r}),(0,N.jsx)(`img`,{src:e.image_url||`data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2NjY2NjYyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjUwIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=`,alt:e.name,className:`product-img`})]}),(0,N.jsx)(`div`,{className:`product-name`,children:e.name}),(0,N.jsx)(`div`,{className:`product-bottom`,children:(0,N.jsxs)(`div`,{className:`product-price`,children:[`$`,Number(e.price).toFixed(2)]})})]}),(0,N.jsxs)(`div`,{className:`product-bottom`,children:[(0,N.jsx)(`div`,{}),(0,N.jsx)(`button`,{type:`button`,className:`add-btn ${e.stock<=0?`disabled`:``}`,disabled:e.stock<=0,onClick:t=>{t.preventDefault(),t.stopPropagation(),b(e.id,e.stock)},title:e.stock<=0?`Out of stock`:`Add to cart`,children:`🛒`})]})]},e.id)})}),(0,N.jsx)(M,{className:`back-btn`,to:`/`,children:`← Back to Store`})]})]}):(0,N.jsxs)(`div`,{className:`category-wrapper`,children:[(0,N.jsx)(`style`,{children:`
+      `}),(0,N.jsxs)(`div`,{className:`topbar`,children:[(0,N.jsx)(`div`,{className:`app-name`,onClick:()=>t(`/`),children:`AntsShop`}),(0,N.jsx)(`div`,{className:`topbar-right`,children:n?(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{to:`/cart`,className:`icon-btn`,children:`🛒`}),(0,N.jsx)(M,{to:`/orders`,className:`icon-btn`,children:`📦`}),(0,N.jsx)(M,{to:`/profile`,className:`icon-btn`,children:`👤`})]}):(0,N.jsxs)(N.Fragment,{children:[(0,N.jsx)(M,{className:`nav-btn`,to:`/login`,children:`Login`}),(0,N.jsx)(M,{className:`nav-btn`,to:`/register`,children:`Register`})]})})]}),u&&(0,N.jsx)(`div`,{className:`cart-message`,children:u}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsxs)(`div`,{className:`category-header`,children:[(0,N.jsx)(`div`,{className:`title-wrapper`,children:(0,N.jsx)(`h1`,{className:`title`,children:o})}),(0,N.jsxs)(`div`,{className:`product-count`,children:[i.length,` `,i.length===1?`product`:`products`]})]}),(0,N.jsx)(`div`,{className:`product-grid`,children:i.map((e,t)=>{let n=e.stock<=0?`Out of stock`:e.stock<=5?`Only ${e.stock} left`:`In stock`;return(0,N.jsxs)(`div`,{className:`product-card`,style:{animationDelay:`${t*60}ms`},children:[(0,N.jsx)(M,{to:`/product/${e.id}`,className:`product-link`,children:(0,N.jsxs)(`div`,{className:`product-img-container`,children:[(0,N.jsx)(`div`,{className:`product-img-glow`}),(0,N.jsx)(`div`,{className:`stock-badge`,children:n}),(0,N.jsx)(`img`,{src:e.image_url||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%232f2c2f'/%3E%3Ctext x='50%25' y='50%25' font-size='42' fill='%23fff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E`,alt:e.name,className:`product-img`})]})}),(0,N.jsx)(`div`,{className:`product-name`,children:e.name}),(0,N.jsx)(`div`,{className:`product-bottom`,children:(0,N.jsxs)(`div`,{className:`product-price`,children:[`$`,Number(e.price).toFixed(2)]})}),(0,N.jsxs)(`div`,{className:`card-footer`,children:[(0,N.jsxs)(`div`,{className:`product-stock`,children:[`Stock: `,e.stock]}),(0,N.jsx)(`button`,{type:`button`,className:`add-btn ${e.stock<=0?`disabled`:``}`,disabled:e.stock<=0,onClick:t=>{t.preventDefault(),t.stopPropagation(),b(e.id,e.stock)},title:e.stock<=0?`Out of stock`:`Add to cart`,children:`🛒`})]})]},e.id)})}),(0,N.jsx)(M,{className:`back-btn`,to:`/`,children:`← Back to Store`})]})]}):(0,N.jsxs)(`div`,{className:`category-wrapper`,children:[(0,N.jsx)(`style`,{children:`
           .category-wrapper {
             min-height: 100vh;
             background: linear-gradient(135deg, #050505, #0a0f1a);
@@ -2810,7 +2964,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           .glass {
             background: rgba(15,15,30,0.75);
             border: 1px solid rgba(0,200,255,0.25);
-            backdrop-filter: blur(25px);
+            backdrop-filter: none;
             border-radius: 20px;
             padding: 35px;
             text-align: center;
@@ -2826,7 +2980,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
             text-decoration: none;
             display: inline-block;
           }
-        `}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`h2`,{children:`No products found in this category`}),(0,N.jsx)(M,{to:`/`,className:`back-btn`,children:`← Back to Store`})]})]})}function dr(){return(0,x.useEffect)(()=>{let e=new URLSearchParams(window.location.search).get(`token`);e&&fetch(`http://localhost:8000/payment/success?token=${e}`,{credentials:`include`}).then(()=>{window.location.href=`/orders`})},[]),(0,N.jsxs)(`div`,{className:`success-wrapper`,children:[(0,N.jsx)(`style`,{children:`
+        `}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`h2`,{children:`No products found in this category`}),(0,N.jsx)(M,{to:`/`,className:`back-btn`,children:`← Back to Store`})]})]})}function dr(){let[e,t]=(0,x.useState)(`processing`),[n,r]=(0,x.useState)(`Confirming your payment…`);return(0,x.useEffect)(()=>{let e=new URLSearchParams(window.location.search).get(`token`);if(!e){t(`error`),r(`PayPal did not return a payment token.`);return}let n=new AbortController,i=window.setTimeout(()=>n.abort(),3e4),a=!1;return(async()=>{try{let i=await fetch(`/api/payment/success?token=${encodeURIComponent(e)}`,{method:`GET`,credentials:`include`,signal:n.signal});if(a)return;if(i.ok){window.location.replace(`/orders`);return}if(i.status===401){t(`error`),r(`Your session expired before the payment could be confirmed. Please log in and check your orders.`);return}let o=`Could not confirm the payment (HTTP ${i.status}).`;try{let e=await i.json();e?.detail&&(o=String(e.detail))}catch{}t(`error`),r(o)}catch(e){if(a)return;console.error(`[Payment] capture failed:`,e),t(`error`),r(e instanceof DOMException&&e.name===`AbortError`?`The server took too long to confirm the payment. Check your orders before retrying.`:`Could not reach the server to confirm the payment.`)}finally{window.clearTimeout(i)}})(),()=>{a=!0,window.clearTimeout(i),n.abort()}},[]),(0,N.jsxs)(`div`,{className:`success-wrapper`,children:[(0,N.jsx)(`style`,{children:`
         .success-wrapper {
           min-height: 100vh;
           display: flex;
@@ -2841,6 +2995,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
         .loader-container {
           text-align: center;
           animation: fadeIn 0.6s ease;
+          padding: 32px;
         }
 
         .ring {
@@ -2873,6 +3028,62 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           animation: glow 1.5s ease-in-out infinite;
         }
 
+        .error-icon {
+          margin: 0 auto;
+          width: 90px;
+          height: 90px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 48px;
+          border: 4px solid rgba(255,110,110,0.6);
+          color: #ff6e6e;
+          box-shadow: 0 0 25px rgba(255,110,110,0.35);
+        }
+
+        .error-title {
+          margin: 22px 0 10px;
+          font-size: 24px;
+          font-weight: 700;
+        }
+
+        .error-message {
+          max-width: 460px;
+          margin: 0 auto;
+          line-height: 1.6;
+          color: rgba(255,255,255,0.75);
+        }
+
+        .actions {
+          margin-top: 26px;
+          display: flex;
+          gap: 14px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .btn {
+          padding: 12px 22px;
+          border-radius: 10px;
+          border: 1px solid rgba(77,255,138,0.5);
+          background: rgba(77,255,138,0.12);
+          color: #4dff8a;
+          text-decoration: none;
+          font-weight: 600;
+          transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+          background: rgba(77,255,138,0.22);
+        }
+
+        .btn.secondary {
+          border-color: rgba(255,255,255,0.25);
+          background: rgba(255,255,255,0.06);
+          color: white;
+        }
+
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
@@ -2893,7 +3104,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-      `}),(0,N.jsxs)(`div`,{className:`loader-container`,children:[(0,N.jsx)(`div`,{className:`ring`}),(0,N.jsx)(`div`,{className:`pulse`}),(0,N.jsx)(`div`,{className:`loading-text`,children:`Processing Payment...`})]})]})}function fr(){let[e,t]=(0,x.useState)(`loading`);return(0,x.useEffect)(()=>{let e=new URLSearchParams(window.location.search).get(`paymentId`);if(!e){t(`error`);return}fetch(`http://localhost:8000/payment/cancel`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({payment_id:Number(e)})}).then(()=>t(`cancelled`)).catch(()=>t(`error`))},[]),e===`loading`?(0,N.jsxs)(`div`,{className:`cancel-container`,children:[(0,N.jsx)(`div`,{className:`spinner`}),(0,N.jsx)(`p`,{children:`Processing cancellation…`})]}):e===`cancelled`?(0,N.jsxs)(`div`,{className:`cancel-container`,children:[(0,N.jsx)(`h1`,{children:`Payment Cancelled`}),(0,N.jsx)(`p`,{children:`Your payment was not completed.`}),(0,N.jsx)(`a`,{href:`/cart`,className:`btn`,children:`Return to Cart`})]}):(0,N.jsxs)(`div`,{className:`cancel-container`,children:[(0,N.jsx)(`h1`,{children:`Error`}),(0,N.jsx)(`p`,{children:`Something went wrong.`})]})}function pr(){let e=yt(),{user:t,loading:n}=Xn();return(0,x.useEffect)(()=>{if(!n){if(!t){e(`/login`,{replace:!0,state:{from:`/admin`}});return}t.is_admin||e(`/`,{replace:!0})}},[n,t,e]),n?(0,N.jsxs)(`div`,{className:`admin-wrapper`,children:[(0,N.jsx)(`style`,{children:`
+      `}),e===`processing`?(0,N.jsxs)(`div`,{className:`loader-container`,children:[(0,N.jsx)(`div`,{className:`ring`}),(0,N.jsx)(`div`,{className:`pulse`}),(0,N.jsx)(`div`,{className:`loading-text`,children:`Processing Payment...`})]}):(0,N.jsxs)(`div`,{className:`loader-container`,children:[(0,N.jsx)(`div`,{className:`error-icon`,children:`!`}),(0,N.jsx)(`h1`,{className:`error-title`,children:`Payment not confirmed`}),(0,N.jsx)(`p`,{className:`error-message`,children:n}),(0,N.jsxs)(`div`,{className:`actions`,children:[(0,N.jsx)(`a`,{className:`btn`,href:`/orders`,children:`View my orders`}),(0,N.jsx)(`a`,{className:`btn secondary`,href:`/cart`,children:`Back to cart`})]})]})]})}function fr(){let[e,t]=(0,x.useState)(`loading`);return(0,x.useEffect)(()=>{let e=new URLSearchParams(window.location.search).get(`paymentId`);if(!e){t(`cancelled`);return}fetch(`/api/payment/cancel?payment_id=${encodeURIComponent(e)}`,{method:`POST`,credentials:`include`}).then(e=>t(e.ok?`cancelled`:`error`)).catch(()=>t(`error`))},[]),e===`loading`?(0,N.jsxs)(`div`,{className:`cancel-container`,children:[(0,N.jsx)(`div`,{className:`spinner`}),(0,N.jsx)(`p`,{children:`Processing cancellation…`})]}):e===`cancelled`?(0,N.jsxs)(`div`,{className:`cancel-container`,children:[(0,N.jsx)(`h1`,{children:`Payment Cancelled`}),(0,N.jsx)(`p`,{children:`Your payment was not completed.`}),(0,N.jsx)(`a`,{href:`/cart`,className:`btn`,children:`Return to Cart`})]}):(0,N.jsxs)(`div`,{className:`cancel-container`,children:[(0,N.jsx)(`h1`,{children:`Error`}),(0,N.jsx)(`p`,{children:`Something went wrong.`})]})}function pr(){let e=yt(),{user:t,loading:n}=Xn();return(0,x.useEffect)(()=>{if(!n){if(!t){e(`/login`,{replace:!0,state:{from:`/admin`}});return}t.is_admin||e(`/`,{replace:!0})}},[n,t,e]),n?(0,N.jsxs)(`div`,{className:`admin-wrapper`,children:[(0,N.jsx)(`style`,{children:`
           .admin-wrapper {
             min-height: 100vh;
             background: linear-gradient(135deg, #050505, #0a0f1a);
@@ -3262,7 +3473,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           margin-bottom: 20px;
           font-weight: 600;
         }
-      `}),r&&(0,N.jsx)(`div`,{className:`error-box`,children:r}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Create Category`}),(0,N.jsxs)(`form`,{onSubmit:_,children:[(0,N.jsx)(`input`,{className:`input ${a.includes(`name`)?`invalid`:``}`,placeholder:`Name`,value:s.name,onChange:e=>c({...s,name:e.target.value})}),(0,N.jsx)(`input`,{className:`input ${a.includes(`parent_id`)?`invalid`:``}`,placeholder:`Parent ID (optional)`,value:s.parent_id,onChange:e=>c({...s,parent_id:e.target.value})}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,children:`Create Category`})]})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Update Category`}),(0,N.jsxs)(`form`,{onSubmit:v,children:[(0,N.jsx)(`input`,{className:`input ${a.includes(`category_id`)?`invalid`:``}`,placeholder:`Category ID`,value:l.category_id,onChange:e=>u({...l,category_id:e.target.value})}),(0,N.jsx)(`input`,{className:`input`,placeholder:`New Name (optional)`,value:l.name,onChange:e=>u({...l,name:e.target.value})}),(0,N.jsx)(`input`,{className:`input ${a.includes(`parent_id`)?`invalid`:``}`,placeholder:`New Parent ID (optional)`,value:l.parent_id,onChange:e=>u({...l,parent_id:e.target.value})}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,children:`Update Category`})]})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Delete Category`}),(0,N.jsxs)(`form`,{onSubmit:y,children:[(0,N.jsx)(`input`,{className:`input ${a.includes(`deleteId`)?`invalid`:``}`,placeholder:`Category ID`,value:d,onChange:e=>f(e.target.value)}),(0,N.jsx)(`button`,{className:`btn delete-btn`,type:`submit`,children:`Delete Category`})]})]}),(0,N.jsx)(`button`,{className:`back-btn`,onClick:()=>e(`/admin`),children:`← Back to Admin Dashboard`})]})}function _r(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function vr(){let e=yt(),{user:t,loading:n}=Xn(),[r,i]=(0,x.useState)(``),[a,o]=(0,x.useState)([]),[s,c]=(0,x.useState)({order_id:``,status:``,shipping_address:``,delivery_method:``}),[l,u]=(0,x.useState)(``);(0,x.useEffect)(()=>{if(!n){if(!t){e(`/login`,{replace:!0,state:{from:`/admin/orders`}});return}t.is_admin||e(`/`,{replace:!0})}},[n,t,e]);function d(){let e=[];return(!s.order_id.trim()||isNaN(parseInt(s.order_id)))&&e.push(`order_id`),e.length>0?(o(e),`Order ID is required.`):(o([]),null)}function f(){let e=[];return(!l.trim()||isNaN(parseInt(l)))&&e.push(`deleteId`),e.length>0?(o(e),`Order ID is required.`):(o([]),null)}async function p(t){t.preventDefault(),i(``);let n=d();if(n){i(n);return}try{let t=await fetch(`/api/admin/order/${s.order_id}`,{method:`PUT`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify({status:s.status||null,shipping_address:s.shipping_address||null,delivery_method:s.delivery_method||null})}),n={};try{n=await t.json()}catch{n={}}if(t.status===401){e(`/login`,{replace:!0,state:{from:`/admin/orders`}});return}if(t.status===403){i(`You do not have permission to update orders.`);return}if(t.status===429){i(_r(n,`Too many requests. Please wait a moment and try again.`));return}if(!t.ok){i(_r(n,`Failed to update order.`));return}i(`Order updated!`),o([])}catch(e){console.error(`Update order error:`,e),i(e?.message||`Unable to connect to the server.`)}}async function m(t){t.preventDefault(),i(``);let n=f();if(n){i(n);return}try{let t=await fetch(`/api/admin/order/${l}`,{method:`DELETE`,credentials:`include`}),n={};try{n=await t.json()}catch{n={}}if(t.status===401){e(`/login`,{replace:!0,state:{from:`/admin/orders`}});return}if(t.status===403){i(`You do not have permission to delete orders.`);return}if(t.status===429){i(_r(n,`Too many requests. Please wait a moment and try again.`));return}if(!t.ok){i(_r(n,`Failed to delete order.`));return}i(`Order deleted!`),o([]),u(``)}catch(e){console.error(`Delete order error:`,e),i(e?.message||`Unable to connect to the server.`)}}return n?(0,N.jsxs)(`div`,{className:`admin-wrapper`,children:[(0,N.jsx)(`div`,{className:`loading`,children:`Checking admin...`}),(0,N.jsx)(`style`,{children:`
+      `}),r&&(0,N.jsx)(`div`,{className:`error-box`,children:r}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Create Category`}),(0,N.jsxs)(`form`,{onSubmit:_,children:[(0,N.jsx)(`input`,{className:`input ${a.includes(`name`)?`invalid`:``}`,placeholder:`Name`,value:s.name,onChange:e=>c({...s,name:e.target.value})}),(0,N.jsx)(`input`,{className:`input ${a.includes(`parent_id`)?`invalid`:``}`,placeholder:`Parent ID (optional)`,value:s.parent_id,onChange:e=>c({...s,parent_id:e.target.value})}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,children:`Create Category`})]})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Update Category`}),(0,N.jsxs)(`form`,{onSubmit:v,children:[(0,N.jsx)(`input`,{className:`input ${a.includes(`category_id`)?`invalid`:``}`,placeholder:`Category ID`,value:l.category_id,onChange:e=>u({...l,category_id:e.target.value})}),(0,N.jsx)(`input`,{className:`input`,placeholder:`New Name (optional)`,value:l.name,onChange:e=>u({...l,name:e.target.value})}),(0,N.jsx)(`input`,{className:`input ${a.includes(`parent_id`)?`invalid`:``}`,placeholder:`New Parent ID (optional)`,value:l.parent_id,onChange:e=>u({...l,parent_id:e.target.value})}),(0,N.jsx)(`button`,{className:`btn`,type:`submit`,children:`Update Category`})]})]}),(0,N.jsxs)(`div`,{className:`glass`,children:[(0,N.jsx)(`div`,{className:`title`,children:`Delete Category`}),(0,N.jsxs)(`form`,{onSubmit:y,children:[(0,N.jsx)(`input`,{className:`input ${a.includes(`deleteId`)?`invalid`:``}`,placeholder:`Category ID`,value:d,onChange:e=>f(e.target.value)}),(0,N.jsx)(`button`,{className:`btn delete-btn`,type:`submit`,children:`Delete Category`})]})]}),(0,N.jsx)(`button`,{className:`back-btn`,onClick:()=>e(`/admin`),children:`← Back to Admin Dashboard`})]})}function _r(e,t){return typeof e?.detail==`string`?e.detail:typeof e?.message==`string`?e.message:typeof e?.error==`string`?e.error:t}function vr(){let e=yt(),{user:t,loading:n}=Xn(),[r,i]=(0,x.useState)(``),[a,o]=(0,x.useState)([]),[s,c]=(0,x.useState)({order_id:``,status:``,shipping_address:``,delivery_method:``}),[l,u]=(0,x.useState)(``);(0,x.useEffect)(()=>{if(!n){if(!t){e(`/login`,{replace:!0,state:{from:`/admin/orders`}});return}t.is_admin||e(`/`,{replace:!0})}},[n,t,e]);function d(){let e=[];return(!s.order_id.trim()||isNaN(parseInt(s.order_id)))&&e.push(`order_id`),e.length>0?(o(e),`Order ID is required.`):!s.status.trim()&&!s.shipping_address.trim()&&!s.delivery_method.trim()?(o([]),`Choose at least one field to update.`):(o([]),null)}function f(){let e=[];return(!l.trim()||isNaN(parseInt(l)))&&e.push(`deleteId`),e.length>0?(o(e),`Order ID is required.`):(o([]),null)}async function p(t){t.preventDefault(),i(``);let n=d();if(n){i(n);return}try{let t={};s.status.trim()&&(t.status=s.status.trim()),s.shipping_address.trim()&&(t.shipping_address=s.shipping_address.trim()),s.delivery_method.trim()&&(t.delivery_method=s.delivery_method.trim());let n=await fetch(`/api/admin/order/${s.order_id}`,{method:`PUT`,credentials:`include`,headers:{"Content-Type":`application/json`},body:JSON.stringify(t)}),r={};try{r=await n.json()}catch{r={}}if(n.status===401){e(`/login`,{replace:!0,state:{from:`/admin/orders`}});return}if(n.status===403){i(`You do not have permission to update orders.`);return}if(n.status===429){i(_r(r,`Too many requests. Please wait a moment and try again.`));return}if(!n.ok){i(_r(r,`Failed to update order.`));return}i(`Order updated!`),o([])}catch(e){console.error(`Update order error:`,e),i(e?.message||`Unable to connect to the server.`)}}async function m(t){t.preventDefault(),i(``);let n=f();if(n){i(n);return}try{let t=await fetch(`/api/admin/order/${l}`,{method:`DELETE`,credentials:`include`}),n={};try{n=await t.json()}catch{n={}}if(t.status===401){e(`/login`,{replace:!0,state:{from:`/admin/orders`}});return}if(t.status===403){i(`You do not have permission to delete orders.`);return}if(t.status===429){i(_r(n,`Too many requests. Please wait a moment and try again.`));return}if(!t.ok){i(_r(n,`Failed to delete order.`));return}i(`Order deleted!`),o([]),u(``)}catch(e){console.error(`Delete order error:`,e),i(e?.message||`Unable to connect to the server.`)}}return n?(0,N.jsxs)(`div`,{className:`admin-wrapper`,children:[(0,N.jsx)(`div`,{className:`loading`,children:`Checking admin...`}),(0,N.jsx)(`style`,{children:`
           .admin-wrapper {
             min-height: 100vh;
             background: linear-gradient(135deg, #050505, #0a0f1a);

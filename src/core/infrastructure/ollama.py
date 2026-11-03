@@ -1,4 +1,3 @@
-import os
 import ollama
 from core.config.settings import settings
 

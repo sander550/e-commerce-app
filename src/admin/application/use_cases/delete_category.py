@@ -1,6 +1,3 @@
-from catalog.domain.entities.category import Category
-
-
 class DeleteCategoryUseCase:
     def __init__(self, category_repo):
         self.category_repo = category_repo

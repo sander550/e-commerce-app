@@ -9,7 +9,6 @@ from cart.application.use_cases.remove_cart_item import RemoveCartItemUseCase
 from cart.application.use_cases.update_cart_item_quantity import UpdateCartItemQuantityUseCase
 
 from cart.domain.entities.cart import Cart, CartItem
-from cart.domain.entities.cart_totals import CartTotals
 
 
 # ---------------------------------------------------------

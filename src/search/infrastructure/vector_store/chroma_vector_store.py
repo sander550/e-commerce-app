@@ -28,7 +28,7 @@ class ChromaVectorStore:
                 query_embeddings=[embedding],
                 n_results=limit
             )
-        except Exception as e:
+        except Exception:
             return []
 
         if "ids" not in results or not results["ids"]:
@@ -36,7 +36,7 @@ class ChromaVectorStore:
 
         try:
             ids = [int(x) for x in results["ids"][0]]
-        except Exception as e:
+        except Exception:
             return []
         return ids
 

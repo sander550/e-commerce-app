@@ -3,7 +3,6 @@ from auth.infrastructure.repositories.user_repo_impl import UserRepository
 from auth.infrastructure.repositories.token_repo_impl import TokenRepository
 
 from auth.domain.entities.user import User
-from auth.domain.entities.refresh_token import RefreshToken
 
 from auth.infrastructure.helpers.token_hash import hash_token
 from auth.infrastructure.helpers.refresh_token_generator import generate_refresh_token
@@ -96,7 +95,7 @@ async def test_token_create_and_get(db_session):
     token_entity.token = hashed
 
     # 3. Store hashed token
-    created = await repo.create(token_entity)
+    await repo.create(token_entity)
 
     # 4. Fetch using raw token
     fetched = await repo.get_by_token(raw)
@@ -127,11 +126,11 @@ async def test_token_delete_all_for_user(db_session):
 
     t1_raw = generate_refresh_token(user_id=5)
     t1_raw.token = hash_token(t1_raw.token)
-    t1 = await repo.create(t1_raw)
+    await repo.create(t1_raw)
 
     t2_raw = generate_refresh_token(user_id=5)
     t2_raw.token = hash_token(t2_raw.token)
-    t2 = await repo.create(t2_raw)
+    await repo.create(t2_raw)
 
     await repo.delete_all_for_user(5)
 

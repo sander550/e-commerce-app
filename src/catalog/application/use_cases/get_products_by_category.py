@@ -1,6 +1,5 @@
 from typing import List
 from catalog.domain.entities.product import Product
-from catalog.domain.entities.category import Category
 from catalog.domain.interfaces.product_repo import IProductRepository
 from catalog.domain.interfaces.category_repo import ICategoryRepository
 

@@ -2,12 +2,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 @dataclass
-class CategoryRequestDTO:
-    name: str
-    parent_id: Optional[int]
-
-
-@dataclass
 class CategoryResponseDTO:
     id: int
     name: str
@@ -21,15 +15,6 @@ class CategoryResponseDTO:
             parent_id=category.parent_id
         )
 
-
-
-@dataclass
-class ProductRequestDTO:
-    name: str
-    description: Optional[str]
-    price: float
-    category_id: int
-    image_url: Optional[str]
 
 
 @dataclass

@@ -85,6 +85,80 @@ async def test_create_product():
 
 
 @pytest.mark.asyncio
+async def test_create_product_does_not_persist_when_embedding_fails():
+    """A failed embedding must not leave a product row (with no vector) behind."""
+    product_repo = AsyncMock()
+    category_repo = AsyncMock()
+    embedding_service = AsyncMock()
+    vector_store = AsyncMock()
+
+    category = MagicMock()
+    category.id = 1
+    category.name = "Electronics"
+    category_repo.get_by_id.return_value = category
+    embedding_service.embed.side_effect = RuntimeError("ollama down")
+
+    use_case = CreateProductUseCase(
+        product_repo=product_repo,
+        category_repo=category_repo,
+        embedding_service=embedding_service,
+        vector_store=vector_store,
+    )
+
+    with pytest.raises(RuntimeError):
+        await use_case.execute(
+            name="Laptop",
+            description="Gaming laptop",
+            price=999.99,
+            stock=5,
+            category_id=1,
+            image_url=None,
+        )
+
+    product_repo.create.assert_not_awaited()
+    vector_store.add.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_product_rolls_back_when_vector_store_fails():
+    """If the vector write fails, the already-committed product is removed."""
+    product_repo = AsyncMock()
+    category_repo = AsyncMock()
+    embedding_service = AsyncMock()
+    vector_store = AsyncMock()
+
+    category = MagicMock()
+    category.id = 1
+    category.name = "Electronics"
+    category_repo.get_by_id.return_value = category
+
+    created_product = MagicMock()
+    created_product.id = 10
+    product_repo.create.return_value = created_product
+    embedding_service.embed.return_value = [0.1, 0.2, 0.3]
+    vector_store.add.side_effect = RuntimeError("chroma down")
+
+    use_case = CreateProductUseCase(
+        product_repo=product_repo,
+        category_repo=category_repo,
+        embedding_service=embedding_service,
+        vector_store=vector_store,
+    )
+
+    with pytest.raises(RuntimeError):
+        await use_case.execute(
+            name="Laptop",
+            description="Gaming laptop",
+            price=999.99,
+            stock=5,
+            category_id=1,
+            image_url=None,
+        )
+
+    product_repo.delete.assert_awaited_once_with(10)
+
+
+@pytest.mark.asyncio
 async def test_delete_category():
     category_repo = AsyncMock()
 

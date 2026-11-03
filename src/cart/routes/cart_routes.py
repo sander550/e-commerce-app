@@ -17,7 +17,6 @@ from core.application.use_case_factories.cart_factories import (
     get_cart_totals_use_case
 )
 
-from fastapi import APIRouter, Depends
 from cart.application.dto.cart_dto import (
     CartResponseDTO,
     CartTotalsResponseDTO,

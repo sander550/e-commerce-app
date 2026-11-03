@@ -1,31 +1,16 @@
 fastapi==0.110.0
 uvicorn
 
-python-multipart
 httpx
-requests
-
-PyJWT
 
 bcrypt
 argon2-cffi
 
 pydantic==2.7.1
-pydantic-settings
 python-dotenv
 
-numpy
-pandas
-tqdm
-scikit-learn
-
-typing-extensions
-rich
-orjson
-
 python-jose[cryptography]
-chroma
-sqlalchemy
+SQLAlchemy[asyncio]
 asyncpg
 psycopg2
 ollama
@@ -37,5 +22,3 @@ pytest
 aiosqlite
 pytest-asyncio
 passlib
-SQLAlchemy[asyncio]
-psycopg[binary]

@@ -1,11 +1,7 @@
 import pytest
-from datetime import datetime
 
 from cart.infrastructure.repositories.cart_repo_impl import CartRepository
 from cart.domain.entities.cart import Cart, CartItem
-
-from cart.infrastructure.db.cart_model import CartModel
-from cart.infrastructure.db.cart_item_model import CartItemModel
 
 
 # ---------------------------------------------------------

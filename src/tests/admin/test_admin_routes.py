@@ -66,6 +66,31 @@ def test_create_product():
     app.dependency_overrides = {}
 
 
+def test_create_product_returns_error_detail():
+    use_case = AsyncMock()
+    use_case.execute.side_effect = RuntimeError("ollama down")
+
+    app.dependency_overrides[admin_required] = lambda: None
+    app.dependency_overrides[get_create_product_use_case] = lambda: use_case
+
+    response = client.post(
+        "/admin/product",
+        json={
+            "name": "Test Product",
+            "description": "Test description",
+            "price": 10.99,
+            "stock": 20,
+            "category_id": 1,
+            "image_url": "image.jpg",
+        },
+    )
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "ollama down"}
+
+    app.dependency_overrides = {}
+
+
 # ---------------------------------------------------------
 # UPDATE PRODUCT
 # ---------------------------------------------------------

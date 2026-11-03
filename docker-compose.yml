@@ -31,7 +31,7 @@ services:
       - ollama_data:/root/.ollama
       - ./ollama-init.sh:/root/ollama-init.sh
     environment:
-      OLLAMA_HOST: ${OLLAMA_HOST}
+      OLLAMA_HOST: 0.0.0.0:11434
     entrypoint:
       [
         "/bin/sh",
@@ -48,7 +48,7 @@ services:
     env_file:
       - .env
     environment:
-      OLLAMA_HOST: ${OLLAMA_HOST}
+      OLLAMA_HOST: http://ollama:11434
       CHROMA_HOST: http://chroma:8000
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000
     depends_on:
@@ -66,7 +66,7 @@ services:
     env_file:
       - .env
     environment:
-      OLLAMA_HOST: ${OLLAMA_HOST}
+      OLLAMA_HOST: http://ollama:11434
       CHROMA_HOST: http://chroma:8000
     command: python -m src.workers.email_worker
     depends_on:

@@ -38,6 +38,14 @@ class CreateProductUseCase:
         if category is None:
             raise ValueError("Category does not exist")
 
+        text = (
+            f"Name: {name}. "
+            f"Description: {description or ''}. "
+            f"Category: {category.name if category else ''}. "
+            f"Price: {price}. "
+        )
+        embedding = await self.embedding_service.embed(text)
+
         # Create domain entity
         product = Product(
             id=None,
@@ -53,16 +61,12 @@ class CreateProductUseCase:
         # Save to DB
         created = await self.product_repo.create(product)
 
-        # Generate embedding
-        text = (
-            f"Name: {created.name}. "
-            f"Description: {created.description or ''}. "
-            f"Category: {category.name if category else ''}. "
-            f"Price: {created.price}. "
-        )
-
-        embedding = await self.embedding_service.embed(text)
-        # Add to Chroma
-        await self.vector_store.add(created.id, embedding)
+        # Add to Chroma. The DB write has already committed, so compensate if
+        # the vector write fails: never keep a product that search cannot see.
+        try:
+            await self.vector_store.add(created.id, embedding)
+        except Exception as e:
+            await self.product_repo.delete(created.id)
+            raise e
 
         return created

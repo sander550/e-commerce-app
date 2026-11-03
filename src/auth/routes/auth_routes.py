@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
-from core.config.settings import settings
 
 from auth.application.use_cases.register_user import RegisterUserUseCase
 from auth.application.use_cases.login_user import LoginUserUseCase
@@ -12,7 +11,6 @@ from auth.application.dto.auth_dto import (
     UserReadDTO,
     UserRequestDTO
 )
-from auth.infrastructure.helpers.token_hash import hash_token
 from core.application.use_case_factories.auth_factories import (
     get_register_use_case,
     get_login_use_case,

@@ -1,6 +1,6 @@
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select
 
 from catalog.domain.entities.product import Product
 from catalog.domain.interfaces.product_repo import IProductRepository

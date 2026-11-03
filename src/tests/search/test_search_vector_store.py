@@ -1,7 +1,5 @@
 from unittest.mock import MagicMock
 
-import pytest
-
 from search.infrastructure.vector_store.chroma_vector_store import ChromaVectorStore
 
 

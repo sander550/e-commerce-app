@@ -1,6 +1,5 @@
 from fastapi import Depends
 from core.application.providers.repo_provider import RepoProvider, get_provider
-from order.application.use_cases.mark_order_paid import MarkOrderPaidUseCase
 
 from order.application.use_cases.place_order import PlaceOrderUseCase
 from order.application.use_cases.get_order_details import GetOrderDetailsUseCase

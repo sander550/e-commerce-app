@@ -1,4 +1,3 @@
-from order.domain.entities.order import Order
 from order.domain.interfaces.order_repo import IOrderRepository
 
 class DeleteOrderUseCase:

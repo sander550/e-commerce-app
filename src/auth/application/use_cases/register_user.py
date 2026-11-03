@@ -9,7 +9,6 @@ from auth.infrastructure.helpers.password_hash import hash_password
 
 from auth.infrastructure.helpers.token_hash import hash_token
 from auth.domain.entities.refresh_token import RefreshToken
-from datetime import datetime
 
 class RegisterUserUseCase:
 

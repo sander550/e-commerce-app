@@ -6,7 +6,6 @@ from typing import Optional
 @dataclass
 class Product:
     name: str
-    name: str
     description: Optional[str]
     price: float
     stock: int

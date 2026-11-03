@@ -2,7 +2,6 @@
 from payment.application.use_cases.complete_payment import CompletePaymentUseCase
 from payment.domain.entities.payment import PaymentStatus
 from payment.domain.interfaces.payment_repo import IPaymentRepository
-from payment.domain.services.paypal_services import paypal_service
 
 class CapturePayPalPaymentUseCase:
     def __init__(

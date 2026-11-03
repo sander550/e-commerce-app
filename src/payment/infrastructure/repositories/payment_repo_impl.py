@@ -2,7 +2,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from payment.domain.entities.payment import Payment
-from payment.domain.entities.payment import PaymentStatus
 from payment.domain.interfaces.payment_repo import IPaymentRepository
 from payment.infrastructure.db.payment_model import PaymentModel
 

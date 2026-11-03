@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 
 from main import app
-from search.application.use_cases.hybrid_search import HybridSearchUseCase
 from core.application.use_case_factories.search_factories import get_search_use_case
 
 
