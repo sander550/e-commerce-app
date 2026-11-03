@@ -1,6 +1,3 @@
-# search/infrastructure/vector_store/chroma_vector_store.py
-
-
 class ChromaVectorStore:
     def __init__(self, client):
         self.client = client
