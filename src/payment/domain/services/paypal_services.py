@@ -1,5 +1,3 @@
-# payment/infrastructure/paypal_service.py
-
 import httpx
 from core.config.settings import settings
 

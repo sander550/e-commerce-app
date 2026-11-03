@@ -1,4 +1,3 @@
-# payment/application/use_cases/capture_paypal_payment.py
 from payment.application.use_cases.complete_payment import CompletePaymentUseCase
 from payment.domain.entities.payment import PaymentStatus
 from payment.domain.interfaces.payment_repo import IPaymentRepository

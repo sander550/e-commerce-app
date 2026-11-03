@@ -1,5 +1,3 @@
-# src/catalog/domain/interfaces/category_repository.py
-
 from abc import ABC, abstractmethod
 
 

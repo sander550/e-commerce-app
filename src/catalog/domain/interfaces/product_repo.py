@@ -1,4 +1,3 @@
-# src/catalog/domain/interfaces/product_repository.py
 from catalog.domain.entities.product import Product
 from abc import ABC, abstractmethod
 

@@ -1,5 +1,3 @@
-# src/catalog/domain/entities/category.py
-
 from dataclasses import dataclass
 from typing import Optional
 

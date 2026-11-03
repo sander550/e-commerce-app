@@ -1,5 +1,3 @@
-# payment/application/dto/paypal_dtos.py
-
 from pydantic import BaseModel
 
 

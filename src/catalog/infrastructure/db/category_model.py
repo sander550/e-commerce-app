@@ -1,5 +1,3 @@
-# src/catalog/infrastructure/models/category_model.py
-
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, ForeignKey
 from core.infrastructure.database import Base

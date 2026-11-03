@@ -1,4 +1,3 @@
-# user.py
 from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime

@@ -1,5 +1,3 @@
-# payment/application/use_cases/create_paypal_payment.py
-
 from datetime import datetime
 from payment.domain.entities.payment import Payment, PaymentStatus
 from payment.domain.interfaces.payment_repo import IPaymentRepository

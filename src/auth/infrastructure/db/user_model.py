@@ -1,4 +1,3 @@
-# user_model.py
 from sqlalchemy import String, Boolean, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime

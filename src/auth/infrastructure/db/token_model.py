@@ -1,4 +1,3 @@
-# token_model.py
 from sqlalchemy import String, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime

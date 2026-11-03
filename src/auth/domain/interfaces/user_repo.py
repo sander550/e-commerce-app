@@ -1,4 +1,3 @@
-# user_repo.py
 from abc import ABC, abstractmethod
 from typing import Optional
 from auth.domain.entities.user import User

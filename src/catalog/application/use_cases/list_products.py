@@ -1,5 +1,3 @@
-# src/catalog/domain/use_cases/list_products_use_case.py
-
 from typing import List
 from catalog.domain.entities.product import Product
 from catalog.domain.interfaces.product_repo import IProductRepository
