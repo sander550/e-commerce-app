@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -17,28 +19,40 @@ from core.security.rate_limiting_service import RedisRateLimitService
 from core.infrastructure.redis import redis_client
 from core.security.rate_limiting import RateLimitMiddleware
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ---------------------------------------------------------
+    # STARTUP: create tables + subscribe to events
+    # ---------------------------------------------------------
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        print('tables created')
+
+    event_bus.subscribe("payment.completed", mark_order_paid_handler)
+    event_bus.subscribe("payment.completed", clear_cart_handler)
+    event_bus.subscribe("payment.completed", update_stock_handler)
+    event_bus.subscribe("payment.completed", send_payment_completed_handler)
+    print("[EventBus] Subscribed to payment_completed")
+
+    yield
+
+    # ---------------------------------------------------------
+    # SHUTDOWN
+    # ---------------------------------------------------------
+
 app = FastAPI(
     title="E‑Commerce API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
-# Comma-separated list, e.g.
 # CORS_ORIGINS=http://51.20.81.71,http://localhost:5173
-# Same-origin /api calls (the normal frontend path through nginx) need no
-# CORS entry at all; this only matters for direct calls to the API port.
 CORS_ORIGINS = [
     origin.strip()
     for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
     if origin.strip()
 ]
 
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "ok",
-        "build_id": os.getenv("APP_BUILD_ID", "local"),
-    }
 
 # ---------------------------------------------------------
 # CORS (Next.js frontend)
@@ -65,19 +79,4 @@ if os.getenv("TESTING") != "true":
     app.middleware("http")(
         rate_limit_middleware.rate_limiting_middleware
     )
-# ---------------------------------------------------------
-# STARTUP: SUBSCRIBE TO EVENTS
-# ---------------------------------------------------------
-@app.on_event("startup")
-async def startup_event():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        print('tables created')
-
-    event_bus.subscribe("payment.completed", mark_order_paid_handler)
-    event_bus.subscribe("payment.completed", clear_cart_handler)
-    event_bus.subscribe("payment.completed", update_stock_handler)
-    event_bus.subscribe("payment.completed", send_payment_completed_handler)
-    print("[EventBus] Subscribed to payment_completed")
-
 
