@@ -447,3 +447,129 @@ async def test_product_repository_search_keyword_case_insensitive(db_session):
     result = await product_repo.search_keyword("GAMING")
 
     assert result == [product.id]
+
+
+@pytest.mark.asyncio
+async def test_product_repository_get_by_name(db_session):
+    category_repo = CategoryRepository(db_session)
+    product_repo = ProductRepository(
+        db_session,
+        category_repo,
+    )
+
+    category = await category_repo.create(
+        name="Electronics",
+        parent_id=None,
+    )
+
+    product = await product_repo.create(
+        Product(
+            id=None,
+            name="Laptop",
+            description="Gaming laptop",
+            price=999.99,
+            stock=10,
+            category_id=category.id,
+            image_url=None,
+            is_active=True,
+        )
+    )
+
+    result = await product_repo.get_by_name("Laptop")
+
+    assert result is not None
+    assert result.id == product.id
+    assert result.name == "Laptop"
+
+
+@pytest.mark.asyncio
+async def test_product_repository_get_by_name_case_insensitive(db_session):
+    category_repo = CategoryRepository(db_session)
+    product_repo = ProductRepository(
+        db_session,
+        category_repo,
+    )
+
+    category = await category_repo.create(
+        name="Electronics",
+        parent_id=None,
+    )
+
+    product = await product_repo.create(
+        Product(
+            id=None,
+            name="Laptop",
+            description="Gaming laptop",
+            price=999.99,
+            stock=10,
+            category_id=category.id,
+            image_url=None,
+            is_active=True,
+        )
+    )
+
+    # Test case insensitive search
+    result = await product_repo.get_by_name("laptop")
+    assert result is not None
+    assert result.id == product.id
+
+    result = await product_repo.get_by_name("LAPTOP")
+    assert result is not None
+    assert result.id == product.id
+
+
+@pytest.mark.asyncio
+async def test_product_repository_get_by_name_nonexistent(db_session):
+    category_repo = CategoryRepository(db_session)
+    product_repo = ProductRepository(
+        db_session,
+        category_repo,
+    )
+
+    result = await product_repo.get_by_name("NonExistentProduct")
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_category_repository_get_by_name(db_session):
+    repo = CategoryRepository(db_session)
+
+    category = await repo.create(
+        name="Electronics",
+        parent_id=None,
+    )
+
+    result = await repo.get_by_name("Electronics")
+
+    assert result is not None
+    assert result.id == category.id
+    assert result.name == "Electronics"
+
+
+@pytest.mark.asyncio
+async def test_category_repository_get_by_name_case_insensitive(db_session):
+    repo = CategoryRepository(db_session)
+
+    category = await repo.create(
+        name="Electronics",
+        parent_id=None,
+    )
+
+    # Test case insensitive search
+    result = await repo.get_by_name("electronics")
+    assert result is not None
+    assert result.id == category.id
+
+    result = await repo.get_by_name("ELECTRONICS")
+    assert result is not None
+    assert result.id == category.id
+
+
+@pytest.mark.asyncio
+async def test_category_repository_get_by_name_nonexistent(db_session):
+    repo = CategoryRepository(db_session)
+
+    result = await repo.get_by_name("NonExistentCategory")
+
+    assert result is None

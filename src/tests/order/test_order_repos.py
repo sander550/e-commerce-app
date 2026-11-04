@@ -47,6 +47,10 @@ def test_to_domain():
 @pytest.mark.asyncio
 async def test_save():
     session = AsyncMock()
+    # AsyncSession.add() is a *sync* method, so it must not be an AsyncMock
+    # (an AsyncMock here creates a coroutine that is never awaited).
+    session.add = MagicMock()
+
     repo = OrderRepository(session)
 
     order = MagicMock()
