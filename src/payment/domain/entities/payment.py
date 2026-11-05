@@ -31,11 +31,3 @@ class Payment:
             "status": self.status.value,
             "created_at": self.created_at.isoformat(),
         }
-
-    def mark_success(self):
-        self.status = PaymentStatus.SUCCESS
-        self.updated_at = datetime.utcnow()
-
-    def mark_failed(self):
-        self.status = PaymentStatus.FAILED
-        self.updated_at = datetime.utcnow()
