@@ -22,9 +22,17 @@ class UpdateCategoryUseCase:
 
         # Validate parent category (if provided)
         if parent_id is not None:
+            # Prevent self-reference
+            if parent_id == category_id:
+                raise ValueError("Category cannot be its own parent")
+
             parent = await self.category_repo.get_by_id(parent_id)
             if parent is None:
                 raise ValueError("Parent category does not exist")
+
+            # Prevent circular reference - check if parent is a descendant
+            if await self._would_create_cycle(category_id, parent_id):
+                raise ValueError("Cannot set parent: would create circular reference")
 
         # Perform update
         updated = await self.category_repo.update(
@@ -34,3 +42,13 @@ class UpdateCategoryUseCase:
         )
 
         return updated
+
+    async def _would_create_cycle(self, category_id: int, new_parent_id: int) -> bool:
+        """Check if setting new_parent_id as parent of category_id would create a cycle."""
+        current_id = new_parent_id
+        while current_id is not None:
+            if current_id == category_id:
+                return True
+            parent = await self.category_repo.get_by_id(current_id)
+            current_id = parent.parent_id if parent else None
+        return False

@@ -98,7 +98,9 @@ def get_delete_category_use_case(
     provider: RepoProvider = Depends(get_provider)
 ) -> DeleteCategoryUseCase:
     return DeleteCategoryUseCase(
-        category_repo=provider.category_repo
+        category_repo=provider.category_repo,
+        product_repo=provider.product_repo,
+        cart_repo=provider.cart_repo
     )
 
 

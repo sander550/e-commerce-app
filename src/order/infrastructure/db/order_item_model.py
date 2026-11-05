@@ -9,7 +9,7 @@ class OrderItemModel(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"))
-    product_id = Column(Integer, nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="SET NULL"), nullable=True)
 
     name = Column(String(255), nullable=False)
     price = Column(Float, nullable=False)

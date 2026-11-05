@@ -13,7 +13,7 @@ class ProductModel(Base):
     stock: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     category_id: Mapped[int] = mapped_column(
-        ForeignKey("categories.id"),
+        ForeignKey("categories.id", ondelete="CASCADE"),
         nullable=False
     )
 
