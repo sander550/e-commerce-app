@@ -13,7 +13,7 @@ class DeleteProductUseCase:
             raise ValueError("Product does not exist")
 
         # Delete associated cart items first (to avoid FK constraint violation)
-        await self.product_repo.delete_items_by_product_id(product_id)
+        await self.cart_repo.delete_items_by_product_id(product_id)
 
         # Delete from DB
         await self.product_repo.delete(product_id)
