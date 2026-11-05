@@ -1,15 +1,16 @@
 # 🛒 E-Commerce App — DDD, Hybrid Search & PayPal Sandbox
 
-A full-stack e-commerce application built with **Domain-Driven Design (DDD)**, hybrid product search, PayPal Sandbox payments, centralized configuration, rate limiting, automated testing, and a neon-glass cyber UI.
+A full-stack e-commerce application built with **Domain-Driven Design (DDD)**, hybrid product search, PayPal Sandbox payments, centralized configuration, rate limiting, automated testing, Event-Driven Architecture (EDA), background email processing, and a neon-glass cyber UI.
 
 ## ✨ Features
 
 - 🛍️ Complete shopping experience with products, categories, carts and orders
 - 🔍 Hybrid search combining PostgreSQL keyword search and ChromaDB semantic search
 - 💳 PayPal Sandbox payment integration
+- 🔄 Event-Driven Architecture (EDA) for post-payment processing
 - 🔐 Authentication and session management
 - 👨‍💼 Admin panel with product, category and order management
-- 📧 Email notifications and background processing
+- 📧 Email notifications with background worker processing
 - 🛡️ Global API and login-specific rate limiting
 - ⚠️ User-friendly error handling
 - ⚙️ Centralized application configuration
@@ -47,6 +48,38 @@ src/
 - **Application:** Use cases coordinating operations such as registration, authentication, cart operations, orders and payments.
 - **Infrastructure:** External technologies including PostgreSQL, SQLAlchemy, Redis, ChromaDB and email services.
 - **Presentation:** FastAPI routes connecting HTTP requests to application use cases.
+
+### Event-Driven Architecture
+
+The application also uses **Event-Driven Architecture (EDA)** for actions that happen after successful payments.
+
+After PayPal payment completion, the backend publishes a `payment.completed` event. Independent handlers subscribe to this event and perform the required follow-up operations.
+
+```text
+              PayPal Payment
+                    │
+                    ▼
+          Payment Completed Event
+                    │
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+   Update Stock  Clear Cart  Send Email
+        │           │           │
+        │           │           ▼
+        │           │      Background
+        │           │        Worker
+        │           │           │
+        └───────────┴───────────▼
+                         Confirmation Email
+```
+
+The payment event is handled by separate components for:
+
+- Updating product stock
+- Clearing the user's cart
+- Sending a payment confirmation email
+
+This keeps the payment flow decoupled from the individual operations that need to happen after a successful payment.
 
 ---
 
@@ -119,13 +152,54 @@ Add products to cart
  Backend processes payment
         │
         ▼
-    Order created
+ Payment Completed Event
         │
         ▼
-  Payment recorded
+   ┌────┼───────────────┐
+   ▼    ▼               ▼
+Update  Clear        Send Payment
+Stock   Cart         Confirmation
+                     Email
+        │               │
+        └───────┬───────┘
+                ▼
+       Order / Payment Flow
 ```
 
 The application also tracks payment information through the backend.
+
+After successful payment, a `payment.completed` event is published. Multiple independent event handlers react to this event to update stock, clear the cart and initiate the payment confirmation email.
+
+---
+
+# 📧 Background Email Processing
+
+Email notifications are processed through a dedicated **background worker** rather than making the main API request wait for email delivery.
+
+When an email needs to be sent, the application creates an email job that can be processed independently by the background worker.
+
+```text
+Payment Completed Event
+          │
+          ▼
+  Email Event Handler
+          │
+          ▼
+      Email Job
+          │
+          ▼
+ Background Email Worker
+          │
+          ▼
+    Email Service
+          │
+          ▼
+ Confirmation Email
+```
+
+This allows the API and event handlers to continue processing without waiting for the email service to complete.
+
+The background worker is used for tasks such as sending payment confirmation emails.
 
 ---
 
@@ -261,7 +335,7 @@ Docker Compose builds and starts the application services:
 - React frontend
 - PostgreSQL
 - Redis
-- Background worker
+- Background email worker
 - ChromaDB
 - Ollama
 
@@ -393,11 +467,16 @@ The production environment should use its own secure environment variables rathe
 ### Payments
 - PayPal Sandbox
 
+### Architecture
+- Domain-Driven Design (DDD)
+- Event-Driven Architecture (EDA)
+
 ### Infrastructure
 - Docker
 - Docker Compose
 - Alembic
 - Ollama
+- Background Email Worker
 
 ---
 
@@ -412,6 +491,7 @@ React Frontend
   FastAPI Backend
       │
       ├── DDD Architecture
+      ├── Event-Driven Architecture
       ├── Authentication
       ├── Rate Limiting
       ├── Orders
@@ -425,7 +505,7 @@ React Frontend
       ├── Redis
       ├── ChromaDB
       ├── Ollama
-      └── Background Worker
+      └── Background Email Worker
 ```
 
-The result is a containerized e-commerce application featuring **DDD architecture, hybrid search, PayPal Sandbox payments, centralized configuration, request protection, background processing, automated testing and a full React frontend**.
+The result is a containerized e-commerce application featuring **DDD architecture, Event-Driven Architecture, hybrid search, PayPal Sandbox payments, centralized configuration, request protection, background email processing, automated testing and a full React frontend**.
