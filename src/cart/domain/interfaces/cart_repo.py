@@ -24,3 +24,8 @@ class ICartRepository(ABC):
     async def delete(self, user_id: int) -> None:
         """Delete the cart entirely (used for guest carts or cleanup)."""
         pass
+
+    @abstractmethod
+    async def delete_items_by_product_id(self, product_id: int) -> None:
+        """Delete all cart items referencing a specific product."""
+        pass

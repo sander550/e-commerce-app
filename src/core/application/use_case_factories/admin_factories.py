@@ -69,6 +69,7 @@ def get_delete_product_use_case(
 
     return DeleteProductUseCase(
         product_repo=provider.product_repo,
+        cart_repo=provider.cart_repo,
         vector_store=ChromaVectorStore(chroma_client)
     )
 

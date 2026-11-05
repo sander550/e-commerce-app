@@ -116,3 +116,13 @@ class CartRepository(ICartRepository):
             )
             await self.session.commit()
 
+    # ---------------------------------------------------------
+    # DELETE CART ITEMS BY PRODUCT ID
+    # ---------------------------------------------------------
+    async def delete_items_by_product_id(self, product_id: int) -> None:
+        """Delete all cart items referencing a specific product."""
+        await self.session.execute(
+            delete(CartItemModel).where(CartItemModel.product_id == product_id)
+        )
+        await self.session.commit()
+
