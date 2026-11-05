@@ -211,18 +211,31 @@ async def test_create_product_execute_rolls_back_when_vector_store_fails():
 @pytest.mark.asyncio
 async def test_delete_category_execute():
     category_repo = AsyncMock()
+    product_repo = AsyncMock()
+    cart_repo = AsyncMock()
 
     category = MagicMock()
     category.id = 1
 
-    category_repo.get_by_id.return_value = category
+    product = MagicMock()
+    product.id = 10
 
-    use_case = DeleteCategoryUseCase(category_repo)
+    category_repo.get_by_id.return_value = category
+    product_repo.list_by_category.return_value = [product]
+
+    use_case = DeleteCategoryUseCase(
+        category_repo=category_repo,
+        product_repo=product_repo,
+        cart_repo=cart_repo
+    )
 
     result = await use_case.execute(1)
 
     assert result is None
     category_repo.get_by_id.assert_awaited_once_with(1)
+    product_repo.list_by_category.assert_awaited_once_with(1)
+    cart_repo.delete_items_by_product_id.assert_awaited_once_with(10)
+    product_repo.delete.assert_awaited_once_with(10)
     category_repo.delete.assert_awaited_once_with(1)
 
 
@@ -247,6 +260,7 @@ async def test_delete_order_execute():
 @pytest.mark.asyncio
 async def test_delete_product_execute():
     product_repo = AsyncMock()
+    cart_repo = AsyncMock()
     vector_store = AsyncMock()
 
     product = MagicMock()
@@ -256,6 +270,7 @@ async def test_delete_product_execute():
 
     use_case = DeleteProductUseCase(
         product_repo=product_repo,
+        cart_repo=cart_repo,
         vector_store=vector_store,
     )
 
@@ -263,6 +278,7 @@ async def test_delete_product_execute():
 
     assert result is None
     product_repo.get_by_id.assert_awaited_once_with(1)
+    cart_repo.delete_items_by_product_id.assert_awaited_once_with(1)
     product_repo.delete.assert_awaited_once_with(1)
     vector_store.delete.assert_awaited_once_with(1)
 
