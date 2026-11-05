@@ -3,6 +3,7 @@ from core.security.dependencies import auth_required
 from order.application.use_cases.place_order import PlaceOrderUseCase
 from order.application.use_cases.get_order_details import GetOrderDetailsUseCase
 from order.application.use_cases.list_user_orders import ListUserOrdersUseCase
+from order.application.use_cases.delete_order import DeleteOrderUseCase
 
 
 from order.application.dto.order_dto import OrderResponseDTO, PlaceOrderDTO
@@ -70,7 +71,7 @@ async def get_order_details(
 async def delete_order(
     order_id: int,
     user=Depends(auth_required),
-    use_case: GetOrderDetailsUseCase = Depends(get_delete_order_use_case)
+    use_case: DeleteOrderUseCase = Depends(get_delete_order_use_case)
 ):
     try:
         return await use_case.execute(user.id, order_id)
