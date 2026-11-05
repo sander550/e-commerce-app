@@ -14,7 +14,7 @@ from order.application.use_cases.place_order import PlaceOrderUseCase
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_delete_order():
+async def test_delete_order_execute():
     order_repo = AsyncMock()
 
     order = MagicMock()
@@ -39,7 +39,7 @@ async def test_delete_order():
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_get_order_details():
+async def test_get_order_details_execute():
     order_repo = AsyncMock()
 
     order = MagicMock()
@@ -63,7 +63,7 @@ async def test_get_order_details():
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_list_user_orders():
+async def test_list_user_orders_execute():
     order_repo = AsyncMock()
 
     order1 = MagicMock()
@@ -87,7 +87,7 @@ async def test_list_user_orders():
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_mark_order_paid():
+async def test_mark_order_paid_execute():
     order_repo = AsyncMock()
 
     order = MagicMock()
@@ -114,7 +114,7 @@ async def test_mark_order_paid():
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_place_order():
+async def test_place_order_execute():
     cart_repo = AsyncMock()
     order_repo = AsyncMock()
     product_repo = AsyncMock()

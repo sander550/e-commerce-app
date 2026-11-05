@@ -5,7 +5,7 @@ from search.application.use_cases.hybrid_search import HybridSearchUseCase
 
 
 @pytest.mark.asyncio
-async def test_hybrid_search():
+async def test_hybrid_search_execute():
     embedding_service = AsyncMock()
     vector_store = AsyncMock()
     product_repo = AsyncMock()

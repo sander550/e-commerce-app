@@ -8,7 +8,7 @@ from cart.domain.entities.cart import Cart, CartItem
 # SAVE + GET
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_save_and_get_cart(db_session):
+async def test_save_and_get_by_user_id(db_session):
     repo = CartRepository(db_session)
 
     cart = Cart(
@@ -39,7 +39,7 @@ async def test_save_and_get_cart(db_session):
 # UPDATE CART
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_update_cart(db_session):
+async def test_save_update(db_session):
     repo = CartRepository(db_session)
 
     # initial cart
@@ -66,7 +66,7 @@ async def test_update_cart(db_session):
 # CLEAR CART
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_clear_cart(db_session):
+async def test_clear(db_session):
     repo = CartRepository(db_session)
 
     cart = Cart(
@@ -86,7 +86,7 @@ async def test_clear_cart(db_session):
 # DELETE CART ENTIRELY
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_delete_cart(db_session):
+async def test_delete(db_session):
     repo = CartRepository(db_session)
 
     cart = Cart(

@@ -7,7 +7,7 @@ from catalog.domain.entities.product import Product
 
 
 @pytest.mark.asyncio
-async def test_category_repository_create_and_get(db_session):
+async def test_category_create_and_get_by_id(db_session):
     repo = CategoryRepository(db_session)
 
     category = await repo.create(
@@ -28,7 +28,7 @@ async def test_category_repository_create_and_get(db_session):
 
 
 @pytest.mark.asyncio
-async def test_category_repository_list(db_session):
+async def test_category_list(db_session):
     repo = CategoryRepository(db_session)
 
     category1 = await repo.create(
@@ -51,7 +51,7 @@ async def test_category_repository_list(db_session):
 
 
 @pytest.mark.asyncio
-async def test_category_repository_update(db_session):
+async def test_category_update(db_session):
     repo = CategoryRepository(db_session)
 
     category = await repo.create(
@@ -71,7 +71,7 @@ async def test_category_repository_update(db_session):
 
 
 @pytest.mark.asyncio
-async def test_category_repository_update_nonexistent(db_session):
+async def test_category_update_nonexistent(db_session):
     repo = CategoryRepository(db_session)
 
     result = await repo.update(
@@ -84,7 +84,7 @@ async def test_category_repository_update_nonexistent(db_session):
 
 
 @pytest.mark.asyncio
-async def test_category_repository_delete(db_session):
+async def test_category_delete(db_session):
     repo = CategoryRepository(db_session)
 
     category = await repo.create(
@@ -100,7 +100,7 @@ async def test_category_repository_delete(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_create_and_get(db_session):
+async def test_product_create_and_get_by_id(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -142,7 +142,7 @@ async def test_product_repository_create_and_get(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_get_nonexistent(db_session):
+async def test_product_get_by_id_nonexistent(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -155,7 +155,7 @@ async def test_product_repository_get_nonexistent(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_list(db_session):
+async def test_product_list(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -203,7 +203,7 @@ async def test_product_repository_list(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_list_by_category(db_session):
+async def test_product_list_by_category(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -255,7 +255,7 @@ async def test_product_repository_list_by_category(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_update(db_session):
+async def test_product_update(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -303,7 +303,7 @@ async def test_product_repository_update(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_update_nonexistent(db_session):
+async def test_product_update_nonexistent(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -327,7 +327,7 @@ async def test_product_repository_update_nonexistent(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_delete(db_session):
+async def test_product_delete(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -360,7 +360,7 @@ async def test_product_repository_delete(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_delete_nonexistent(db_session):
+async def test_product_delete_nonexistent(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -373,7 +373,7 @@ async def test_product_repository_delete_nonexistent(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_search_keyword(db_session):
+async def test_product_search_keyword(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -419,7 +419,7 @@ async def test_product_repository_search_keyword(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_search_keyword_case_insensitive(db_session):
+async def test_product_search_keyword_case_insensitive(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -450,7 +450,7 @@ async def test_product_repository_search_keyword_case_insensitive(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_get_by_name(db_session):
+async def test_product_get_by_name(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -483,7 +483,7 @@ async def test_product_repository_get_by_name(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_get_by_name_case_insensitive(db_session):
+async def test_product_get_by_name_case_insensitive(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -519,7 +519,7 @@ async def test_product_repository_get_by_name_case_insensitive(db_session):
 
 
 @pytest.mark.asyncio
-async def test_product_repository_get_by_name_nonexistent(db_session):
+async def test_product_get_by_name_nonexistent(db_session):
     category_repo = CategoryRepository(db_session)
     product_repo = ProductRepository(
         db_session,
@@ -532,7 +532,7 @@ async def test_product_repository_get_by_name_nonexistent(db_session):
 
 
 @pytest.mark.asyncio
-async def test_category_repository_get_by_name(db_session):
+async def test_category_get_by_name(db_session):
     repo = CategoryRepository(db_session)
 
     category = await repo.create(
@@ -548,7 +548,7 @@ async def test_category_repository_get_by_name(db_session):
 
 
 @pytest.mark.asyncio
-async def test_category_repository_get_by_name_case_insensitive(db_session):
+async def test_category_get_by_name_case_insensitive(db_session):
     repo = CategoryRepository(db_session)
 
     category = await repo.create(
@@ -567,7 +567,7 @@ async def test_category_repository_get_by_name_case_insensitive(db_session):
 
 
 @pytest.mark.asyncio
-async def test_category_repository_get_by_name_nonexistent(db_session):
+async def test_category_get_by_name_nonexistent(db_session):
     repo = CategoryRepository(db_session)
 
     result = await repo.get_by_name("NonExistentCategory")

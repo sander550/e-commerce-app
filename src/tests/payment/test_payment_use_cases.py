@@ -19,7 +19,7 @@ from payment.domain.entities.payment import PaymentStatus
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_create_paypal_payment():
+async def test_create_paypal_payment_execute():
     payment_repo = AsyncMock()
     order_repo = AsyncMock()
 
@@ -76,7 +76,7 @@ async def test_create_paypal_payment():
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_capture_paypal_payment():
+async def test_capture_paypal_payment_execute():
     paypal_service = AsyncMock()
     payment_repo = AsyncMock()
     complete_payment_uc = AsyncMock()
@@ -126,7 +126,7 @@ async def test_capture_paypal_payment():
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_complete_payment():
+async def test_complete_payment_execute():
     payment_repo = AsyncMock()
     cart_repo = AsyncMock()
 

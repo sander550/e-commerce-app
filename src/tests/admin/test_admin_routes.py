@@ -25,7 +25,7 @@ client = TestClient(app)
 # CREATE PRODUCT
 # ---------------------------------------------------------
 
-def test_create_product():
+def test_create_product_post():
     use_case = AsyncMock()
 
     use_case.execute.return_value = {
@@ -66,7 +66,7 @@ def test_create_product():
     app.dependency_overrides = {}
 
 
-def test_create_product_returns_error_detail():
+def test_create_product_post_returns_error_detail():
     use_case = AsyncMock()
     use_case.execute.side_effect = RuntimeError("ollama down")
 
@@ -95,7 +95,7 @@ def test_create_product_returns_error_detail():
 # UPDATE PRODUCT
 # ---------------------------------------------------------
 
-def test_update_product():
+def test_update_product_put():
     use_case = AsyncMock()
 
     use_case.execute.return_value = {
@@ -143,7 +143,7 @@ def test_update_product():
 # DELETE PRODUCT
 # ---------------------------------------------------------
 
-def test_delete_product():
+def test_delete_product_delete():
     use_case = AsyncMock()
 
     app.dependency_overrides[admin_required] = lambda: None
@@ -165,7 +165,7 @@ def test_delete_product():
 # CREATE CATEGORY
 # ---------------------------------------------------------
 
-def test_create_category():
+def test_create_category_post():
     use_case = AsyncMock()
 
     use_case.execute.return_value = {
@@ -202,7 +202,7 @@ def test_create_category():
 # UPDATE CATEGORY
 # ---------------------------------------------------------
 
-def test_update_category():
+def test_update_category_put():
     use_case = AsyncMock()
 
     use_case.execute.return_value = {
@@ -240,7 +240,7 @@ def test_update_category():
 # DELETE CATEGORY
 # ---------------------------------------------------------
 
-def test_delete_category():
+def test_delete_category_delete():
     use_case = AsyncMock()
 
     app.dependency_overrides[admin_required] = lambda: None
@@ -262,7 +262,7 @@ def test_delete_category():
 # UPDATE ORDER
 # ---------------------------------------------------------
 
-def test_update_order():
+def test_update_order_put():
     use_case = AsyncMock()
 
     use_case.execute.return_value = {
@@ -302,7 +302,7 @@ def test_update_order():
 # DELETE ORDER
 # ---------------------------------------------------------
 
-def test_delete_order():
+def test_delete_order_delete():
     use_case = AsyncMock()
 
     app.dependency_overrides[admin_required] = lambda: None

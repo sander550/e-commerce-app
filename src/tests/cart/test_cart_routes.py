@@ -45,7 +45,7 @@ def client():
 # GET CART
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_get_cart_route(client):
+async def test_get_cart_get(client):
     mock_uc = AsyncMock()
     mock_uc.execute.return_value = type("Cart", (), {
         "user_id": 1,
@@ -71,7 +71,7 @@ async def test_get_cart_route(client):
 # ADD ITEM
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_add_item_route(client):
+async def test_add_item_post(client):
     mock_uc = AsyncMock()
     mock_uc.execute.return_value = type("Cart", (), {
         "user_id": 1,
@@ -94,7 +94,7 @@ async def test_add_item_route(client):
 # REMOVE ITEM
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_remove_item_route(client):
+async def test_remove_item_delete(client):
     mock_uc = AsyncMock()
     mock_uc.execute.return_value = type("Cart", (), {
         "user_id": 1,
@@ -114,7 +114,7 @@ async def test_remove_item_route(client):
 # UPDATE QUANTITY
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_update_item_quantity_route(client):
+async def test_update_item_quantity_put(client):
     mock_uc = AsyncMock()
     mock_uc.execute.return_value = type("Cart", (), {
         "user_id": 1,
@@ -137,7 +137,7 @@ async def test_update_item_quantity_route(client):
 # CLEAR CART
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_clear_cart_route(client):
+async def test_clear_cart_post(client):
     mock_uc = AsyncMock()
     mock_uc.execute.return_value = None
 
@@ -152,7 +152,7 @@ async def test_clear_cart_route(client):
 # CART TOTALS
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_cart_totals_route(client):
+async def test_cart_totals_get(client):
     mock_uc = AsyncMock()
     mock_uc.execute.return_value = type("Totals", (), {
         "subtotal": 20.0,

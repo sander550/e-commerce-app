@@ -31,7 +31,7 @@ def override_auth(mock_user):
     app.dependency_overrides = {}
 
 
-def test_place_order():
+def test_place_order_post():
     mock_use_case = AsyncMock()
     mock_use_case.execute.return_value = SimpleNamespace(
         id=10,
@@ -91,7 +91,7 @@ def test_place_order():
     )
 
 
-def test_list_user_orders():
+def test_list_user_orders_get():
     mock_use_case = AsyncMock()
 
     mock_order = SimpleNamespace(
@@ -134,7 +134,7 @@ def test_list_user_orders():
     mock_use_case.execute.assert_awaited_once_with(1)
 
 
-def test_get_order_details():
+def test_get_order_details_get():
     mock_use_case = AsyncMock()
 
     mock_order = SimpleNamespace(
@@ -166,7 +166,7 @@ def test_get_order_details():
     mock_use_case.execute.assert_awaited_once_with(1, 10)
 
 
-def test_delete_order():
+def test_delete_order_delete():
     mock_use_case = AsyncMock()
     mock_use_case.execute.return_value = {"message": "Order deleted"}
 
@@ -182,7 +182,7 @@ def test_delete_order():
     mock_use_case.execute.assert_awaited_once_with(1, 10)
 
 
-def test_place_order_error():
+def test_place_order_post_error():
     mock_use_case = AsyncMock()
     mock_use_case.execute.side_effect = Exception("Could not place order")
 
@@ -200,7 +200,7 @@ def test_place_order_error():
     assert response.json()["detail"] == "Could not place order"
 
 
-def test_list_user_orders_error():
+def test_list_user_orders_get_error():
     mock_use_case = AsyncMock()
     mock_use_case.execute.side_effect = Exception("Could not list orders")
 
@@ -214,7 +214,7 @@ def test_list_user_orders_error():
     assert response.json()["detail"] == "Could not list orders"
 
 
-def test_get_order_details_error():
+def test_get_order_details_get_error():
     mock_use_case = AsyncMock()
     mock_use_case.execute.side_effect = Exception("Order not found")
 
@@ -228,7 +228,7 @@ def test_get_order_details_error():
     assert response.json()["detail"] == "Order not found"
 
 
-def test_delete_order_error():
+def test_delete_order_delete_error():
     mock_use_case = AsyncMock()
     mock_use_case.execute.side_effect = Exception("Could not delete order")
 
@@ -246,7 +246,7 @@ def test_delete_order_error():
 # REQUEST VALIDATION / AUTH
 # ---------------------------------------------------------
 
-def test_place_order_requires_shipping_address_and_delivery_method():
+def test_place_order_post_requires_shipping_address_and_delivery_method():
     mock_use_case = AsyncMock()
     app.dependency_overrides[get_place_order_use_case] = lambda: mock_use_case
 

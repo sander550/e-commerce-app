@@ -25,7 +25,7 @@ from core.security.rate_limiting_service import RedisRateLimitService
 # REGISTER INTEGRATION
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_register_integration(db_session):
+async def test_register_user_execute_integration(db_session):
     user_repo = UserRepository(db_session)
     token_repo = TokenRepository(db_session)
     domain = AuthDomainService()
@@ -62,7 +62,7 @@ async def test_register_integration(db_session):
 # LOGIN INTEGRATION
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_login_integration(db_session):
+async def test_login_user_execute_integration(db_session):
     user_repo = UserRepository(db_session)
     token_repo = TokenRepository(db_session)
     domain = AuthDomainService()
@@ -133,7 +133,7 @@ async def test_login_integration(db_session):
 # LOGOUT INTEGRATION
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_logout_integration(db_session):
+async def test_logout_execute_integration(db_session):
     token_repo = TokenRepository(db_session)
 
     # generate raw token exactly like real app

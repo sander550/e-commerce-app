@@ -38,7 +38,7 @@ def mock_register_uc():
     return mock
 
 
-def test_register_success(mock_register_uc):
+def test_register_post_success(mock_register_uc):
     app.dependency_overrides[auth_optional] = lambda: None
     app.dependency_overrides[get_register_use_case] = lambda: mock_register_uc
 
@@ -60,7 +60,7 @@ def test_register_success(mock_register_uc):
         app.dependency_overrides = {}
 
 
-def test_register_already_logged_in():
+def test_register_post_already_logged_in():
     app.dependency_overrides[auth_optional] = lambda: mock_user()
     app.dependency_overrides[get_register_use_case] = lambda: AsyncMock()
 
@@ -89,7 +89,7 @@ def mock_login_uc():
     return mock
 
 
-def test_login_success(mock_login_uc):
+def test_login_post_success(mock_login_uc):
     app.dependency_overrides[auth_optional] = lambda: None
     app.dependency_overrides[get_login_use_case] = lambda: mock_login_uc
 
@@ -111,7 +111,7 @@ def test_login_success(mock_login_uc):
         app.dependency_overrides = {}
 
 
-def test_login_replaces_a_previous_session(mock_login_uc):
+def test_login_post_replaces_previous_session(mock_login_uc):
     app.dependency_overrides[auth_optional] = lambda: mock_user()
     app.dependency_overrides[get_login_use_case] = lambda: mock_login_uc
 
@@ -136,7 +136,7 @@ def mock_logout_uc():
     return mock
 
 
-def test_logout_success(mock_logout_uc):
+def test_logout_post_success(mock_logout_uc):
     app.dependency_overrides[get_logout_use_case] = lambda: mock_logout_uc
 
     try:
@@ -154,7 +154,7 @@ def test_logout_success(mock_logout_uc):
 
 # ---------------- PROFILE ----------------
 
-def test_profile_success():
+def test_profile_get_success():
     app.dependency_overrides[auth_required] = lambda: mock_user()
 
     try:
@@ -169,7 +169,7 @@ def test_profile_success():
         app.dependency_overrides = {}
 
 
-def test_profile_not_authenticated():
+def test_profile_get_not_authenticated():
     app.dependency_overrides[auth_required] = lambda: None
 
     try:

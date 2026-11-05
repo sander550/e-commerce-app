@@ -15,7 +15,7 @@ from cart.domain.entities.cart import Cart, CartItem
 # ADD ITEM
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_add_item_to_cart_new_item():
+async def test_add_item_to_cart_execute_new_item():
     cart_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -40,7 +40,7 @@ async def test_add_item_to_cart_new_item():
 
 
 @pytest.mark.asyncio
-async def test_add_item_merge_quantity():
+async def test_add_item_to_cart_execute_merge_quantity():
     cart_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -69,7 +69,7 @@ async def test_add_item_merge_quantity():
 # CALCULATE TOTALS
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_calculate_cart_totals_empty():
+async def test_calculate_cart_totals_execute_empty():
     cart_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -84,7 +84,7 @@ async def test_calculate_cart_totals_empty():
 
 
 @pytest.mark.asyncio
-async def test_calculate_cart_totals_with_items():
+async def test_calculate_cart_totals_execute_with_items():
     cart_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -115,7 +115,7 @@ async def test_calculate_cart_totals_with_items():
 # CLEAR CART
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_clear_cart():
+async def test_clear_cart_execute():
     cart_repo = AsyncMock()
     cart_repo.get_by_user_id.return_value = Cart(user_id=1, items=[CartItem(10, 2, 5.0, "Item A", None)])
 
@@ -126,7 +126,7 @@ async def test_clear_cart():
 
 
 @pytest.mark.asyncio
-async def test_clear_cart_no_cart():
+async def test_clear_cart_execute_no_cart():
     cart_repo = AsyncMock()
     cart_repo.get_by_user_id.return_value = None
 
@@ -140,7 +140,7 @@ async def test_clear_cart_no_cart():
 # GET CART
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_get_cart_empty():
+async def test_get_cart_execute_empty():
     cart_repo = AsyncMock()
     cart_repo.get_by_user_id.return_value = None
 
@@ -152,7 +152,7 @@ async def test_get_cart_empty():
 
 
 @pytest.mark.asyncio
-async def test_get_cart_existing():
+async def test_get_cart_execute_existing():
     cart_repo = AsyncMock()
     cart_repo.get_by_user_id.return_value = Cart(
         user_id=1,
@@ -169,7 +169,7 @@ async def test_get_cart_existing():
 # REMOVE ITEM
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_remove_item():
+async def test_remove_cart_item_execute():
     cart_repo = AsyncMock()
     cart_repo.get_by_user_id.return_value = Cart(
         user_id=1,
@@ -184,7 +184,7 @@ async def test_remove_item():
 
 
 @pytest.mark.asyncio
-async def test_remove_item_no_cart():
+async def test_remove_cart_item_execute_no_cart():
     cart_repo = AsyncMock()
     cart_repo.get_by_user_id.return_value = None
 
@@ -198,7 +198,7 @@ async def test_remove_item_no_cart():
 # UPDATE QUANTITY
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_update_quantity():
+async def test_update_cart_item_quantity_execute():
     cart_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -217,7 +217,7 @@ async def test_update_quantity():
 
 
 @pytest.mark.asyncio
-async def test_update_quantity_remove_item():
+async def test_update_cart_item_quantity_execute_remove_item():
     cart_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -234,7 +234,7 @@ async def test_update_quantity_remove_item():
 
 
 @pytest.mark.asyncio
-async def test_update_quantity_not_enough_stock():
+async def test_update_cart_item_quantity_execute_not_enough_stock():
     cart_repo = AsyncMock()
     product_repo = AsyncMock()
 

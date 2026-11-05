@@ -9,7 +9,7 @@ from core.application.use_case_factories.search_factories import get_search_use_
 client = TestClient(app)
 
 
-def test_search_products():
+def test_search_products_get():
     use_case = AsyncMock()
 
     use_case.execute.return_value = [

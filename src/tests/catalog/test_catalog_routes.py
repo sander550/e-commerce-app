@@ -41,7 +41,7 @@ def mock_category():
 
 # ---------------- LIST PRODUCTS ----------------
 
-def test_list_products_success():
+def test_list_products_get_success():
     mock = AsyncMock()
     mock.execute.return_value = [
         mock_product(),
@@ -70,7 +70,7 @@ def test_list_products_success():
     app.dependency_overrides = {}
 
 
-def test_list_products_empty():
+def test_list_products_get_empty():
     mock = AsyncMock()
     mock.execute.return_value = []
 
@@ -86,7 +86,7 @@ def test_list_products_empty():
     app.dependency_overrides = {}
 
 
-def test_list_products_error():
+def test_list_products_get_error():
     mock = AsyncMock()
     mock.execute.side_effect = Exception("Database error")
 
@@ -104,7 +104,7 @@ def test_list_products_error():
 
 # ---------------- GET PRODUCT DETAILS ----------------
 
-def test_get_product_details_success():
+def test_get_product_details_get_success():
     mock = AsyncMock()
     mock.execute.return_value = mock_product()
 
@@ -128,7 +128,7 @@ def test_get_product_details_success():
     app.dependency_overrides = {}
 
 
-def test_get_product_details_not_found():
+def test_get_product_details_get_not_found():
     mock = AsyncMock()
     mock.execute.side_effect = ValueError("Product not found")
 
@@ -146,7 +146,7 @@ def test_get_product_details_not_found():
 
 # ---------------- PRODUCTS BY CATEGORY ----------------
 
-def test_list_products_by_category_success():
+def test_list_products_by_category_get_success():
     product1 = mock_product()
 
     product2 = Product(
@@ -191,7 +191,7 @@ def test_list_products_by_category_success():
     app.dependency_overrides = {}
 
 
-def test_list_products_by_category_empty():
+def test_list_products_by_category_get_empty():
     mock = AsyncMock()
     mock.execute.return_value = []
 
@@ -209,7 +209,7 @@ def test_list_products_by_category_empty():
     app.dependency_overrides = {}
 
 
-def test_list_products_by_category_not_found():
+def test_list_products_by_category_get_not_found():
     mock = AsyncMock()
     mock.execute.side_effect = ValueError("Category not found")
 
@@ -229,7 +229,7 @@ def test_list_products_by_category_not_found():
 
 # ---------------- LIST CATEGORIES ----------------
 
-def test_list_categories_success():
+def test_list_categories_get_success():
     mock = AsyncMock()
     mock.execute.return_value = [
         mock_category(),
@@ -255,7 +255,7 @@ def test_list_categories_success():
     app.dependency_overrides = {}
 
 
-def test_list_categories_empty():
+def test_list_categories_get_empty():
     mock = AsyncMock()
     mock.execute.return_value = []
 
@@ -273,7 +273,7 @@ def test_list_categories_empty():
     app.dependency_overrides = {}
 
 
-def test_list_categories_error():
+def test_list_categories_get_error():
     mock = AsyncMock()
     mock.execute.side_effect = Exception("Database error")
 

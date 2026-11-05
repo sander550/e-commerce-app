@@ -13,7 +13,7 @@ from auth.infrastructure.helpers.refresh_token_generator import generate_refresh
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_user_create_and_get(db_session):
+async def test_user_create_and_get_by_id(db_session):
     repo = UserRepository(db_session)
 
     user = User(
@@ -83,7 +83,7 @@ async def test_user_update(db_session):
 # ---------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_token_create_and_get(db_session):
+async def test_token_create_and_get_by_token(db_session):
     repo = TokenRepository(db_session)
 
     # 1. Generate raw token
@@ -155,7 +155,7 @@ async def test_token_revoke(db_session):
 
 
 @pytest.mark.asyncio
-async def test_token_rotate(db_session):
+async def test_token_rotate_refresh_token(db_session):
     repo = TokenRepository(db_session)
 
     old_raw = generate_refresh_token(user_id=10)

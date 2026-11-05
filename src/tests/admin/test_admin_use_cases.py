@@ -12,7 +12,7 @@ from admin.application.use_cases.update_product import UpdateProductUseCase
 
 
 @pytest.mark.asyncio
-async def test_create_category():
+async def test_create_category_execute():
     category_repo = AsyncMock()
 
     category = MagicMock()
@@ -38,7 +38,7 @@ async def test_create_category():
 
 
 @pytest.mark.asyncio
-async def test_create_category_rejects_duplicate_name():
+async def test_create_category_execute_rejects_duplicate_name():
     category_repo = AsyncMock()
     category_repo.get_by_name.return_value = MagicMock()
 
@@ -52,7 +52,7 @@ async def test_create_category_rejects_duplicate_name():
 
 
 @pytest.mark.asyncio
-async def test_create_product():
+async def test_create_product_execute():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
     embedding_service = AsyncMock()
@@ -101,7 +101,7 @@ async def test_create_product():
 
 
 @pytest.mark.asyncio
-async def test_create_product_rejects_duplicate_name():
+async def test_create_product_execute_rejects_duplicate_name():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
     embedding_service = AsyncMock()
@@ -133,7 +133,7 @@ async def test_create_product_rejects_duplicate_name():
 
 
 @pytest.mark.asyncio
-async def test_create_product_does_not_persist_when_embedding_fails():
+async def test_create_product_execute_does_not_persist_when_embedding_fails():
     """A failed embedding must not leave a product row (with no vector) behind."""
     product_repo = AsyncMock()
     category_repo = AsyncMock()
@@ -169,7 +169,7 @@ async def test_create_product_does_not_persist_when_embedding_fails():
 
 
 @pytest.mark.asyncio
-async def test_create_product_rolls_back_when_vector_store_fails():
+async def test_create_product_execute_rolls_back_when_vector_store_fails():
     """If the vector write fails, the already-committed product is removed."""
     product_repo = AsyncMock()
     category_repo = AsyncMock()
@@ -209,7 +209,7 @@ async def test_create_product_rolls_back_when_vector_store_fails():
 
 
 @pytest.mark.asyncio
-async def test_delete_category():
+async def test_delete_category_execute():
     category_repo = AsyncMock()
 
     category = MagicMock()
@@ -227,7 +227,7 @@ async def test_delete_category():
 
 
 @pytest.mark.asyncio
-async def test_delete_order():
+async def test_delete_order_execute():
     order_repo = AsyncMock()
 
     order = MagicMock()
@@ -245,7 +245,7 @@ async def test_delete_order():
 
 
 @pytest.mark.asyncio
-async def test_delete_product():
+async def test_delete_product_execute():
     product_repo = AsyncMock()
     vector_store = AsyncMock()
 
@@ -268,7 +268,7 @@ async def test_delete_product():
 
 
 @pytest.mark.asyncio
-async def test_update_category():
+async def test_update_category_execute():
     category_repo = AsyncMock()
 
     existing = MagicMock()
@@ -302,7 +302,7 @@ async def test_update_category():
 
 
 @pytest.mark.asyncio
-async def test_update_order():
+async def test_update_order_execute():
     order_repo = AsyncMock()
 
     existing = MagicMock()
@@ -336,7 +336,7 @@ async def test_update_order():
 
 
 @pytest.mark.asyncio
-async def test_update_order_partial_keeps_unsupplied_fields():
+async def test_update_order_execute_partial_keeps_unsupplied_fields():
     """Changing only the status must not wipe the stored address / delivery method."""
     order_repo = AsyncMock()
 
@@ -371,7 +371,7 @@ async def test_update_order_partial_keeps_unsupplied_fields():
 
 
 @pytest.mark.asyncio
-async def test_update_product():
+async def test_update_product_execute():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
     embedding_service = AsyncMock()

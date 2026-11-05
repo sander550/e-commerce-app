@@ -19,7 +19,7 @@ client = TestClient(app)
 # CREATE PAYPAL PAYMENT
 # ---------------------------------------------------------
 
-def test_create_paypal_payment():
+def test_create_paypal_payment_post():
     use_case = AsyncMock()
 
     use_case.execute.return_value = {
@@ -55,7 +55,7 @@ def test_create_paypal_payment():
 # CAPTURE PAYPAL PAYMENT
 # ---------------------------------------------------------
 
-def test_capture_paypal_payment():
+def test_capture_paypal_payment_get():
     use_case = AsyncMock()
 
     result = MagicMock()
@@ -97,7 +97,7 @@ def test_capture_paypal_payment():
 # CANCEL PAYMENT
 # ---------------------------------------------------------
 
-def test_cancel_payment():
+def test_cancel_payment_post():
     use_case = AsyncMock()
 
     user = MagicMock()

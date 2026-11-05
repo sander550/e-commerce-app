@@ -48,7 +48,7 @@ def mock_category():
 # =========================================================
 
 @pytest.mark.asyncio
-async def test_get_product_details_success():
+async def test_get_product_details_execute_success():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
 
@@ -73,7 +73,7 @@ async def test_get_product_details_success():
 
 
 @pytest.mark.asyncio
-async def test_get_product_details_product_not_found():
+async def test_get_product_details_execute_product_not_found():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
 
@@ -92,7 +92,7 @@ async def test_get_product_details_product_not_found():
 
 
 @pytest.mark.asyncio
-async def test_get_product_details_category_not_found():
+async def test_get_product_details_execute_category_not_found():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
 
@@ -120,7 +120,7 @@ async def test_get_product_details_category_not_found():
 # =========================================================
 
 @pytest.mark.asyncio
-async def test_get_products_by_category_success():
+async def test_get_products_by_category_execute_success():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
 
@@ -154,7 +154,7 @@ async def test_get_products_by_category_success():
 
 
 @pytest.mark.asyncio
-async def test_get_products_by_category_empty():
+async def test_get_products_by_category_execute_empty():
     product_repo = AsyncMock()
     category_repo = AsyncMock()
 
@@ -177,7 +177,7 @@ async def test_get_products_by_category_empty():
 # =========================================================
 
 @pytest.mark.asyncio
-async def test_list_categories_success():
+async def test_list_categories_execute_success():
     category_repo = AsyncMock()
 
     categories = [
@@ -206,7 +206,7 @@ async def test_list_categories_success():
 
 
 @pytest.mark.asyncio
-async def test_list_categories_empty():
+async def test_list_categories_execute_empty():
     category_repo = AsyncMock()
 
     category_repo.list.return_value = []
@@ -227,7 +227,7 @@ async def test_list_categories_empty():
 # =========================================================
 
 @pytest.mark.asyncio
-async def test_list_products_success():
+async def test_list_products_execute_success():
     product_repo = AsyncMock()
 
     products = [
@@ -261,7 +261,7 @@ async def test_list_products_success():
 
 
 @pytest.mark.asyncio
-async def test_list_products_empty():
+async def test_list_products_execute_empty():
     product_repo = AsyncMock()
 
     product_repo.list.return_value = []
@@ -282,7 +282,7 @@ async def test_list_products_empty():
 # =========================================================
 
 @pytest.mark.asyncio
-async def test_update_stock_success():
+async def test_update_stock_execute_success():
     order_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -315,7 +315,7 @@ async def test_update_stock_success():
 
 
 @pytest.mark.asyncio
-async def test_update_stock_order_not_found():
+async def test_update_stock_execute_order_not_found():
     order_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -335,7 +335,7 @@ async def test_update_stock_order_not_found():
 
 
 @pytest.mark.asyncio
-async def test_update_stock_product_not_found():
+async def test_update_stock_execute_product_not_found():
     order_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -363,7 +363,7 @@ async def test_update_stock_product_not_found():
 
 
 @pytest.mark.asyncio
-async def test_update_stock_never_goes_below_zero():
+async def test_update_stock_execute_never_goes_below_zero():
     order_repo = AsyncMock()
     product_repo = AsyncMock()
 
@@ -393,7 +393,7 @@ async def test_update_stock_never_goes_below_zero():
 
 
 @pytest.mark.asyncio
-async def test_update_stock_multiple_items():
+async def test_update_stock_execute_multiple_items():
     order_repo = AsyncMock()
     product_repo = AsyncMock()
 

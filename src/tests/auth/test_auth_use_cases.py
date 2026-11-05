@@ -39,7 +39,7 @@ def mock_user():
 # REGISTER USE CASE
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_register_success():
+async def test_register_user_execute_success():
     user_repo = AsyncMock()
     token_repo = AsyncMock()
     domain = AsyncMock()
@@ -88,7 +88,7 @@ async def test_register_success():
 # LOGIN USE CASE
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_login_success():
+async def test_login_user_execute_success():
     user_repo = AsyncMock()
     token_repo = AsyncMock()
     domain = AuthDomainService()
@@ -155,7 +155,7 @@ async def test_login_success():
 # LOGOUT USE CASE
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-async def test_logout_success():
+async def test_logout_execute_success():
     token_repo = AsyncMock()
 
     # Simulate existing refresh token

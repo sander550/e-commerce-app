@@ -55,7 +55,7 @@ def make_request(cookies: dict) -> Request:
 
 
 @pytest.mark.asyncio
-async def test_no_auth_cookies_is_unauthenticated():
+async def test_auth_required_no_auth_cookies():
     request = make_request({})
 
     with pytest.raises(HTTPException) as exc_info:
@@ -65,7 +65,7 @@ async def test_no_auth_cookies_is_unauthenticated():
 
 
 @pytest.mark.asyncio
-async def test_invalid_access_and_refresh_cookies_are_unauthenticated(
+async def test_auth_required_invalid_access_and_refresh_cookies(
     db_session,
 ):
     request = make_request(
@@ -82,7 +82,7 @@ async def test_invalid_access_and_refresh_cookies_are_unauthenticated(
 
 
 @pytest.mark.asyncio
-async def test_valid_refresh_cookie_refreshes_the_session(db_session):
+async def test_auth_required_valid_refresh_cookie_refreshes_session(db_session):
     user_repo = UserRepository(db_session)
     token_repo = TokenRepository(db_session)
 

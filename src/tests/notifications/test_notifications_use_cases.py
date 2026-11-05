@@ -8,7 +8,7 @@ from notifications.application.use_cases.send_payment_completed_email import (
 
 
 @pytest.mark.asyncio
-async def test_send_payment_completed_email_success():
+async def test_send_payment_completed_email_execute_success():
     user_repo = AsyncMock()
     order_repo = AsyncMock()
     payment_repo = AsyncMock()
