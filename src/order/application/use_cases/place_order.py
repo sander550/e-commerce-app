@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from order.domain.entities.order import Order, OrderItem
 from order.domain.interfaces.order_repo import IOrderRepository
 from cart.domain.interfaces.cart_repo import ICartRepository
@@ -16,6 +17,7 @@ class PlaceOrderUseCase:
         self.order_repo = order_repo
         self.product_repo = product_repo
         self.tax_rate = settings.TAX_RATE
+        self.reservation_time = settings.RESERVATION_TIME
 
     async def execute(
         self,
@@ -49,13 +51,8 @@ class PlaceOrderUseCase:
         cart.items = updated_items
         await self.cart_repo.save(cart)
 
-        # ---------------------------------------------------------
-        # Hard stock check
-        # ---------------------------------------------------------
-        for item in cart.items:
-            product = await self.product_repo.get_by_id(item.product_id)
-            if product.stock < item.quantity:
-                raise ValueError(f"Not enough stock for product {product.id}")
+        if not cart.items:
+            raise ValueError("No products are currently available")
 
         # ---------------------------------------------------------
         # Build order items
@@ -72,7 +69,7 @@ class PlaceOrderUseCase:
         ]
 
         # ---------------------------------------------------------
-        # Create new order
+        # Create new order with reservation expiration
         # ---------------------------------------------------------
         order = Order(
             id=None,
@@ -80,10 +77,25 @@ class PlaceOrderUseCase:
             shipping_address=shipping_address,
             delivery_method=delivery_method,
             items=order_items,
-            status="pending"
+            status="pending",
+            reservation_expires_at=datetime.utcnow() + timedelta(self.reservation_time)
         )
 
         order.calculate_totals(self.tax_rate)
+
+        # ---------------------------------------------------------
+        # Reserve stock
+        # ---------------------------------------------------------
+        for item in sorted(order_items, key=lambda x: x.product_id):
+            reserved = await self.product_repo.reserve_stock(
+                product_id=item.product_id,
+                quantity=item.quantity
+            )
+
+            if not reserved:
+                raise ValueError(
+                    f"Not enough stock for product {item.product_id}"
+                )
 
         saved_order = await self.order_repo.save(order)
         return saved_order
