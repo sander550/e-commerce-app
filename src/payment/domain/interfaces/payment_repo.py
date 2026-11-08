@@ -24,3 +24,8 @@ class IPaymentRepository(ABC):
     async def update(self, payment: Payment) -> Payment:
         """Update payment status or details."""
         pass
+
+    @abstractmethod
+    async def get_by_paypal_order_id(self, paypal_order_id: str) -> Optional[Payment]:
+        """Fetch a payment by PayPal order ID."""
+        pass
