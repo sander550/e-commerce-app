@@ -1,6 +1,6 @@
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from catalog.domain.entities.product import Product
 from catalog.domain.interfaces.product_repo import IProductRepository
@@ -145,3 +145,18 @@ class ProductRepository(IProductRepository):
 
         return matched_ids
 
+    async def reserve_stock(self, product_id: int, quantity: int) -> bool:
+        stmt = (
+            update(ProductModel)
+            .where(
+                ProductModel.id == product_id,
+                ProductModel.stock >= quantity
+            )
+            .values(
+                stock=ProductModel.stock - quantity
+            )
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.rowcount == 1
