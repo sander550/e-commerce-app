@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
+from datetime import datetime
 
 from order.domain.entities.order import Order, OrderItem
 from order.domain.interfaces.order_repo import IOrderRepository
@@ -240,3 +241,13 @@ class OrderRepository(IOrderRepository):
                 return None
 
         return last_order
+
+    async def get_expired_pending_orders(self):
+        result = await self.session.execute(
+            select(OrderModel).where(
+                OrderModel.status == "pending",
+                OrderModel.reservation_expires_at <= datetime.utcnow()
+            )
+        )
+
+        return result.scalars().all()
