@@ -12,7 +12,6 @@ from core.infrastructure.database import Base, engine
 from core.events.event_bus import event_bus
 from order.application.handlers.mark_order_paid_handler import mark_order_paid_handler
 from cart.application.handlers.clear_cart_handler import clear_cart_handler
-from catalog.application.handlers.update_stock_handler import update_stock_handler
 from notifications.application.handlers.send_payment_completed_email_handler import send_payment_completed_handler
 
 from core.security.rate_limiting_service import RedisRateLimitService
@@ -30,7 +29,6 @@ async def lifespan(app: FastAPI):
 
     event_bus.subscribe("payment.completed", mark_order_paid_handler)
     event_bus.subscribe("payment.completed", clear_cart_handler)
-    event_bus.subscribe("payment.completed", update_stock_handler)
     event_bus.subscribe("payment.completed", send_payment_completed_handler)
     print("[EventBus] Subscribed to payment_completed")
 
