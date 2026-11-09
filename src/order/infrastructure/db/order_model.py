@@ -14,8 +14,8 @@ class OrderModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False)
 
-    shipping_address = Column(String(500), nullable=True)
-    delivery_method = Column(String(50), nullable=True)
+    shipping_address = Column(String(500), nullable=False)
+    delivery_method = Column(String(50), nullable=False)
 
     subtotal = Column(Float, nullable=False)
     tax = Column(Float, nullable=False)
