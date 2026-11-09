@@ -68,7 +68,7 @@ services:
     environment:
       OLLAMA_HOST: http://ollama:11434
       CHROMA_HOST: http://chroma:8000
-    command: python -m src.workers.email_worker
+    command: python -m src.workers.worker
     depends_on:
       - redis
       - postgres
