@@ -15,6 +15,7 @@ class Order:
     total: float = 0.0
     status: str = "pending"
     created_at: datetime = field(default_factory=datetime.utcnow)
+    reservation_expires_at: datetime | None = None
 
     def calculate_totals(self, tax_rate: float = 0.2):
         self.subtotal = sum(item.price * item.quantity for item in self.items)

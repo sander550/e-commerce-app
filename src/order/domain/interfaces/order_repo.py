@@ -22,6 +22,6 @@ class IOrderRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def delete(self, user_id: int):
-        """Delete an existing order."""
+    async def delete(self, order_id: int):
+        """Delete an existing order by its ID."""
         raise NotImplementedError

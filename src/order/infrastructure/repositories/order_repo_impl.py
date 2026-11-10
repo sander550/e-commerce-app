@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
+from datetime import datetime
 
 from order.domain.entities.order import Order, OrderItem
 from order.domain.interfaces.order_repo import IOrderRepository
@@ -27,6 +28,7 @@ class OrderRepository(IOrderRepository):
             )
             for item in model.items
         ]
+
         return Order(
             id=model.id,
             user_id=model.user_id,
@@ -37,13 +39,17 @@ class OrderRepository(IOrderRepository):
             total=model.total,
             status=model.status,
             items=items,
-            created_at=model.created_at
+            created_at=model.created_at,
+            reservation_expires_at=model.reservation_expires_at
         )
 
     async def save(self, order: Order) -> Order | None:
+        # ---------------------------------------------------------
         # UPDATE
+        # ---------------------------------------------------------
         if order.id:
             db_order = await self.get_model_by_id(order.id)
+
             if not db_order:
                 return None
 
@@ -52,16 +58,19 @@ class OrderRepository(IOrderRepository):
             db_order.tax = order.tax
             db_order.total = order.total
 
-            # NEW FIELDS
+            # Order fields
             db_order.shipping_address = order.shipping_address
             db_order.delivery_method = order.delivery_method
+            db_order.reservation_expires_at = order.reservation_expires_at
 
-            # delete existing items
+            # Delete existing items
             await self.session.execute(
-                delete(OrderItemModel).where(OrderItemModel.order_id == db_order.id)
+                delete(OrderItemModel).where(
+                    OrderItemModel.order_id == db_order.id
+                )
             )
 
-            # insert new items
+            # Insert new items
             for item in order.items:
                 self.session.add(
                     OrderItemModel(
@@ -74,7 +83,9 @@ class OrderRepository(IOrderRepository):
                     )
                 )
 
+        # ---------------------------------------------------------
         # INSERT
+        # ---------------------------------------------------------
         else:
             db_order = OrderModel(
                 user_id=order.user_id,
@@ -83,13 +94,15 @@ class OrderRepository(IOrderRepository):
                 total=order.total,
                 status=order.status,
 
-                # NEW FIELDS
+                # Order fields
                 shipping_address=order.shipping_address,
                 delivery_method=order.delivery_method,
+                reservation_expires_at=order.reservation_expires_at,
             )
 
             self.session.add(db_order)
-            await self.session.flush()  # get db_order.id
+
+            await self.session.flush()  # Get db_order.id
 
             for item in order.items:
                 self.session.add(
@@ -105,12 +118,15 @@ class OrderRepository(IOrderRepository):
 
         await self.session.commit()
 
-        # re‑load with items eagerly loaded
+        # ---------------------------------------------------------
+        # RELOAD WITH ITEMS EAGERLY LOADED
+        # ---------------------------------------------------------
         stmt = (
             select(OrderModel)
             .where(OrderModel.id == db_order.id)
             .options(selectinload(OrderModel.items))
         )
+
         result = await self.session.execute(stmt)
         loaded = result.scalar_one()
 
@@ -128,6 +144,7 @@ class OrderRepository(IOrderRepository):
 
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
+
         return self._to_domain(model) if model else None
 
     # ---------------------------------------------------------
@@ -139,46 +156,76 @@ class OrderRepository(IOrderRepository):
             .where(OrderModel.user_id == user_id)
             .options(selectinload(OrderModel.items))
         )
+
         result = await self.session.execute(stmt)
         models = result.scalars().all()
+
         return [self._to_domain(m) for m in models]
 
     # ---------------------------------------------------------
     # INTERNAL HELPER
     # ---------------------------------------------------------
-    async def get_model_by_id(self, order_id: int) -> OrderModel | None:
+    async def get_model_by_id(
+        self,
+        order_id: int
+    ) -> OrderModel | None:
+
         stmt = (
             select(OrderModel)
             .where(OrderModel.id == order_id)
             .options(selectinload(OrderModel.items))
         )
+
         result = await self.session.execute(stmt)
+
         return result.scalar_one_or_none()
 
-
+    # ---------------------------------------------------------
+    # DELETE ORDER
+    # ---------------------------------------------------------
     async def delete(self, order_id: int) -> None:
-        # Delete items first (FK cascade safe but explicit is cleaner)
+        # Delete items first
         await self.session.execute(
-            delete(OrderItemModel).where(OrderItemModel.order_id == order_id)
+            delete(OrderItemModel).where(
+                OrderItemModel.order_id == order_id
+            )
         )
 
         # Delete order
         await self.session.execute(
-            delete(OrderModel).where(OrderModel.id == order_id)
+            delete(OrderModel).where(
+                OrderModel.id == order_id
+            )
         )
 
         await self.session.commit()
 
-    async def get_last_order_for_user(self, user_id: int) -> Order | None:
+    # ---------------------------------------------------------
+    # GET LAST ORDER FOR USER
+    # ---------------------------------------------------------
+    async def get_last_order_for_user(
+        self,
+        user_id: int
+    ) -> Order | None:
+
         orders = await self.list_by_user_id(user_id)
+
         if not orders:
             return None
 
-        # Assuming orders are stored oldest → newest
         return orders[-1]
 
-    async def find_duplicate_order(self, user_id: int, items: list[OrderItem]) -> Order | None:
+    # ---------------------------------------------------------
+    # FIND DUPLICATE ORDER
+    # ---------------------------------------------------------
+    async def find_duplicate_order(
+        self,
+        user_id: int,
+        items: list[OrderItem]
+    ) -> Order | None:
+
         last_order = await self.get_last_order_for_user(user_id)
+
         if not last_order:
             return None
 
@@ -187,12 +234,20 @@ class OrderRepository(IOrderRepository):
 
         for a, b in zip(last_order.items, items):
             if (
-                    a.product_id != b.product_id or
-                    a.quantity != b.quantity or
-                    a.price != b.price
+                a.product_id != b.product_id
+                or a.quantity != b.quantity
+                or a.price != b.price
             ):
                 return None
 
         return last_order
 
+    async def get_expired_pending_orders(self):
+        result = await self.session.execute(
+            select(OrderModel).where(
+                OrderModel.status == "pending",
+                OrderModel.reservation_expires_at <= datetime.utcnow()
+            )
+        )
 
+        return result.scalars().all()
