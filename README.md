@@ -1,6 +1,6 @@
 # 🛒 E-Commerce App — DDD, Hybrid Search & PayPal Sandbox
 
-A full-stack e-commerce application built with **Domain-Driven Design (DDD)**, hybrid product search, PayPal Sandbox payments, centralized configuration, rate limiting, automated testing, Event-Driven Architecture (EDA), background email processing, and a neon-glass cyber UI.
+A full-stack e-commerce application built with **Domain-Driven Design (DDD)**, hybrid product search, PostgreSQL, Redis, PayPal Sandbox, centralized configuration, rate limiting, automated testing, **atomic database transactions**, Event-Driven Architecture (EDA), background email processing, and a neon-glass cyber UI.
 
 ## ✨ Features
 
@@ -14,6 +14,7 @@ A full-stack e-commerce application built with **Domain-Driven Design (DDD)**, h
 - 🛡️ Global API and login-specific rate limiting
 - ⚠️ User-friendly error handling
 - ⚙️ Centralized application configuration
+- 🔒 Atomic database transactions for consistent stock reservations and order operations
 - 🐳 Docker Compose infrastructure
 - ✅ Automated testing with Pytest and GitHub Actions
 
@@ -49,6 +50,27 @@ src/
 - **Infrastructure:** External technologies including PostgreSQL, SQLAlchemy, Redis, ChromaDB and email services.
 - **Presentation:** FastAPI routes connecting HTTP requests to application use cases.
 
+### Atomic Database Transactions
+
+The application uses **atomic database operations and transactions** to keep inventory and order state consistent when multiple users interact with the application concurrently.
+
+For stock reservations, inventory is updated using an atomic database operation that checks whether enough stock exists and decreases the stock in the same operation.
+
+```sql
+UPDATE products
+SET stock = stock - :quantity
+WHERE id = :product_id
+  AND stock >= :quantity;
+```
+
+If the update affects one row, the reservation succeeds. If it affects zero rows, there was not enough stock available.
+
+This prevents race conditions where multiple customers could otherwise read the same stock value and oversell the product.
+
+Order creation and stock reservation are also handled within a database transaction so that related changes can be committed together. If an operation fails before the transaction is committed, the uncommitted changes can be rolled back instead of leaving the database in an inconsistent state.
+
+This is especially important when an order contains multiple products. Either the required stock reservations and order creation succeed together, or the transaction does not commit the partial changes.
+
 ### Event-Driven Architecture
 
 The application also uses **Event-Driven Architecture (EDA)** for actions that happen after successful payments.
@@ -56,21 +78,21 @@ The application also uses **Event-Driven Architecture (EDA)** for actions that h
 After PayPal payment completion, the backend publishes a `payment.completed` event. Independent handlers subscribe to this event and perform the required follow-up operations.
 
 ```text
-              PayPal Payment
+               PayPal Payment
                     │
                     ▼
-          Payment Completed Event
+           Payment Completed Event
                     │
-        ┌───────────┼───────────┐
-        ▼           ▼           ▼
-   Update Stock  Clear Cart  Send Email
-        │           │           │
-        │           │           ▼
-        │           │      Background
-        │           │        Worker
-        │           │           │
-        └───────────┴───────────▼
-                         Confirmation Email
+         ┌───────────┼───────────┐
+         ▼           ▼           ▼
+    Update Stock  Clear Cart  Send Email
+         │           │           │
+         │           │           ▼
+         │           │      Background
+         │           │        Worker
+         │           │           │
+         └───────────┴───────────▼
+                          Confirmation Email
 ```
 
 The payment event is handled by separate components for:
@@ -115,14 +137,14 @@ The application combines traditional keyword search with semantic vector search.
           ┌───────┴───────┐
           ▼               ▼
      PostgreSQL        ChromaDB
-   Keyword Search    Semantic Search
+    Keyword Search    Semantic Search
           │               │
           └───────┬───────┘
                   ▼
-            Results Merged
+             Results Merged
                   │
                   ▼
-           Products Returned
+            Products Returned
 ```
 
 Semantic search uses embeddings to find relevant products based on meaning, even when the exact search terms do not appear in product names.
@@ -137,38 +159,124 @@ The application integrates PayPal Sandbox to test payments without using real mo
 Add products to cart
         │
         ▼
-     Checkout
+      Checkout
         │
         ▼
- Create PayPal payment
+  Reserve Stock
         │
         ▼
-   PayPal Sandbox
+ Create Pending Order
+        │
+        ▼
+Create PayPal payment
+        │
+        ▼
+  PayPal Sandbox
         │
         ▼
  User approves payment
         │
         ▼
- Backend processes payment
+Backend processes payment
         │
         ▼
- Payment Completed Event
+Payment Completed Event
         │
         ▼
    ┌────┼───────────────┐
    ▼    ▼               ▼
 Update  Clear        Send Payment
 Stock   Cart         Confirmation
-                     Email
-        │               │
-        └───────┬───────┘
-                ▼
-       Order / Payment Flow
+        Email
+         │
+         └───────┬───────┘
+                 ▼
+          Order / Payment Flow
 ```
 
-The application also tracks payment information through the backend.
+Before payment, the application reserves the required inventory using atomic database operations.
+
+The order remains in a `pending` state while the customer completes payment. A reservation expiration time is stored with the order so that unpaid orders can eventually release their reserved inventory.
 
 After successful payment, a `payment.completed` event is published. Multiple independent event handlers react to this event to update stock, clear the cart and initiate the payment confirmation email.
+
+---
+
+# 📦 Stock Reservation & Concurrency
+
+The application prevents multiple customers from purchasing more inventory than is available.
+
+When a customer checks out, stock is reserved before the PayPal payment flow continues.
+
+The reservation uses an atomic database update:
+
+```sql
+UPDATE products
+SET stock = stock - :quantity
+WHERE id = :product_id
+  AND stock >= :quantity;
+```
+
+This means the stock check and stock decrease happen as one database operation.
+
+For example, if a product has 1 item remaining:
+
+```text
+Customer A → reserves 1 → success → stock becomes 0
+Customer B → tries to reserve 1 → fails
+```
+
+If there are 10 items available, multiple customers can successfully reserve stock concurrently as long as enough inventory remains.
+
+Orders receive a reservation expiration time. If payment is not completed before the reservation expires, the background worker releases the reserved stock and marks the order as expired.
+
+This prevents unpaid orders from permanently holding inventory.
+
+---
+
+# 🔄 Order Reservation Flow
+
+```text
+Customer Checkout
+       │
+       ▼
+Check Cart
+       │
+       ▼
+Atomic Stock Reservation
+       │
+       ▼
+Create Pending Order
+       │
+       ▼
+Commit Transaction
+       │
+       ▼
+Create / Redirect to PayPal
+       │
+       ├───────────────┐
+       │               │
+       ▼               ▼
+   Payment          Reservation
+   succeeds         expires
+       │               │
+       ▼               ▼
+    Paid            Expired
+       │               │
+       │               ▼
+       │         Restore Stock
+       │
+       ▼
+Payment Completed Event
+       │
+       ├───────────────┐
+       ▼               ▼
+   Clear Cart      Send Email
+```
+
+Stock is reserved before the PayPal redirect so that a customer does not complete payment only to discover that another customer already purchased the remaining inventory.
+
+Atomic transactions ensure that the stock reservation and order creation are handled consistently.
 
 ---
 
@@ -182,24 +290,24 @@ When an email needs to be sent, the application creates an email job that can be
 Payment Completed Event
           │
           ▼
-  Email Event Handler
+   Email Event Handler
           │
           ▼
-      Email Job
+       Email Job
           │
           ▼
  Background Email Worker
           │
           ▼
-    Email Service
+     Email Service
           │
           ▼
- Confirmation Email
+   Confirmation Email
 ```
 
 This allows the API and event handlers to continue processing without waiting for the email service to complete.
 
-The background worker is used for tasks such as sending payment confirmation emails.
+The background worker is used for tasks such as sending payment confirmation emails and checking for expired order reservations.
 
 ---
 
@@ -261,7 +369,7 @@ Newly registered users are not administrators by default.
 To promote a user, connect to PostgreSQL:
 
 ```bash
-docker compose exec postgres psql -U postgres -d your_db
+docker compose exec postgres psql -U postgres -d fastapi_app6
 ```
 
 Then execute:
@@ -452,6 +560,7 @@ The production environment should use its own secure environment variables rathe
 # 🛠️ Tech Stack
 
 ### Backend
+
 - Python
 - FastAPI
 - SQLAlchemy
@@ -462,16 +571,21 @@ The production environment should use its own secure environment variables rathe
 - GitHub Actions
 
 ### Frontend
+
 - React
 
 ### Payments
+
 - PayPal Sandbox
 
 ### Architecture
+
 - Domain-Driven Design (DDD)
 - Event-Driven Architecture (EDA)
+- Atomic database transactions
 
 ### Infrastructure
+
 - Docker
 - Docker Compose
 - Alembic
@@ -496,6 +610,8 @@ React Frontend
       ├── Rate Limiting
       ├── Orders
       ├── Payments
+      ├── Stock Reservation
+      ├── Atomic Transactions
       ├── Hybrid Search
       └── Admin
       │
@@ -508,4 +624,4 @@ React Frontend
       └── Background Email Worker
 ```
 
-The result is a containerized e-commerce application featuring **DDD architecture, Event-Driven Architecture, hybrid search, PayPal Sandbox payments, centralized configuration, request protection, background email processing, automated testing and a full React frontend**.
+The result is a containerized e-commerce application featuring **DDD architecture, Event-Driven Architecture, hybrid search, PayPal Sandbox payments, centralized configuration, atomic database transactions, request protection, background email processing, automated testing and a full React frontend**.
