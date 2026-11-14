@@ -4,8 +4,6 @@ from auth.infrastructure.repositories.token_repo_impl import TokenRepository
 from auth.infrastructure.repositories.user_repo_impl import UserRepository
 from auth.infrastructure.helpers.jwt import create_access_token
 from core.infrastructure.database import get_session
-from core.config.settings import settings
-
 
 async def auth_required(
     request: Request,
@@ -39,10 +37,6 @@ async def auth_required(
     # -----------------------------
     # 3. Try REFRESH token
     # ----------------------------
-    # A valid refresh token refreshes a missing/expired access
-    # token (and rotates the refresh token). If the refresh
-    # cookie is missing, unknown, revoked or expired, the
-    # request is simply unauthenticated: 401.
     if not refresh_token:
         raise HTTPException(401, "Unauthorized")
 
@@ -62,7 +56,7 @@ async def auth_required(
         "refresh_token",
         new_raw,
         httponly=True,
-        secure=settings.AUTH_COOKIE_SECURE,
+        secure=True,
         samesite="lax",
         max_age=60 * 60 * 24 * 7
     )
@@ -71,7 +65,7 @@ async def auth_required(
         "access_token",
         new_access,
         httponly=True,
-        secure=settings.AUTH_COOKIE_SECURE,
+        secure=True,
         samesite="lax",
         max_age=60 * 15
     )
