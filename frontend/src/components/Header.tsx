@@ -85,7 +85,7 @@ export default function Header() {
       <div className="header-content">
         {/* App name/logo on the left - clickable to reload index page */}
         <Link to="/index" className="app-name">
-          Temu 2.0
+          Ecommerce app
         </Link>
 
         {user ? (
