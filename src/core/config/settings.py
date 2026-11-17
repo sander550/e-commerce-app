@@ -8,7 +8,7 @@ class Settings:
     # ---------------------------------------------------------
     # APP CONFIG
     # ---------------------------------------------------------
-    APP_NAME = "ecommerce app"
+    APP_NAME = "Ecommerce app"
     APP_PORT = "8000"
 
     # ---------------------------------------------------------
@@ -17,10 +17,9 @@ class Settings:
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     # ---------------------------------------------------------
-    # CHROMA VECTOR DB
+    # VECTOR SEARCH (pgvector)
     # ---------------------------------------------------------
-    CHROMA_PATH = os.getenv("CHROMA_PATH")
-    CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION")
+    VECTOR_DIMENSIONS = int(os.getenv("VECTOR_DIMENSIONS", "1024"))
 
     # ---------------------------------------------------------
     # EMBEDDING MODEL (Ollama)

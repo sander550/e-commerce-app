@@ -1,6 +1,5 @@
 from fastapi import Depends
 
-from core.infrastructure.chroma_db import ChromaDBClient
 from core.infrastructure.ollama import OllamaClient
 from core.config.settings import settings
 
@@ -16,7 +15,7 @@ from admin.application.use_cases.update_order import UpdateOrderUseCase
 from admin.application.use_cases.delete_order import DeleteOrderUseCase
 
 from search.domain.services.embedding_service import EmbeddingService
-from search.infrastructure.vector_store.chroma_vector_store import ChromaVectorStore
+from search.infrastructure.vector_store.pgvector_store import PgVectorStore
 from core.application.providers.repo_provider import RepoProvider
 from core.application.providers.repo_provider import get_provider
 
@@ -29,7 +28,6 @@ def get_create_product_use_case(
     provider: RepoProvider = Depends(get_provider)
 ) -> CreateProductUseCase:
 
-    chroma_client = ChromaDBClient()
     ollama_client = OllamaClient()
 
     return CreateProductUseCase(
@@ -39,7 +37,7 @@ def get_create_product_use_case(
             ollama_client=ollama_client,
             model_name=settings.EMBEDDING_MODEL
         ),
-        vector_store=ChromaVectorStore(chroma_client)
+        vector_store=PgVectorStore()
     )
 
 
@@ -47,7 +45,6 @@ def get_update_product_use_case(
     provider: RepoProvider = Depends(get_provider)
 ) -> UpdateProductUseCase:
 
-    chroma_client = ChromaDBClient()
     ollama_client = OllamaClient()
 
     return UpdateProductUseCase(
@@ -57,7 +54,7 @@ def get_update_product_use_case(
             ollama_client=ollama_client,
             model_name=settings.EMBEDDING_MODEL
         ),
-        vector_store=ChromaVectorStore(chroma_client)
+        vector_store=PgVectorStore()
     )
 
 
@@ -65,12 +62,10 @@ def get_delete_product_use_case(
     provider: RepoProvider = Depends(get_provider)
 ) -> DeleteProductUseCase:
 
-    chroma_client = ChromaDBClient()
-
     return DeleteProductUseCase(
         product_repo=provider.product_repo,
         cart_repo=provider.cart_repo,
-        vector_store=ChromaVectorStore(chroma_client)
+        vector_store=PgVectorStore()
     )
 
 
@@ -110,7 +105,6 @@ def get_update_order_use_case(
     return UpdateOrderUseCase(
         order_repo=provider.order_repo
     )
-
 
 
 def get_delete_order_use_case(

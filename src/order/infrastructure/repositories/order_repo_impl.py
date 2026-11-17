@@ -181,6 +181,19 @@ class OrderRepository(IOrderRepository):
         return result.scalar_one_or_none()
 
     # ---------------------------------------------------------
+    # UPDATE ORDER STATUS
+    # ---------------------------------------------------------
+    async def update_status(self, order_id: int, status: str) -> None:
+        from sqlalchemy import update
+        stmt = (
+            update(OrderModel)
+            .where(OrderModel.id == order_id)
+            .values(status=status)
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+
+    # ---------------------------------------------------------
     # DELETE ORDER
     # ---------------------------------------------------------
     async def delete(self, order_id: int) -> None:
@@ -244,10 +257,11 @@ class OrderRepository(IOrderRepository):
 
     async def get_expired_pending_orders(self):
         result = await self.session.execute(
-            select(OrderModel).where(
+            select(OrderModel)
+            .options(selectinload(OrderModel.items))
+            .where(
                 OrderModel.status == "pending",
                 OrderModel.reservation_expires_at <= datetime.utcnow()
             )
         )
-
-        return result.scalars().all()
+        return [self._to_domain(order) for order in result.scalars().all()]

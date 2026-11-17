@@ -7,6 +7,7 @@ import os
 # All routers combined in one place
 from api.router import router
 from core.infrastructure.database import Base, engine
+from core.config.settings import settings
 
 # Event bus + events
 from core.events.event_bus import event_bus
@@ -39,7 +40,7 @@ async def lifespan(app: FastAPI):
     # ---------------------------------------------------------
 
 app = FastAPI(
-    title="E‑Commerce API",
+    title=settings.APP_NAME,
     version="1.0.0",
     lifespan=lifespan,
 )

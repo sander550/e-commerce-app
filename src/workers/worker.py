@@ -74,7 +74,8 @@ async def check_expired_reservations():
                             product.stock += item.quantity
                             await product_repo.update(product)
 
-                order.status = "expired"
+                # Persist status change
+                await order_repo.update_status(order.id, "expired")
 
             await session.commit()
 

@@ -878,7 +878,7 @@ export default function Index() {
       {/* TOP BAR */}
       <div className="topbar">
         <div className="app-name" onClick={() => navigate("/")}>
-          AntsShop
+          Ecommerce app
         </div>
 
         <input

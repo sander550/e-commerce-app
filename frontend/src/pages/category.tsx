@@ -1101,7 +1101,7 @@ export default function CategoryPage() {
           className="app-name"
           onClick={() => navigate("/")}
         >
-          AntsShop
+          Ecommerce app
         </div>
 
         <div className="topbar-right">
