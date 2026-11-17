@@ -17,12 +17,6 @@ class Settings:
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     # ---------------------------------------------------------
-    # CHROMA VECTOR DB
-    # ---------------------------------------------------------
-    CHROMA_PATH = os.getenv("CHROMA_PATH")
-    CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION")
-
-    # ---------------------------------------------------------
     # EMBEDDING MODEL (Ollama)
     # ---------------------------------------------------------
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")

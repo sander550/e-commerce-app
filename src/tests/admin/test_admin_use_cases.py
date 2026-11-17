@@ -186,7 +186,7 @@ async def test_create_product_execute_rolls_back_when_vector_store_fails():
     created_product.id = 10
     product_repo.create.return_value = created_product
     embedding_service.embed.return_value = [0.1, 0.2, 0.3]
-    vector_store.add.side_effect = RuntimeError("chroma down")
+    vector_store.add.side_effect = RuntimeError("vector store down")
 
     use_case = CreateProductUseCase(
         product_repo=product_repo,

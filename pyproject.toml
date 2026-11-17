@@ -11,4 +11,13 @@ dependencies = [
   "python-jose[cryptography]",
   "passlib[bcrypt]",
   "pydantic",
+  "pgvector",
+  "python-dotenv",
+  "httpx",
+  "bcrypt",
+  "argon2-cffi",
+  "ollama",
+  "redis",
+  "aiosmtplib",
+  "alembic",
 ]

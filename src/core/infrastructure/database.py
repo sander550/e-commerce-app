@@ -1,24 +1,24 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 from core.config.settings import settings
 
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()
+
 
 # ---------------------------------------------------------
 # ENGINE
 # ---------------------------------------------------------
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=False,        # usually False in production
+    echo=False,
     future=True,
     pool_pre_ping=True,
 )
 
 
 # ---------------------------------------------------------
-# SESSION FACTORY
+# SESSION FACTORY (eagerly bound)
 # ---------------------------------------------------------
 async_session_factory = sessionmaker(
     bind=engine,

@@ -78,7 +78,7 @@ class PlaceOrderUseCase:
             delivery_method=delivery_method,
             items=order_items,
             status="pending",
-            reservation_expires_at=datetime.utcnow() + timedelta(self.reservation_time)
+            reservation_expires_at=datetime.utcnow() + timedelta(seconds=self.reservation_time)
         )
 
         order.calculate_totals(self.tax_rate)

@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     env_file:
       - .env
     environment:
@@ -13,16 +13,6 @@ services:
 
   redis:
     image: redis:7
-    restart: unless-stopped
-
-  chroma:
-    image: chromadb/chroma:latest
-    volumes:
-      - chroma_data:/chroma
-    environment:
-      CHROMA_DB_IMPL: "duckdb+parquet"
-      CHROMA_SERVER_HOST: "0.0.0.0"
-      CHROMA_SERVER_PORT: "8000"
     restart: unless-stopped
 
   ollama:
@@ -40,6 +30,32 @@ services:
       ]
     restart: unless-stopped
 
+  # Run database migrations before backend starts
+  migration:
+    build:
+      context: .
+      args:
+        APP_BUILD_ID: ${APP_BUILD_ID:-unknown}
+    env_file:
+      - .env
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      VECTOR_DIMENSIONS: "768"
+      EMBEDDING_MODEL: bge-large
+    command: >
+      sh -c "
+        echo 'Waiting for postgres...'
+        until python -c \"import psycopg2; psycopg2.connect(host='postgres', user='${POSTGRES_USER}', password='${POSTGRES_PASSWORD}', database='${POSTGRES_DB}')\" 2>/dev/null; do
+          sleep 2
+        done
+        echo 'Postgres ready, running migrations...'
+        alembic upgrade head
+      "
+    depends_on:
+      - postgres
+    restart: "no"
+
   backend:
     build:
       context: .
@@ -49,13 +65,12 @@ services:
       - .env
     environment:
       OLLAMA_HOST: http://ollama:11434
-      CHROMA_HOST: http://chroma:8000
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000
     depends_on:
       - redis
       - postgres
       - ollama
-      - chroma
+      - migration
     restart: unless-stopped
 
   worker:
@@ -67,13 +82,12 @@ services:
       - .env
     environment:
       OLLAMA_HOST: http://ollama:11434
-      CHROMA_HOST: http://chroma:8000
     command: python -m src.workers.worker
     depends_on:
       - redis
       - postgres
       - ollama
-      - chroma
+      - migration
     restart: unless-stopped
 
   frontend:
@@ -90,4 +104,3 @@ services:
 volumes:
   postgres_data:
   ollama_data:
-  chroma_data:

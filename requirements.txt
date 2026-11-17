@@ -14,7 +14,7 @@ SQLAlchemy[asyncio]
 asyncpg
 psycopg2
 ollama
-chromadb
+pgvector
 redis
 aiosmtplib
 alembic
